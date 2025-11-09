@@ -6,10 +6,13 @@ import { Search, Lightbulb, Wallet, Vote } from 'lucide-react'
 import { DiscoverTab } from '@/components/cofounder/DiscoverTab'
 import { MyContributionsTab } from '@/components/cofounder/MyContributionsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
+import { WalletModule } from '@/components/dashboard/WalletModule'
+import { ProposalsModule } from '@/components/dashboard/ProposalsModule'
 import { useRouter } from 'next/navigation'
 
 /**
  * Cofounder Dashboard page - Discover missions and manage contributions
+ * Phase 6: Enhanced with WalletModule showing balance, price, and USD value
  * Client Component - has tab state management
  */
 export default function CofounderDashboardPage() {
@@ -79,6 +82,11 @@ export default function CofounderDashboardPage() {
             </p>
           </div>
 
+          {/* Wallet Module - Always visible at top */}
+          <div className="mb-8">
+            <WalletModule />
+          </div>
+
           {/* Tabs */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8 overflow-x-auto">
             <div className="flex border-b border-gray-200 dark:border-gray-700">
@@ -108,11 +116,7 @@ export default function CofounderDashboardPage() {
           )}
           {activeTab === 'contributions' && <MyContributionsTab />}
           {activeTab === 'portfolio' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center">
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                Portfolio view coming soon...
-              </p>
-            </div>
+            <ProposalsModule />
           )}
           {activeTab === 'governance' && (
             <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center">

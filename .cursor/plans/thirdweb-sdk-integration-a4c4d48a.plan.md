@@ -1,758 +1,784 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 b8f93285-b9be-462a-b64e-c04b1a88395c -->
-# Phase 5 Refinement: Minimal-Invasive Smart Contract Development
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 40339191-0551-41d8-9d7b-34cd0af3bb0c -->
+# Phase 6 Refinement: Minimal-Invasive Co-Owner Dashboard & Token Economics
 
 ## Context: What We've Built
 
-### Phase 1-4 Complete ✅
+### Phase 1-5 Complete ✅
 
-- **Database:** proposals table with status field
 - **Auth:** Secure wallet authentication
-- **Proposals:** Co-founders can submit proposals
-- **Double Handshake:** Admin reviews, pioneer accepts
-- **Final State:** Proposals reach 'accepted' status
+- **Proposals:** Submit, review, accept
+- **Smart Contracts:** Token escrow and release
+- **Full Lifecycle:** Proposal → Agreement → Work → Release
+- **Tokens:** $CSTAKE tokens can be earned and held
 
-### What Happens Next?
+### Current Dashboard State
 
-When a proposal reaches 'accepted' status, tokens need to be:
+Looking at existing code:
 
-1. **Locked in escrow** (createAgreement)
-2. **Work completed** by pioneer
-3. **Confirmed** by pioneer (confirmWorkDone)
-4. **Verified** by admin
-5. **Released** to pioneer (releaseAgreement)
+- `src/app/cofounder-dashboard/page.tsx` exists
+- Shows proposals list (from Phase 4)
+- Basic tabs structure
+- NO wallet balance display yet
+- NO token price display yet
+- NO USD value calculation yet
 
-This requires a **smart contract** to manage the escrow trustlessly.
+## Phase 6 Goal: Make Co-Ownership Tangible
 
-## Phase 5 Goal: Token Escrow via Smart Contract
+**The "Reward Loop"** - Show pioneers their actual ownership:
 
-Implement VestingContract that:
+1. Display $CSTAKE token balance in wallet
+2. Fetch real-time token price from DEX
+3. Calculate and show USD value
+4. Show portfolio of completed work
+5. Real-time updates
 
-- Locks $CSTAKE tokens when agreement is reached
-- Allows pioneer to confirm work completion
-- Allows admin to release tokens after verification
-- Provides transparent, on-chain record
+**This is the "aha moment"** - seeing liquid, tradeable value from contributions.
 
 ## Minimal-Invasive Strategy
 
-**What we'll do:**
+**What we'll leverage:**
 
-- Write minimal Solidity contract (150 lines)
-- Deploy to testnet first (Base Sepolia)
-- Use ThirdWeb for deployment (no Hardhat setup)
-- Backend service to interact with contract
-- Simple UUID to uint256 conversion
-- Manual admin wallet for foundation
+- ThirdWeb SDK already integrated (read token balance)
+- Existing dashboard structure
+- Existing API patterns
+- Simple caching for price data
+
+**What we'll build:**
+
+- Token balance reading hook
+- DEX price fetching service (Uniswap pool)
+- Price API endpoint with caching
+- WalletModule component
+- Enhanced proposals list
+- Simple portfolio view
 
 **What we'll skip:**
 
-- ❌ Complex Hardhat/Foundry setup (use ThirdWeb)
-- ❌ Extensive test suite (basic tests only)
-- ❌ Gas optimization (premature)
-- ❌ Multi-sig admin (single wallet for MVP)
-- ❌ Pausable functionality (add later if needed)
-- ❌ Upgradeable contracts (deploy new one if needed)
+- ❌ Complex price oracle (use simple DEX query)
+- ❌ Historical price charts (post-MVP)
+- ❌ Portfolio analytics (post-MVP)
+- ❌ Token staking (post-MVP)
+- ❌ Governance voting (post-MVP)
 
-## Critical Decision: Use ThirdWeb for Deployment
+## Critical Decision: Price Data Source
 
-**Why ThirdWeb over Hardhat?**
+**Options:**
 
-- Already integrated in project
-- One-click deployment via dashboard
-- Automatic verification on Basescan
-- No complex tooling setup
-- Can still write custom Solidity
+1. **Uniswap Pool Query** (Recommended for MVP)
 
-**Trade-off:** Less local testing, but faster MVP.
+   - Direct on-chain query
+   - No API dependencies
+   - Free
+   - Simple math (reserves)
 
-## Smart Contract Specification
+2. CoinGecko API
 
-### VestingContract.sol (Simplified)
+   - Requires API key
+   - Rate limits
+   - External dependency
 
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+**Choice:** Uniswap pool query for MVP (upgrade later if needed).
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+## Architecture Overview
 
-contract VestingContract {
-    struct Agreement {
-        address contributor;
-        uint256 amount;
-        bool pioneerConfirmed;
-        bool foundationConfirmed;
-        bool exists;
-    }
-    
-    mapping(uint256 => Agreement) public agreements;
-    
-    IERC20 public immutable cstakeToken;
-    address public foundationWallet;
-    
-    event AgreementCreated(uint256 indexed proposalId, address indexed contributor, uint256 amount);
-    event PioneerConfirmed(uint256 indexed proposalId);
-    event AgreementReleased(uint256 indexed proposalId, address indexed contributor, uint256 amount);
-    
-    constructor(address _cstakeToken, address _foundationWallet) {
-        cstakeToken = IERC20(_cstakeToken);
-        foundationWallet = _foundationWallet;
-    }
-    
-    modifier onlyFoundation() {
-        require(msg.sender == foundationWallet, "Not foundation");
-        _;
-    }
-    
-    function createAgreement(uint256 _proposalId, address _contributor, uint256 _amount) 
-        external 
-        onlyFoundation 
-    {
-        require(!agreements[_proposalId].exists, "Agreement exists");
-        require(_contributor != address(0), "Invalid contributor");
-        require(_amount > 0, "Amount must be > 0");
-        
-        // Pull tokens from foundation into contract
-        require(
-            cstakeToken.transferFrom(msg.sender, address(this), _amount),
-            "Transfer failed"
-        );
-        
-        agreements[_proposalId] = Agreement(_contributor, _amount, false, false, true);
-        emit AgreementCreated(_proposalId, _contributor, _amount);
-    }
-    
-    function confirmWorkDone(uint256 _proposalId) external {
-        Agreement storage agreement = agreements[_proposalId];
-        require(agreement.exists, "No agreement");
-        require(msg.sender == agreement.contributor, "Not contributor");
-        require(!agreement.pioneerConfirmed, "Already confirmed");
-        
-        agreement.pioneerConfirmed = true;
-        emit PioneerConfirmed(_proposalId);
-    }
-    
-    function releaseAgreement(uint256 _proposalId) external onlyFoundation {
-        Agreement storage agreement = agreements[_proposalId];
-        require(agreement.exists, "No agreement");
-        require(agreement.pioneerConfirmed, "Pioneer not confirmed");
-        require(!agreement.foundationConfirmed, "Already released");
-        
-        agreement.foundationConfirmed = true;
-        uint256 amount = agreement.amount;
-        
-        // Release tokens to contributor
-        require(
-            cstakeToken.transfer(agreement.contributor, amount),
-            "Transfer failed"
-        );
-        
-        emit AgreementReleased(_proposalId, agreement.contributor, amount);
-        delete agreements[_proposalId]; // Save gas
-    }
-    
-    function getAgreement(uint256 _proposalId) 
-        external 
-        view 
-        returns (Agreement memory) 
-    {
-        return agreements[_proposalId];
-    }
-}
 ```
-
-**Total: ~100 lines, simple and auditable.**
+Frontend (Dashboard)
+    ↓
+useTokenBalance() hook → ThirdWeb SDK → Read $CSTAKE balance
+    ↓
+useTokenPrice() hook → API /api/token-price
+    ↓
+Price Service → Uniswap Pool Contract → Calculate price
+    ↓
+Cache (60 seconds) → Return price
+    ↓
+Frontend calculates: balance * price = USD value
+```
 
 ## Refined Actionable Tickets
 
-### PHASE-5-TICKET-001: Write VestingContract.sol
+### PHASE-6-TICKET-001: Create Token Balance Reading Hook
 
-**Priority:** P0 | **Time:** 2 hours
+**Priority:** P0 | **Time:** 45 min
 
-**Goal:** Write complete smart contract in Solidity
+**Goal:** Create React hook to read $CSTAKE token balance from user's wallet
 
 **What to Do:**
 
-1. Create `contracts/VestingContract.sol`
-2. Implement complete contract as specified above
-3. Add NatSpec comments for documentation
-4. Ensure compiles with Solidity ^0.8.20
+1. Create `src/hooks/useTokenBalance.ts`
+2. Use ThirdWeb's useReadContract for ERC20 balanceOf
+3. Format balance with decimals
+4. Auto-update on wallet change
+5. Handle loading and error states
 
 **Files to Create:**
 
-- `contracts/VestingContract.sol`
+- `src/hooks/useTokenBalance.ts`
 
 **Definition of Done:**
 
-- [ ] Contract code complete with all functions
-- [ ] Uses OpenZeppelin IERC20
-- [ ] onlyFoundation modifier works
-- [ ] All events defined and emitted
-- [ ] NatSpec documentation added
-- [ ] Compiles without errors (can test on Remix)
-- [ ] No obvious security issues
-
-**Contract Functions:**
-
-- `createAgreement(proposalId, contributor, amount)` - Foundation only
-- `confirmWorkDone(proposalId)` - Contributor only
-- `releaseAgreement(proposalId)` - Foundation only
-- `getAgreement(proposalId)` - View function
-
----
-
-### PHASE-5-TICKET-002: Deploy Mock $CSTAKE Token (Testnet Only)
-
-**Priority:** P0 | **Time:** 30 min
-
-**Goal:** Deploy a simple ERC20 token to Base Sepolia for testing
-
-**What to Do:**
-
-1. Use ThirdWeb dashboard to deploy ERC20 token
-2. Name: "CrowdStaking Test Token"
-3. Symbol: $CSTAKE
-4. Mint 1,000,000 tokens to foundation wallet
-5. Save token address
-
-**Definition of Done:**
-
-- [ ] Token deployed to Base Sepolia
-- [ ] Token address saved in .env
-- [ ] Foundation wallet has 1M tokens
-- [ ] Can view token on Base Sepolia Basescan
-- [ ] Token contract verified
-
-**Alternative:** Use existing testnet token if available.
-
-**Environment Variable:**
-
-```
-CSTAKE_TOKEN_ADDRESS_TESTNET=0x...
-```
-
----
-
-### PHASE-5-TICKET-003: Deploy VestingContract to Testnet
-
-**Priority:** P0 | **Time:** 1 hour
-
-**Goal:** Deploy VestingContract to Base Sepolia using ThirdWeb
-
-**What to Do:**
-
-1. Go to ThirdWeb dashboard
-2. Upload VestingContract.sol
-3. Deploy to Base Sepolia
-4. Constructor params:
-
-   - _cstakeToken: from PHASE-5-TICKET-002
-   - _foundationWallet: admin wallet address
-
-5. Verify contract on Basescan
-6. Save contract address
-
-**Files to Edit:**
-
-- `.env.local` (add contract address)
-- `.env.example` (document)
-
-**Definition of Done:**
-
-- [ ] Contract deployed to Base Sepolia
-- [ ] Contract verified on Basescan
-- [ ] Constructor parameters correct
-- [ ] Can view contract on block explorer
-- [ ] Contract address saved in environment
-- [ ] Foundation wallet approved for token spending
-
-**Environment Variables:**
-
-```
-VESTING_CONTRACT_ADDRESS_TESTNET=0x...
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-```
-
-**Important:** Foundation wallet must approve VestingContract to spend tokens:
-
-```
-CSTAKE.approve(vestingContractAddress, MAX_UINT256)
-```
-
----
-
-### PHASE-5-TICKET-004: Create UUID to uint256 Conversion Utility
-
-**Priority:** P0 | **Time:** 30 min
-
-**Goal:** Convert proposal UUID from database to uint256 for smart contract
-
-**What to Do:**
-
-1. Create `src/lib/contracts/utils.ts`
-2. Implement uuidToUint256() function
-3. Use keccak256 hash of UUID string
-4. Test with sample UUIDs
-5. Ensure deterministic conversion
-
-**Files to Create:**
-
-- `src/lib/contracts/utils.ts`
-
-**Definition of Done:**
-
-- [ ] Function converts UUID string to bigint
-- [ ] Conversion is deterministic (same UUID = same uint256)
-- [ ] Different UUIDs produce different uint256s
-- [ ] Works with ethers.js types
-- [ ] Unit tests pass
-- [ ] TypeScript types correct
+- [ ] Hook reads balance from $CSTAKE token contract
+- [ ] Returns formatted balance (e.g., "1,234.56")
+- [ ] Returns raw balance for calculations
+- [ ] Auto-updates when wallet changes
+- [ ] Loading state while fetching
+- [ ] Error state if fetch fails
+- [ ] Works with testnet token address
 
 **Code Pattern:**
 
 ```typescript
-// src/lib/contracts/utils.ts
-import { keccak256, toUtf8Bytes } from 'ethers'
+// src/hooks/useTokenBalance.ts
+'use client'
+import { useReadContract } from 'thirdweb/react'
+import { getContract } from 'thirdweb'
+import { client } from '@/lib/thirdweb'
+import { baseSepolia } from 'thirdweb/chains'
+import { formatUnits } from 'ethers'
 
-export function uuidToUint256(uuid: string): bigint {
-  // Remove hyphens from UUID
-  const cleanUuid = uuid.replace(/-/g, '')
+const CSTAKE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_CSTAKE_TOKEN_ADDRESS!
+
+export function useTokenBalance(walletAddress?: string) {
+  const contract = getContract({
+    client,
+    chain: baseSepolia,
+    address: CSTAKE_TOKEN_ADDRESS,
+  })
   
-  // Hash the UUID to get uint256
-  const hash = keccak256(toUtf8Bytes(cleanUuid))
+  const { data, isLoading, error } = useReadContract({
+    contract,
+    method: 'function balanceOf(address) returns (uint256)',
+    params: walletAddress ? [walletAddress] : undefined,
+  })
   
-  // Convert hex string to bigint
-  return BigInt(hash)
+  const balance = data ? formatUnits(data, 18) : '0'
+  const balanceFormatted = Number(balance).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  
+  return {
+    balance,
+    balanceFormatted,
+    balanceRaw: data,
+    isLoading,
+    error,
+  }
 }
-
-// Example usage:
-// uuidToUint256('123e4567-e89b-12d3-a456-426614174000')
-// → 12345678901234567890n
 ```
 
 ---
 
-### PHASE-5-TICKET-005: Create Contract Interaction Service
+### PHASE-6-TICKET-002: Create Uniswap Price Fetching Service
 
 **Priority:** P0 | **Time:** 2 hours
 
-**Goal:** Build backend service to interact with VestingContract
+**Goal:** Build backend service to fetch $CSTAKE price from Uniswap pool
 
 **What to Do:**
 
-1. Install ethers.js: `npm install ethers`
-2. Create `src/lib/contracts/vestingService.ts`
-3. Implement createAgreement function
-4. Implement releaseAgreement function
-5. Implement getAgreement function (read-only)
-6. Setup provider and signer
+1. Create `src/lib/price/uniswapService.ts`
+2. Query Uniswap V2/V3 pool for reserves
+3. Calculate price ratio
+4. Handle token decimals
+5. Return price in USD (if paired with USDC)
 
 **Files to Create:**
 
-- `src/lib/contracts/vestingService.ts`
-- `src/lib/contracts/abi.ts` (contract ABI)
+- `src/lib/price/uniswapService.ts`
+- `src/lib/price/cache.ts` (in-memory cache)
 
 **Definition of Done:**
 
-- [ ] ethers.js installed
-- [ ] Contract ABI extracted and imported
-- [ ] Can call createAgreement from backend
-- [ ] Can call releaseAgreement from backend
-- [ ] Can read agreement data
-- [ ] Foundation wallet private key securely loaded
-- [ ] Error handling for failed transactions
-- [ ] Gas estimation working
+- [ ] Can query Uniswap pool contract
+- [ ] Calculates price from reserves
+- [ ] Handles 18-decimal tokens
+- [ ] Returns price as number (e.g., 1.23)
+- [ ] Error handling for missing pool
+- [ ] Falls back to 0 if pool doesn't exist yet
+- [ ] Works on testnet
 
 **Code Pattern:**
 
 ```typescript
-// src/lib/contracts/vestingService.ts
+// src/lib/price/uniswapService.ts
 import { ethers } from 'ethers'
-import { VESTING_ABI } from './abi'
-import { uuidToUint256 } from './utils'
 
 const RPC_URL = process.env.BASE_SEPOLIA_RPC_URL!
-const CONTRACT_ADDRESS = process.env.VESTING_CONTRACT_ADDRESS_TESTNET!
-const FOUNDATION_PRIVATE_KEY = process.env.FOUNDATION_WALLET_PRIVATE_KEY!
+const UNISWAP_POOL_ADDRESS = process.env.CSTAKE_UNISWAP_POOL_ADDRESS
 
-export class VestingService {
+// Uniswap V2 Pool ABI (minimal)
+const POOL_ABI = [
+  'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
+  'function token0() external view returns (address)',
+  'function token1() external view returns (address)',
+]
+
+export class UniswapPriceService {
   private provider: ethers.JsonRpcProvider
-  private signer: ethers.Wallet
-  private contract: ethers.Contract
   
   constructor() {
     this.provider = new ethers.JsonRpcProvider(RPC_URL)
-    this.signer = new ethers.Wallet(FOUNDATION_PRIVATE_KEY, this.provider)
-    this.contract = new ethers.Contract(
-      CONTRACT_ADDRESS,
-      VESTING_ABI,
-      this.signer
-    )
   }
   
-  async createAgreement(
-    proposalId: string,
-    contributorAddress: string,
-    amount: bigint
-  ): Promise<string> {
+  async getPrice(): Promise<number> {
     try {
-      const proposalIdUint = uuidToUint256(proposalId)
+      if (!UNISWAP_POOL_ADDRESS) {
+        console.warn('No Uniswap pool configured, returning 0')
+        return 0
+      }
       
-      // Call contract function
-      const tx = await this.contract.createAgreement(
-        proposalIdUint,
-        contributorAddress,
-        amount
+      const poolContract = new ethers.Contract(
+        UNISWAP_POOL_ADDRESS,
+        POOL_ABI,
+        this.provider
       )
       
-      // Wait for confirmation
-      const receipt = await tx.wait()
+      // Get reserves
+      const reserves = await poolContract.getReserves()
+      const reserve0 = reserves.reserve0
+      const reserve1 = reserves.reserve1
       
-      return receipt.hash
+      // Get token addresses to determine order
+      const token0 = await poolContract.token0()
+      const token1 = await poolContract.token1()
+      
+      // Assume token0 is $CSTAKE, token1 is USDC
+      // If reversed, adjust calculation
+      const cstakeTokenAddress = process.env.CSTAKE_TOKEN_ADDRESS_TESTNET!
+      
+      let price: number
+      if (token0.toLowerCase() === cstakeTokenAddress.toLowerCase()) {
+        // $CSTAKE is token0, USDC is token1
+        // Price = reserve1 / reserve0
+        price = Number(reserve1) / Number(reserve0)
+      } else {
+        // $CSTAKE is token1, USDC is token0
+        // Price = reserve0 / reserve1
+        price = Number(reserve0) / Number(reserve1)
+      }
+      
+      // Adjust for decimals (both 18 decimals, so ratio is correct)
+      // If USDC is 6 decimals, divide by 1e12
+      
+      return price
     } catch (error) {
-      console.error('Create agreement failed:', error)
-      throw error
+      console.error('Failed to fetch price from Uniswap:', error)
+      return 0
     }
-  }
-  
-  async releaseAgreement(proposalId: string): Promise<string> {
-    try {
-      const proposalIdUint = uuidToUint256(proposalId)
-      
-      const tx = await this.contract.releaseAgreement(proposalIdUint)
-      const receipt = await tx.wait()
-      
-      return receipt.hash
-    } catch (error) {
-      console.error('Release agreement failed:', error)
-      throw error
-    }
-  }
-  
-  async getAgreement(proposalId: string) {
-    const proposalIdUint = uuidToUint256(proposalId)
-    return await this.contract.getAgreement(proposalIdUint)
   }
 }
 
-// Singleton instance
-export const vestingService = new VestingService()
+export const uniswapPriceService = new UniswapPriceService()
+```
+```typescript
+// src/lib/price/cache.ts
+interface CachedPrice {
+  price: number
+  timestamp: number
+}
+
+let cache: CachedPrice | null = null
+const CACHE_DURATION = 60000 // 60 seconds
+
+export function getCachedPrice(): number | null {
+  if (!cache) return null
+  
+  const now = Date.now()
+  if (now - cache.timestamp > CACHE_DURATION) {
+    cache = null
+    return null
+  }
+  
+  return cache.price
+}
+
+export function setCachedPrice(price: number): void {
+  cache = {
+    price,
+    timestamp: Date.now(),
+  }
+}
 ```
 
 ---
 
-### PHASE-5-TICKET-006: Add Contract Fields to Proposals Table
+### PHASE-6-TICKET-003: API Endpoint - GET /api/token-price
 
-**Priority:** P1 | **Time:** 20 min
+**Priority:** P0 | **Time:** 30 min
 
-**Goal:** Track contract interaction data in database
+**Goal:** Create public API endpoint to serve cached token price
 
 **What to Do:**
 
-1. Add migration for new fields
-2. Add columns:
+1. Create `src/app/api/token-price/route.ts`
+2. Check cache first
+3. Fetch from Uniswap if cache miss
+4. Return price with timestamp
+5. Set cache for next request
 
-   - `contract_agreement_tx` - Transaction hash for createAgreement
-   - `contract_release_tx` - Transaction hash for releaseAgreement
-   - `pioneer_confirmed_at` - Timestamp when pioneer confirmed
+**Files to Create:**
 
-3. Update Proposal TypeScript type
-
-**Migration SQL:**
-
-```sql
-ALTER TABLE proposals
-  ADD COLUMN contract_agreement_tx TEXT,
-  ADD COLUMN contract_release_tx TEXT,
-  ADD COLUMN pioneer_confirmed_at TIMESTAMPTZ;
-```
+- `src/app/api/token-price/route.ts`
 
 **Definition of Done:**
 
-- [ ] Migration applied
-- [ ] New columns exist
-- [ ] Proposal type updated
-- [ ] No breaking changes
+- [ ] GET `/api/token-price` endpoint works
+- [ ] No authentication required (public)
+- [ ] Returns cached price if available
+- [ ] Fetches new price if cache expired
+- [ ] Response includes price, currency, timestamp
+- [ ] Error handling returns 0 price
+- [ ] Response time < 500ms (due to cache)
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/token-price/route.ts
+import { NextResponse } from 'next/server'
+import { uniswapPriceService } from '@/lib/price/uniswapService'
+import { getCachedPrice, setCachedPrice } from '@/lib/price/cache'
+
+export async function GET() {
+  try {
+    // Check cache first
+    let price = getCachedPrice()
+    
+    if (price === null) {
+      // Cache miss, fetch from Uniswap
+      price = await uniswapPriceService.getPrice()
+      setCachedPrice(price)
+    }
+    
+    return NextResponse.json({
+      success: true,
+      price,
+      currency: 'USD',
+      timestamp: new Date().toISOString(),
+    })
+  } catch (error) {
+    console.error('Token price fetch failed:', error)
+    return NextResponse.json({
+      success: false,
+      price: 0,
+      currency: 'USD',
+      error: 'Failed to fetch price',
+    }, { status: 500 })
+  }
+}
+
+// Optional: Add revalidate for Next.js caching
+export const revalidate = 60 // Revalidate every 60 seconds
+```
 
 ---
 
-### PHASE-5-TICKET-007: API Endpoint - Create Agreement (Auto-trigger)
+### PHASE-6-TICKET-004: Create Token Price Hook
 
-**Priority:** P0 | **Time:** 1 hour
+**Priority:** P0 | **Time:** 30 min
 
-**Goal:** Automatically create smart contract agreement when proposal is accepted by pioneer
+**Goal:** Create React hook to fetch and cache token price on frontend
 
 **What to Do:**
 
-1. Update `src/app/api/proposals/respond/[id]/route.ts`
-2. When pioneer accepts (status → 'accepted'), trigger contract creation
-3. Call vestingService.createAgreement()
-4. Save transaction hash to database
-5. Update proposal status to 'work_in_progress'
+1. Create `src/hooks/useTokenPrice.ts`
+2. Fetch from /api/token-price
+3. Use React Query for caching and auto-refresh
+4. Handle loading and error states
+
+**Files to Create:**
+
+- `src/hooks/useTokenPrice.ts`
+
+**Definition of Done:**
+
+- [ ] Hook fetches price from API
+- [ ] Returns price as number
+- [ ] Caches for 60 seconds
+- [ ] Auto-refetches on window focus
+- [ ] Loading state
+- [ ] Error state
+- [ ] Can manually refetch
+
+**Code Pattern:**
+
+```typescript
+// src/hooks/useTokenPrice.ts
+'use client'
+import { useQuery } from '@tanstack/react-query'
+
+interface TokenPriceResponse {
+  success: boolean
+  price: number
+  currency: string
+  timestamp: string
+}
+
+export function useTokenPrice() {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['tokenPrice'],
+    queryFn: async () => {
+      const response = await fetch('/api/token-price')
+      const data: TokenPriceResponse = await response.json()
+      return data
+    },
+    staleTime: 60000, // Consider data fresh for 60 seconds
+    refetchInterval: 60000, // Auto-refetch every 60 seconds
+    refetchOnWindowFocus: true,
+  })
+  
+  return {
+    price: data?.price ?? 0,
+    currency: data?.currency ?? 'USD',
+    isLoading,
+    error,
+    refetch,
+  }
+}
+```
+
+---
+
+### PHASE-6-TICKET-005: Install React Query
+
+**Priority:** P0 | **Time:** 15 min
+
+**Goal:** Install and configure React Query for data fetching
+
+**What to Do:**
+
+1. Install @tanstack/react-query
+2. Add QueryClientProvider to app providers
+3. Configure default options
+4. Add devtools (optional)
+
+**Commands:**
+
+```bash
+npm install @tanstack/react-query
+npm install --save-dev @tanstack/react-query-devtools
+```
 
 **Files to Edit:**
 
-- `src/app/api/proposals/respond/[id]/route.ts`
+- `src/app/providers.tsx`
+- `package.json`
 
 **Definition of Done:**
 
-- [ ] When pioneer accepts, contract is called
-- [ ] Agreement created on blockchain
-- [ ] Transaction hash saved to DB
-- [ ] Status updated to 'work_in_progress'
-- [ ] Error handling if contract call fails
-- [ ] Pioneer sees success message
-- [ ] Can view transaction on Basescan
+- [ ] React Query installed
+- [ ] QueryClientProvider wraps app
+- [ ] Default options configured
+- [ ] Devtools available in dev mode
+- [ ] No TypeScript errors
 
 **Code Pattern:**
 
 ```typescript
-// In respond/[id]/route.ts (UPDATE)
-import { vestingService } from '@/lib/contracts/vestingService'
+// src/app/providers.tsx (UPDATE)
+'use client'
+import { ThirdwebProvider } from 'thirdweb/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+import { useState } from 'react'
 
-// After pioneer accepts
-if (action === 'accept' && ['counter_offer_pending', 'approved'].includes(proposal.status)) {
-  try {
-    // Determine agreed amount
-    const agreedAmount = proposal.foundation_offer_cstake_amount 
-      || proposal.requested_cstake_amount
-    
-    // Create agreement on blockchain
-    const txHash = await vestingService.createAgreement(
-      proposal.id,
-      proposal.creator_wallet_address,
-      BigInt(agreedAmount * 1e18) // Convert to wei (assuming 18 decimals)
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60000, // 60 seconds
+        refetchOnWindowFocus: true,
+      },
+    },
+  }))
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThirdwebProvider>
+        {children}
+        {process.env.NODE_ENV === 'development' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
+      </ThirdwebProvider>
+    </QueryClientProvider>
+  )
+}
+```
+
+---
+
+### PHASE-6-TICKET-006: Create WalletModule Component
+
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Build component showing balance, price, and USD value
+
+**What to Do:**
+
+1. Create `src/components/dashboard/WalletModule.tsx`
+2. Use useTokenBalance hook
+3. Use useTokenPrice hook
+4. Calculate USD value (balance * price)
+5. Display all three values beautifully
+6. Add loading states
+
+**Files to Create:**
+
+- `src/components/dashboard/WalletModule.tsx`
+
+**Definition of Done:**
+
+- [ ] Component displays $CSTAKE balance
+- [ ] Component displays current price
+- [ ] Component displays USD value
+- [ ] Formatted numbers with commas and decimals
+- [ ] Loading skeletons while fetching
+- [ ] Error states if fetch fails
+- [ ] Styled with design system
+- [ ] Mobile responsive
+
+**Code Pattern:**
+
+```typescript
+// src/components/dashboard/WalletModule.tsx
+'use client'
+import { useActiveAccount } from 'thirdweb/react'
+import { useTokenBalance } from '@/hooks/useTokenBalance'
+import { useTokenPrice } from '@/hooks/useTokenPrice'
+
+export function WalletModule() {
+  const account = useActiveAccount()
+  const { balanceFormatted, balance, isLoading: balanceLoading } = useTokenBalance(account?.address)
+  const { price, isLoading: priceLoading } = useTokenPrice()
+  
+  const usdValue = Number(balance) * price
+  const usdValueFormatted = usdValue.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  
+  if (!account) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <p className="text-gray-600">Connect wallet to view balance</p>
+      </div>
     )
-    
-    // Update DB with transaction and new status
-    const { data: updated, error } = await supabase
-      .from('proposals')
-      .update({
-        status: 'work_in_progress',
-        contract_agreement_tx: txHash,
-      })
-      .eq('id', params.id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    
-    return jsonResponse({ 
-      success: true, 
-      proposal: updated,
-      message: 'Agreement created on blockchain. You can now start work!'
-    })
-  } catch (error) {
-    // Revert status if contract fails
-    return errorResponse('Failed to create blockchain agreement', 500)
   }
+  
+  return (
+    <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+      <h3 className="text-sm font-semibold opacity-90 mb-4">Your Wallet</h3>
+      
+      <div className="space-y-4">
+        {/* Balance */}
+        <div>
+          <p className="text-sm opacity-75 mb-1">$CSTAKE Balance</p>
+          {balanceLoading ? (
+            <div className="h-8 bg-white/20 rounded animate-pulse" />
+          ) : (
+            <p className="text-3xl font-bold">{balanceFormatted}</p>
+          )}
+        </div>
+        
+        {/* Price */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm opacity-75 mb-1">Current Price</p>
+            {priceLoading ? (
+              <div className="h-6 w-20 bg-white/20 rounded animate-pulse" />
+            ) : (
+              <p className="text-lg font-semibold">
+                ${price.toFixed(4)}
+              </p>
+            )}
+          </div>
+          
+          <div className="text-right">
+            <p className="text-sm opacity-75 mb-1">Total Value</p>
+            {balanceLoading || priceLoading ? (
+              <div className="h-6 w-24 bg-white/20 rounded animate-pulse ml-auto" />
+            ) : (
+              <p className="text-lg font-semibold">{usdValueFormatted}</p>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Additional Info */}
+      <div className="mt-4 pt-4 border-t border-white/20">
+        <p className="text-xs opacity-75">
+          Price updates every 60 seconds from Uniswap
+        </p>
+      </div>
+    </div>
+  )
 }
 ```
 
 ---
 
-### PHASE-5-TICKET-008: API Endpoint - Confirm Work (Pioneer)
+### PHASE-6-TICKET-007: Enhanced Proposals List Component
 
-**Priority:** P0 | **Time:** 45 min
+**Priority:** P1 | **Time:** 45 min
 
-**Goal:** Allow pioneer to confirm work completion via smart contract
+**Goal:** Enhance proposals list to show earned amounts and status
 
 **What to Do:**
 
-1. Create `src/app/api/contracts/confirm-work/[id]/route.ts`
-2. Verify proposal is in 'work_in_progress' status
-3. Verify caller is contributor
-4. Call contract confirmWorkDone from pioneer's wallet
-5. Update DB with confirmation timestamp
+1. Update `src/components/dashboard/ProposalsModule.tsx` (or create)
+2. Show all user proposals with status
+3. Highlight completed proposals with earned amount
+4. Show pending, in-progress, rejected states
+5. Add filters (optional)
 
-**Files to Create:**
+**Files to Create/Edit:**
 
-- `src/app/api/contracts/confirm-work/[id]/route.ts`
+- `src/components/dashboard/ProposalsModule.tsx`
 
 **Definition of Done:**
 
-- [ ] POST endpoint works
-- [ ] Requires pioneer authentication
-- [ ] Only works if status is 'work_in_progress'
-- [ ] Calls smart contract function
-- [ ] Updates pioneer_confirmed_at timestamp
-- [ ] Returns success with transaction hash
-- [ ] Error handling
-
-**Note:** Pioneer must sign transaction themselves (not foundation wallet).
+- [ ] Component displays all user proposals
+- [ ] Shows title, status, amount
+- [ ] Completed proposals highlighted in green
+- [ ] Shows earned amount for completed
+- [ ] Shows requested amount for pending
+- [ ] Color-coded status badges
+- [ ] Click to view details
+- [ ] Empty state if no proposals
 
 **Code Pattern:**
 
 ```typescript
-// src/app/api/contracts/confirm-work/[id]/route.ts
-import { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { jsonResponse, errorResponse } from '@/lib/api'
-import { requireAuth } from '@/lib/auth'
+// src/components/dashboard/ProposalsModule.tsx
+'use client'
+import { useEffect, useState } from 'react'
+import type { Proposal } from '@/types/proposal'
+import Link from 'next/link'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const wallet = requireAuth(request)
-    
-    // Get proposal
-    const { data: proposal, error: fetchError } = await supabase
-      .from('proposals')
-      .select('*')
-      .eq('id', params.id)
-      .single()
-    
-    if (fetchError || !proposal) {
-      return errorResponse('Proposal not found', 404)
+export function ProposalsModule() {
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    fetchProposals()
+  }, [])
+  
+  const fetchProposals = async () => {
+    try {
+      const response = await fetch('/api/proposals/me')
+      const { proposals } = await response.json()
+      setProposals(proposals)
+    } catch (error) {
+      console.error('Failed to fetch proposals:', error)
+    } finally {
+      setLoading(false)
     }
-    
-    // Verify caller is creator
-    if (proposal.creator_wallet_address.toLowerCase() !== wallet.toLowerCase()) {
-      return errorResponse('Forbidden', 403)
-    }
-    
-    // Verify status
-    if (proposal.status !== 'work_in_progress') {
-      return errorResponse('Work not in progress', 400)
-    }
-    
-    // TODO: Call contract from FRONTEND (pioneer signs transaction)
-    // For now, just update timestamp
-    // Real implementation needs frontend to call contract directly
-    
-    const { data: updated, error } = await supabase
-      .from('proposals')
-      .update({
-        pioneer_confirmed_at: new Date().toISOString(),
-      })
-      .eq('id', params.id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    
-    return jsonResponse({ 
-      success: true, 
-      proposal: updated,
-      message: 'Work confirmation recorded. Awaiting admin approval.'
-    })
-  } catch (error) {
-    return errorResponse(error.message, 500)
   }
+  
+  const completedProposals = proposals.filter(p => p.status === 'completed')
+  const totalEarned = completedProposals.reduce((sum, p) => 
+    sum + (p.foundation_offer_cstake_amount || p.requested_cstake_amount), 
+    0
+  )
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-xl font-bold">My Contributions</h3>
+        {completedProposals.length > 0 && (
+          <div className="text-right">
+            <p className="text-sm text-gray-600">Total Earned</p>
+            <p className="text-lg font-bold text-green-600">
+              {totalEarned.toLocaleString()} $CSTAKE
+            </p>
+          </div>
+        )}
+      </div>
+      
+      {loading ? (
+        <p>Loading proposals...</p>
+      ) : proposals.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">No proposals yet</p>
+          <Link
+            href="/dashboard/propose"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
+          >
+            Submit Your First Proposal
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {proposals.map(proposal => (
+            <ProposalCard key={proposal.id} proposal={proposal} />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProposalCard({ proposal }: { proposal: Proposal }) {
+  const statusColors = {
+    pending_review: 'bg-yellow-100 text-yellow-800',
+    counter_offer_pending: 'bg-blue-100 text-blue-800',
+    approved: 'bg-green-100 text-green-800',
+    accepted: 'bg-green-100 text-green-800',
+    work_in_progress: 'bg-purple-100 text-purple-800',
+    completed: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+  }
+  
+  const amount = proposal.status === 'completed' 
+    ? (proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount)
+    : proposal.requested_cstake_amount
+  
+  return (
+    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          <h4 className="font-semibold">{proposal.title}</h4>
+          <p className="text-sm text-gray-600 mt-1">
+            {amount.toLocaleString()} $CSTAKE
+          </p>
+        </div>
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[proposal.status]}`}>
+          {proposal.status.replace('_', ' ')}
+        </span>
+      </div>
+      
+      {proposal.status === 'completed' && proposal.contract_release_tx && (
+        <a
+          href={`https://sepolia.basescan.org/tx/${proposal.contract_release_tx}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+        >
+          View transaction →
+        </a>
+      )}
+    </div>
+  )
 }
 ```
 
 ---
 
-### PHASE-5-TICKET-009: API Endpoint - Release Agreement (Admin)
+### PHASE-6-TICKET-008: Integrate Components into Dashboard
 
-**Priority:** P0 | **Time:** 45 min
+**Priority:** P0 | **Time:** 30 min
 
-**Goal:** Allow admin to release tokens after verifying work
-
-**What to Do:**
-
-1. Create `src/app/api/contracts/release-agreement/[id]/route.ts`
-2. Verify admin authentication
-3. Verify pioneer has confirmed work
-4. Call vestingService.releaseAgreement()
-5. Update status to 'completed'
-6. Save release transaction hash
-
-**Files to Create:**
-
-- `src/app/api/contracts/release-agreement/[id]/route.ts`
-
-**Definition of Done:**
-
-- [ ] POST endpoint works
-- [ ] Requires admin authentication
-- [ ] Verifies pioneer confirmed work first
-- [ ] Calls smart contract releaseAgreement
-- [ ] Updates status to 'completed'
-- [ ] Saves transaction hash
-- [ ] Returns success
-- [ ] Error handling
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/contracts/release-agreement/[id]/route.ts
-import { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { jsonResponse, errorResponse } from '@/lib/api'
-import { requireAdmin } from '@/lib/auth/admin'
-import { vestingService } from '@/lib/contracts/vestingService'
-
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    requireAdmin(request)
-    
-    // Get proposal
-    const { data: proposal, error: fetchError } = await supabase
-      .from('proposals')
-      .select('*')
-      .eq('id', params.id)
-      .single()
-    
-    if (fetchError || !proposal) {
-      return errorResponse('Proposal not found', 404)
-    }
-    
-    // Verify work is in progress and pioneer confirmed
-    if (proposal.status !== 'work_in_progress') {
-      return errorResponse('Proposal not in progress', 400)
-    }
-    
-    if (!proposal.pioneer_confirmed_at) {
-      return errorResponse('Pioneer has not confirmed work completion', 400)
-    }
-    
-    // Release tokens via smart contract
-    const txHash = await vestingService.releaseAgreement(proposal.id)
-    
-    // Update DB
-    const { data: updated, error } = await supabase
-      .from('proposals')
-      .update({
-        status: 'completed',
-        contract_release_tx: txHash,
-      })
-      .eq('id', params.id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    
-    return jsonResponse({ 
-      success: true, 
-      proposal: updated,
-      txHash,
-      message: 'Tokens released to contributor!'
-    })
-  } catch (error) {
-    return errorResponse(error.message, 500)
-  }
-}
-```
-
----
-
-### PHASE-5-TICKET-010: Frontend - Confirm Work Button
-
-**Priority:** P1 | **Time:** 30 min
-
-**Goal:** Add UI for pioneer to confirm work completion
+**Goal:** Add WalletModule and ProposalsModule to cofounder dashboard
 
 **What to Do:**
 
-1. Update cofounder dashboard
-2. Show "Confirm Work Done" button for work_in_progress proposals
-3. Call /api/contracts/confirm-work endpoint
-4. Show success/error feedback
+1. Update `src/app/cofounder-dashboard/page.tsx`
+2. Add WalletModule at top
+3. Add ProposalsModule below
+4. Adjust layout for better presentation
+5. Ensure responsive
 
 **Files to Edit:**
 
@@ -760,172 +786,299 @@ export async function POST(
 
 **Definition of Done:**
 
-- [ ] Button visible for work_in_progress proposals
-- [ ] Button calls confirm-work API
-- [ ] Shows loading state
-- [ ] Shows success message
-- [ ] Shows error if fails
-- [ ] Updates UI after confirmation
+- [ ] WalletModule visible at top of dashboard
+- [ ] ProposalsModule visible below wallet
+- [ ] Both components load data correctly
+- [ ] Layout is clean and organized
+- [ ] Mobile responsive
+- [ ] Loading states work
+- [ ] Auth protection still active
+
+**Code Pattern:**
+
+```typescript
+// src/app/cofounder-dashboard/page.tsx (UPDATE)
+import { WalletModule } from '@/components/dashboard/WalletModule'
+import { ProposalsModule } from '@/components/dashboard/ProposalsModule'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { Layout } from '@/components/Layout'
+
+export default function CofounderDashboardPage() {
+  return (
+    <Layout>
+      <ProtectedRoute>
+        <div className="max-w-7xl mx-auto py-8 px-4">
+          <h1 className="text-4xl font-bold mb-8">Co-Founder Dashboard</h1>
+          
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Wallet Module - Takes 1 column */}
+            <div className="lg:col-span-1">
+              <WalletModule />
+            </div>
+            
+            {/* Proposals Module - Takes 2 columns */}
+            <div className="lg:col-span-2">
+              <ProposalsModule />
+            </div>
+          </div>
+          
+          {/* Additional sections can go here */}
+        </div>
+      </ProtectedRoute>
+    </Layout>
+  )
+}
+```
+
+---
+
+### PHASE-6-TICKET-009: Add Environment Variables Documentation
+
+**Priority:** P2 | **Time:** 15 min
+
+**Goal:** Document all new environment variables needed for Phase 6
+
+**What to Do:**
+
+1. Update `.env.example`
+2. Document each variable
+3. Add to README if needed
+
+**Files to Edit:**
+
+- `.env.example`
+- `README.md` (optional)
+
+**Definition of Done:**
+
+- [ ] All Phase 6 variables in .env.example
+- [ ] Clear descriptions for each
+- [ ] Example values provided
+- [ ] Links to where to get values
+
+**Environment Variables:**
+
+```bash
+# Token Configuration
+NEXT_PUBLIC_CSTAKE_TOKEN_ADDRESS=0x... # $CSTAKE token contract address
+CSTAKE_UNISWAP_POOL_ADDRESS=0x... # Uniswap V2 pool address (optional)
+
+# Already from Phase 5
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+```
+
+---
+
+### PHASE-6-TICKET-010: Create Simple Portfolio View
+
+**Priority:** P2 | **Time:** 1 hour
+
+**Goal:** Add basic portfolio statistics and completed work showcase
+
+**What to Do:**
+
+1. Create `src/components/dashboard/PortfolioStats.tsx`
+2. Show stats: Total earned, completed projects, success rate
+3. Show list of completed work with links
+4. Simple charts (optional - use recharts if already installed)
+
+**Files to Create:**
+
+- `src/components/dashboard/PortfolioStats.tsx`
+
+**Definition of Done:**
+
+- [ ] Component shows key statistics
+- [ ] Total $CSTAKE earned
+- [ ] Number of completed proposals
+- [ ] Success rate (accepted/total)
+- [ ] List of completed work
+- [ ] Links to transaction receipts
+- [ ] Styled consistently
 - [ ] Mobile responsive
 
 **Code Pattern:**
 
 ```typescript
-// In cofounder-dashboard/page.tsx
-{proposal.status === 'work_in_progress' && !proposal.pioneer_confirmed_at && (
-  <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded p-4">
-    <p className="font-semibold mb-2">Work in Progress</p>
-    <p className="text-sm mb-3">
-      Have you completed the work? Mark it as done to request review.
-    </p>
-    <button
-      onClick={() => handleConfirmWork(proposal.id)}
-      className="bg-green-600 text-white px-6 py-2 rounded-lg"
-    >
-      ✅ Mark Work as Complete
-    </button>
-  </div>
-)}
+// src/components/dashboard/PortfolioStats.tsx
+'use client'
+import { useEffect, useState } from 'react'
+import type { Proposal } from '@/types/proposal'
 
-{proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
-  <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
-    <p className="font-semibold">⏳ Awaiting Admin Review</p>
-    <p className="text-sm text-gray-600">
-      You marked this work as complete. The foundation will review and release tokens.
-    </p>
-  </div>
-)}
+export function PortfolioStats() {
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  
+  useEffect(() => {
+    fetchProposals()
+  }, [])
+  
+  const fetchProposals = async () => {
+    const response = await fetch('/api/proposals/me')
+    const { proposals } = await response.json()
+    setProposals(proposals)
+  }
+  
+  const completed = proposals.filter(p => p.status === 'completed')
+  const rejected = proposals.filter(p => p.status === 'rejected')
+  const total = proposals.length
+  
+  const successRate = total > 0 ? (completed.length / total * 100).toFixed(1) : 0
+  
+  const totalEarned = completed.reduce((sum, p) => 
+    sum + (p.foundation_offer_cstake_amount || p.requested_cstake_amount), 
+    0
+  )
+  
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+      <h3 className="text-xl font-bold mb-6">Portfolio Overview</h3>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <StatCard label="Total Earned" value={`${totalEarned.toLocaleString()} $CSTAKE`} />
+        <StatCard label="Completed" value={completed.length.toString()} />
+        <StatCard label="Success Rate" value={`${successRate}%`} />
+        <StatCard label="Total Proposals" value={total.toString()} />
+      </div>
+      
+      {completed.length > 0 && (
+        <div>
+          <h4 className="font-semibold mb-3">Completed Work</h4>
+          <div className="space-y-2">
+            {completed.map(proposal => (
+              <div key={proposal.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <span className="font-medium">{proposal.title}</span>
+                <span className="text-green-600 font-semibold">
+                  +{(proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount).toLocaleString()} $CSTAKE
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{label}</p>
+    </div>
+  )
+}
 ```
 
 ---
 
-### PHASE-5-TICKET-011: Frontend - Admin Release Tokens Button
+### PHASE-6-TICKET-011: Add Real-Time Balance Updates
 
-**Priority:** P1 | **Time:** 30 min
+**Priority:** P2 | **Time:** 30 min
 
-**Goal:** Add UI for admin to release tokens after verifying work
+**Goal:** Ensure balance updates immediately after token release
 
 **What to Do:**
 
-1. Update admin proposal detail page
-2. Show "Release Tokens" button if pioneer confirmed work
-3. Call /api/contracts/release-agreement endpoint
-4. Show transaction hash
-5. Link to Basescan
+1. Add refetch triggers in proposal response handlers
+2. Use React Query invalidation
+3. Show toast notification when tokens received
+4. Celebrate completed work with animation
 
 **Files to Edit:**
 
-- `src/app/admin/proposals/[id]/page.tsx`
+- `src/app/cofounder-dashboard/page.tsx`
+- `src/hooks/useTokenBalance.ts`
 
 **Definition of Done:**
 
-- [ ] Button visible when pioneer confirmed work
-- [ ] Button calls release-agreement API
-- [ ] Shows loading state during blockchain transaction
-- [ ] Shows success with transaction hash
-- [ ] Links to Basescan to view transaction
-- [ ] Shows error if fails
-- [ ] Updates proposal status after release
+- [ ] Balance refetches after work completion
+- [ ] Toast notification on token receipt
+- [ ] Smooth number animation (optional)
+- [ ] No page refresh needed
+- [ ] Works reliably
 
 **Code Pattern:**
 
 ```typescript
-// In admin proposal detail
-{proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
-  <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
-    <p className="font-semibold mb-2">✅ Pioneer Confirmed Work Complete</p>
-    <p className="text-sm text-gray-600 mb-4">
-      Confirmed at: {new Date(proposal.pioneer_confirmed_at).toLocaleString()}
-    </p>
-    <button
-      onClick={() => handleReleaseTokens(proposal.id)}
-      disabled={releasing}
-      className="bg-green-600 text-white px-6 py-3 rounded-lg disabled:opacity-50"
-    >
-      {releasing ? 'Releasing Tokens...' : '💰 Release Tokens to Contributor'}
-    </button>
-  </div>
-)}
+// In dashboard, after admin releases tokens
+import { useQueryClient } from '@tanstack/react-query'
 
-{proposal.status === 'completed' && (
-  <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
-    <p className="font-semibold mb-2">✅ Completed</p>
-    <p className="text-sm text-gray-600 mb-2">
-      Tokens released successfully!
-    </p>
-    {proposal.contract_release_tx && (
-      <a
-        href={`https://sepolia.basescan.org/tx/${proposal.contract_release_tx}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:underline text-sm"
-      >
-        View transaction on Basescan →
-      </a>
-    )}
-  </div>
-)}
+const queryClient = useQueryClient()
+
+const handleRefresh = () => {
+  // Invalidate balance and proposals queries
+  queryClient.invalidateQueries({ queryKey: ['tokenBalance'] })
+  queryClient.invalidateQueries({ queryKey: ['proposals'] })
+}
+
+// Call handleRefresh when detecting status change to 'completed'
+// Or setup polling for proposals with work_in_progress status
 ```
 
 ---
 
-### PHASE-5-TICKET-012: E2E Integration Test - Complete Lifecycle
+### PHASE-6-TICKET-012: E2E Test - Complete User Journey
 
-**Priority:** P0 | **Time:** 1 hour
+**Priority:** P0 | **Time:** 45 min
 
-**Goal:** Test complete proposal lifecycle including smart contract interactions
+**Goal:** Test complete co-founder experience from onboarding to earning
 
 **What to Do:**
 
-1. Test full flow from proposal to token release
-2. Verify blockchain state matches DB state
-3. Check token balances before/after
-4. Test error cases
-5. Verify all transaction hashes valid
+1. Test full user journey as co-founder
+2. Verify all dashboard features work
+3. Check balance updates correctly
+4. Verify price fetching works
+5. Test on mobile
 
 **Definition of Done:**
 
-- [ ] Can submit and accept proposal
-- [ ] Agreement created on blockchain
-- [ ] Can confirm work as pioneer
-- [ ] Can release tokens as admin
-- [ ] Tokens transferred to pioneer wallet
-- [ ] All transaction hashes valid
-- [ ] All statuses update correctly
-- [ ] Can view transactions on Basescan
-- [ ] Error handling works
-- [ ] Mobile UI tested
+- [ ] Can view empty dashboard (0 balance)
+- [ ] Can submit proposal
+- [ ] Can accept admin offer
+- [ ] Work status shows correctly
+- [ ] Can confirm work complete
+- [ ] Balance increases after admin releases
+- [ ] USD value calculates correctly
+- [ ] Portfolio stats update
+- [ ] All numbers format correctly
+- [ ] Mobile responsive
 
 **Test Checklist:**
 
 ```
-Setup:
-✓ Foundation wallet has $CSTAKE tokens
-✓ Foundation wallet approved VestingContract
+Initial State:
+✓ Dashboard shows 0 $CSTAKE balance
+✓ Price displays correctly
+✓ USD value is $0.00
 
-Full Lifecycle:
-✓ Pioneer submits proposal
-✓ Admin accepts proposal
+Submit & Accept Proposal:
+✓ Submit proposal for 1000 $CSTAKE
+✓ Admin accepts
 ✓ Pioneer accepts (triggers contract)
-✓ Check Basescan: createAgreement transaction
-✓ Verify agreement exists in contract
-✓ Pioneer confirms work done
-✓ Admin clicks "Release Tokens"
-✓ Check Basescan: releaseAgreement transaction
-✓ Verify tokens received in pioneer wallet
-✓ Verify proposal status = 'completed'
+✓ Status shows "work_in_progress"
 
-Token Balances:
-✓ Check pioneer balance before (0 $CSTAKE)
-✓ Check pioneer balance after (agreed amount)
-✓ Check contract balance = 0 after release
+Complete Work:
+✓ Click "Mark Work Complete"
+✓ Confirmation saved
+✓ Admin sees confirmation
+✓ Admin releases tokens
+✓ Balance updates to 1000 $CSTAKE
+✓ USD value updates (1000 * price)
+✓ Portfolio shows 1 completed project
+✓ Total earned shows 1000 $CSTAKE
+
+Multiple Proposals:
+✓ Submit second proposal
+✓ Complete cycle again
+✓ Balance shows cumulative total
+✓ Portfolio stats accurate
 
 Edge Cases:
-✓ Try to release before pioneer confirms (should fail)
-✓ Try to create duplicate agreement (should fail)
-✓ Try to confirm work twice (should fail on contract)
-✓ Non-admin tries to release (should fail)
-✓ Non-pioneer tries to confirm (should fail)
+✓ Price fetch fails - shows 0 gracefully
+✓ Balance fetch fails - shows error state
+✓ Wallet disconnects - shows connect prompt
+✓ Network errors handled gracefully
 ```
 
 ---
@@ -934,121 +1087,96 @@ Edge Cases:
 
 **Do these tickets in exact order:**
 
-1. **PHASE-5-TICKET-001** - Write VestingContract.sol (2 hours)
-2. **PHASE-5-TICKET-002** - Deploy mock $CSTAKE token (30 min)
-3. **PHASE-5-TICKET-003** - Deploy VestingContract (1 hour)
-4. **PHASE-5-TICKET-004** - UUID to uint256 utility (30 min)
-5. **PHASE-5-TICKET-005** - Contract interaction service (2 hours)
-6. **PHASE-5-TICKET-006** - Add contract fields to DB (20 min)
-7. **PHASE-5-TICKET-007** - Auto-trigger createAgreement (1 hour)
-8. **PHASE-5-TICKET-008** - Confirm work API (45 min)
-9. **PHASE-5-TICKET-009** - Release agreement API (45 min)
-10. **PHASE-5-TICKET-010** - Frontend confirm work button (30 min)
-11. **PHASE-5-TICKET-011** - Frontend release tokens button (30 min)
-12. **PHASE-5-TICKET-012** - E2E integration test (1 hour)
+1. **PHASE-6-TICKET-005** - Install React Query (15 min) ← **Do this first!**
+2. **PHASE-6-TICKET-001** - Token balance hook (45 min)
+3. **PHASE-6-TICKET-002** - Uniswap price service (2 hours)
+4. **PHASE-6-TICKET-003** - Price API endpoint (30 min)
+5. **PHASE-6-TICKET-004** - Token price hook (30 min)
+6. **PHASE-6-TICKET-006** - WalletModule component (1 hour)
+7. **PHASE-6-TICKET-007** - Enhanced proposals list (45 min)
+8. **PHASE-6-TICKET-008** - Integrate into dashboard (30 min)
+9. **PHASE-6-TICKET-009** - Environment vars docs (15 min)
+10. **PHASE-6-TICKET-010** - Portfolio view (1 hour)
+11. **PHASE-6-TICKET-011** - Real-time updates (30 min)
+12. **PHASE-6-TICKET-012** - E2E test (45 min)
 
-**Total Estimated Time: 11 hours**
+**Total Estimated Time: 8.5 hours**
 
 ## New Dependencies
 
 ```json
 {
   "dependencies": {
-    "ethers": "^6.13.4"
+    "@tanstack/react-query": "^5.62.14",
+    "ethers": "^6.13.4" // Already added in Phase 5
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.62.14"
   }
 }
 ```
 
-## Updated Status Flow
-
-```
-pending_review → approved/counter_offer_pending → accepted
-                                                      ↓
-                                          [BLOCKCHAIN: createAgreement]
-                                                      ↓
-                                              work_in_progress
-                                                      ↓
-                                          pioneer confirms work
-                                                      ↓
-                                          admin verifies & releases
-                                                      ↓
-                                          [BLOCKCHAIN: releaseAgreement]
-                                                      ↓
-                                                 completed
-```
-
-## Environment Variables Summary
-
-```bash
-# From previous phases
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID=
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-ADMIN_WALLET_ADDRESS=0x...
-
-# New in Phase 5
-CSTAKE_TOKEN_ADDRESS_TESTNET=0x...
-VESTING_CONTRACT_ADDRESS_TESTNET=0x...
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-FOUNDATION_WALLET_PRIVATE_KEY=0x... # NEVER COMMIT!
-```
-
 ## What We're Skipping
 
-- ❌ Hardhat/Foundry test suite
-- ❌ Gas optimization analysis
-- ❌ Formal verification
-- ❌ Multi-signature admin wallet
-- ❌ Pausable/upgradeable contracts
-- ❌ Slashing for incomplete work
-- ❌ Partial releases (milestones)
-- ❌ Dispute resolution mechanism
+- ❌ Historical price charts (CoinGecko/TradingView)
+- ❌ Portfolio analytics & insights
+- ❌ Token staking/delegation
+- ❌ Governance voting interface
+- ❌ NFT achievement badges
+- ❌ Social sharing features
+- ❌ Advanced filtering/sorting
+- ❌ Export portfolio as PDF
 
-These can be added in Phase 6+ or post-MVP.
-
-## Security Considerations
-
-✅ **What we're doing right:**
-
-- Using OpenZeppelin IERC20
-- onlyFoundation modifier
-- Require statements for validation
-- Double confirmation (pioneer + admin)
-- Event emission for transparency
-
-⚠️ **What to audit before mainnet:**
-
-- Re-entrancy (not applicable here but verify)
-- Integer overflow (Solidity 0.8+ protects)
-- Access control (simple but verify)
-- Token approval mechanism
-- Front-running considerations
+These are post-MVP enhancements.
 
 ## Success Criteria
 
-After Phase 5 is complete:
+After Phase 6 is complete:
 
-✅ Smart contract deployed to testnet
+✅ Co-founders see their $CSTAKE balance
 
-✅ Tokens locked in escrow on agreement
+✅ Real-time token price displayed
 
-✅ Pioneer can confirm work completion
+✅ USD value calculated and shown
 
-✅ Admin can release tokens after verification
+✅ Portfolio of completed work visible
 
-✅ All transactions on-chain and verifiable
+✅ Dashboard is beautiful and motivating
 
-✅ Complete lifecycle tested end-to-end
+✅ All numbers update in real-time
 
-✅ Ready for Phase 6 (Dashboard enhancements)
+✅ Mobile responsive
 
-## Next Steps After Phase 5
+✅ Ready for polish and launch prep
 
-Once smart contracts work:
+## The "Aha Moment"
 
-- Phase 6: Co-founder dashboard with wallet balance, token price
-- Phase 7: Admin dashboard with analytics
-- Phase 8: Polish, testing, launch prep
-- Phase 9: Mainnet deployment
+This phase creates the **dopamine hit** for co-founders:
 
-The core CrowdStaking mechanism is now fully functional with trustless escrow!
+```
+Submit Proposal
+    ↓
+Do the Work
+    ↓
+Get Tokens Released
+    ↓
+SEE BALANCE INCREASE 🎉
+    ↓
+SEE USD VALUE 💰
+    ↓
+"I own part of this!"
+```
+
+This is what makes CrowdStaking addictive and viral.
+
+## Next Steps After Phase 6
+
+Phase 6 completes the core MVP! Next:
+
+- Phase 7: Polish, testing, bug fixes
+- Phase 8: Security audit
+- Phase 9: Testnet beta with real users
+- Phase 10: Mainnet deployment
+- Post-Launch: Marketing, community, iteration
+
+The full CrowdStaking platform is now functional from end to end! 🚀
