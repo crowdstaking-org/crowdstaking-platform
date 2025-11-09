@@ -59,11 +59,40 @@ export function MyContributionsTab() {
         throw new Error(data.error || 'Failed to respond')
       }
       
+      const data = await response.json()
+      
       // Refresh proposals
       await fetchMyProposals()
-      alert(`Erfolgreich ${action === 'accept' ? 'akzeptiert' : 'abgelehnt'}!`)
+      alert(data.message || `Erfolgreich ${action === 'accept' ? 'akzeptiert' : 'abgelehnt'}!`)
     } catch (err: any) {
       console.error('Response failed:', err)
+      alert(`Aktion fehlgeschlagen: ${err.message}`)
+    }
+  }
+
+  const handleConfirmWork = async (proposalId: string) => {
+    if (!confirm('Möchtest du bestätigen, dass die Arbeit abgeschlossen ist?')) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/contracts/confirm-work/${proposalId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to confirm work')
+      }
+      
+      const data = await response.json()
+      
+      // Refresh proposals
+      await fetchMyProposals()
+      alert(data.message || 'Arbeit als abgeschlossen markiert!')
+    } catch (err: any) {
+      console.error('Confirm work failed:', err)
       alert(`Aktion fehlgeschlagen: ${err.message}`)
     }
   }
@@ -72,8 +101,9 @@ export function MyContributionsTab() {
   const filteredProposals = proposals.filter(p => {
     if (activeSubTab === 'all') return true
     if (activeSubTab === 'pending') return p.status === 'pending_review'
-    if (activeSubTab === 'action') return ['counter_offer_pending', 'approved'].includes(p.status)
-    if (activeSubTab === 'accepted') return p.status === 'accepted'
+    if (activeSubTab === 'action') return ['counter_offer_pending', 'approved', 'work_in_progress'].includes(p.status)
+    if (activeSubTab === 'in_progress') return p.status === 'work_in_progress'
+    if (activeSubTab === 'completed') return p.status === 'completed'
     if (activeSubTab === 'rejected') return p.status === 'rejected'
     return true
   })
@@ -81,8 +111,9 @@ export function MyContributionsTab() {
   const subTabs = [
     { id: 'all', label: 'Alle', count: proposals.length },
     { id: 'pending', label: 'Pending Review', count: proposals.filter(p => p.status === 'pending_review').length },
-    { id: 'action', label: 'Aktion erforderlich', count: proposals.filter(p => ['counter_offer_pending', 'approved'].includes(p.status)).length },
-    { id: 'accepted', label: 'Akzeptiert', count: proposals.filter(p => p.status === 'accepted').length },
+    { id: 'action', label: 'Aktion erforderlich', count: proposals.filter(p => ['counter_offer_pending', 'approved', 'work_in_progress'].includes(p.status)).length },
+    { id: 'in_progress', label: 'In Arbeit', count: proposals.filter(p => p.status === 'work_in_progress').length },
+    { id: 'completed', label: 'Abgeschlossen', count: proposals.filter(p => p.status === 'completed').length },
     { id: 'rejected', label: 'Abgelehnt', count: proposals.filter(p => p.status === 'rejected').length },
   ]
 
@@ -150,6 +181,7 @@ export function MyContributionsTab() {
               key={proposal.id}
               proposal={proposal}
               onResponse={handleResponse}
+              onConfirmWork={handleConfirmWork}
             />
           ))}
         </div>
@@ -163,10 +195,12 @@ export function MyContributionsTab() {
  */
 function ProposalCard({ 
   proposal, 
-  onResponse 
+  onResponse,
+  onConfirmWork
 }: { 
   proposal: Proposal
   onResponse: (id: string, action: 'accept' | 'reject') => void
+  onConfirmWork: (id: string) => void
 }) {
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
@@ -290,6 +324,71 @@ function ProposalCard({
           </p>
         </div>
       )}
+
+      {/* Work in Progress - Not Confirmed Yet */}
+      {proposal.status === 'work_in_progress' && !proposal.pioneer_confirmed_at && (
+        <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <p className="font-semibold text-yellow-900 dark:text-yellow-300 mb-2">
+            🚧 Arbeit läuft
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+            Die Vereinbarung ist auf der Blockchain gespeichert. Arbeite an der Aufgabe und markiere sie als abgeschlossen, wenn du fertig bist.
+          </p>
+          {proposal.contract_agreement_tx && (
+            <a
+              href={`https://${process.env.NODE_ENV === 'development' ? 'sepolia.' : ''}basescan.org/tx/${proposal.contract_agreement_tx}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline mb-3 block"
+            >
+              📜 Blockchain-Vereinbarung anzeigen →
+            </a>
+          )}
+          <button
+            onClick={() => onConfirmWork(proposal.id)}
+            className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+          >
+            ✅ Arbeit als abgeschlossen markieren
+          </button>
+        </div>
+      )}
+
+      {/* Work in Progress - Confirmed, Awaiting Admin */}
+      {proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
+        <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="font-semibold text-blue-900 dark:text-blue-300 mb-2">
+            ⏳ Warten auf Admin-Verifizierung
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+            Du hast die Arbeit als abgeschlossen markiert am {new Date(proposal.pioneer_confirmed_at).toLocaleString('de-DE')}.
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Die Foundation wird deine Arbeit überprüfen und die Tokens freigeben.
+          </p>
+        </div>
+      )}
+
+      {/* Completed State */}
+      {proposal.status === 'completed' && (
+        <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+          <p className="font-semibold text-green-900 dark:text-green-300 mb-2">
+            ✅ Abgeschlossen & Tokens erhalten!
+          </p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3">
+            Die Tokens wurden erfolgreich an deine Wallet übertragen.
+          </p>
+          {proposal.contract_release_tx && (
+            <a
+              href={`https://${process.env.NODE_ENV === 'development' ? 'sepolia.' : ''}basescan.org/tx/${proposal.contract_release_tx}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-green-600 dark:text-green-400 hover:underline"
+            >
+              📜 Token-Release-Transaktion anzeigen →
+            </a>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -318,6 +417,16 @@ function StatusBadge({ status }: { status: string }) {
       bg: 'bg-blue-100 dark:bg-blue-900/30',
       text: 'text-blue-800 dark:text-blue-400',
       label: 'Akzeptiert'
+    },
+    work_in_progress: {
+      bg: 'bg-orange-100 dark:bg-orange-900/30',
+      text: 'text-orange-800 dark:text-orange-400',
+      label: 'In Arbeit'
+    },
+    completed: {
+      bg: 'bg-green-100 dark:bg-green-900/30',
+      text: 'text-green-800 dark:text-green-400',
+      label: 'Abgeschlossen'
     },
     rejected: {
       bg: 'bg-red-100 dark:bg-red-900/30',

@@ -17,7 +17,7 @@ import type { Proposal } from '@/types/proposal'
 
 export default function AdminProposalsPage() {
   const router = useRouter()
-  const { wallet, isConnecting } = useAuth()
+  const { wallet } = useAuth()
   const [proposals, setProposals] = useState<Proposal[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -26,12 +26,12 @@ export default function AdminProposalsPage() {
   const hasAdminAccess = wallet && isAdmin(wallet)
   
   useEffect(() => {
-    if (!isConnecting && wallet && hasAdminAccess) {
+    if (wallet && hasAdminAccess) {
       fetchProposals()
-    } else if (!isConnecting && !hasAdminAccess) {
+    } else if (!hasAdminAccess) {
       setLoading(false)
     }
-  }, [wallet, hasAdminAccess, isConnecting])
+  }, [wallet, hasAdminAccess])
   
   const fetchProposals = async () => {
     try {
@@ -56,7 +56,7 @@ export default function AdminProposalsPage() {
   }
   
   // Loading state
-  if (isConnecting || loading) {
+  if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">

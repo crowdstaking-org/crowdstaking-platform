@@ -42,7 +42,9 @@ export type ProposalFormData = z.infer<typeof proposalSchema>
  * - pending_review: Initial state, awaiting admin review
  * - counter_offer_pending: Admin made counter-offer, awaiting pioneer response
  * - approved: Admin approved, awaiting pioneer acceptance
- * - accepted: Both parties agreed (final success state)
+ * - accepted: Both parties agreed, triggers smart contract agreement creation
+ * - work_in_progress: Smart contract created, pioneer is working on deliverable
+ * - completed: Work verified and tokens released to pioneer
  * - rejected: Rejected by admin or pioneer (final failure state)
  */
 export type ProposalStatus = 
@@ -50,6 +52,8 @@ export type ProposalStatus =
   | 'counter_offer_pending'
   | 'approved'
   | 'accepted'
+  | 'work_in_progress'
+  | 'completed'
   | 'rejected'
 
 /**
@@ -67,6 +71,10 @@ export interface Proposal {
   status: ProposalStatus
   foundation_offer_cstake_amount?: number
   foundation_notes?: string
+  // Smart contract fields (Phase 5)
+  contract_agreement_tx?: string | null
+  contract_release_tx?: string | null
+  pioneer_confirmed_at?: string | null
 }
 
 /**

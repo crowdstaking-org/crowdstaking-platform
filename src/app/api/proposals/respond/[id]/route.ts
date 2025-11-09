@@ -3,12 +3,15 @@
  * PUT /api/proposals/respond/:id - Pioneer responds to admin actions
  * 
  * PHASE 4: Pioneer can accept or reject counter-offers and approvals
+ * PHASE 5: Auto-trigger smart contract agreement creation on acceptance
  */
 
 import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonResponse, errorResponse } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
+import { getVestingService, isVestingServiceAvailable } from '@/lib/contracts/vestingService'
+import { tokenAmountToWei } from '@/lib/contracts/utils'
 import type { Proposal, ProposalStatus } from '@/types/proposal'
 
 /**
@@ -38,9 +41,12 @@ interface PioneerResponseRequest {
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params (Next.js 16 change)
+    const { id } = await params
+
     // Verify authentication
     const wallet = requireAuth(request)
     
@@ -57,7 +63,7 @@ export async function PUT(
     const { data: proposal, error: fetchError } = await supabase
       .from('proposals')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     
     if (fetchError || !proposal) {
@@ -82,37 +88,124 @@ export async function PUT(
     let newStatus: ProposalStatus
     
     if (action === 'accept') {
-      newStatus = 'accepted'
+      // PHASE 5: Create smart contract agreement on acceptance
       console.log(
         `Pioneer ${wallet} accepted ${proposal.status === 'counter_offer_pending' ? 'counter-offer' : 'approval'} ` +
-        `for proposal ${params.id}`
+        `for proposal ${id}`
       )
+      
+      // Try to create blockchain agreement if vesting service is available
+      let contractTxHash: string | null = null
+      
+      if (isVestingServiceAvailable()) {
+        try {
+    // Await params (Next.js 16 change)
+    const { id } = await params
+
+          console.log('[Phase 5] Creating blockchain agreement...')
+          
+          // Determine agreed amount (counter-offer or original request)
+          const agreedAmount = proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount
+          
+          if (!agreedAmount || agreedAmount <= 0) {
+            throw new Error('Invalid token amount')
+          }
+          
+          // Convert to wei (assuming 18 decimals for $CSTAKE)
+          const amountInWei = tokenAmountToWei(agreedAmount)
+          
+          console.log('[Phase 5] Agreement details:', {
+            proposalId: id,
+            contributor: proposal.creator_wallet_address,
+            amount: agreedAmount,
+            amountInWei: amountInWei.toString(),
+          })
+          
+          // Create agreement on blockchain
+          const vestingService = getVestingService()
+          contractTxHash = await vestingService.createAgreement(
+            id,
+            proposal.creator_wallet_address,
+            amountInWei
+          )
+          
+          console.log('[Phase 5] Agreement created successfully:', contractTxHash)
+          
+          // If contract creation successful, move to work_in_progress
+          newStatus = 'work_in_progress'
+        } catch (contractError: any) {
+          console.error('[Phase 5] Failed to create blockchain agreement:', contractError)
+          
+          // If contract fails, still mark as accepted but don't move to work_in_progress
+          // Admin can retry contract creation later
+          newStatus = 'accepted'
+          
+          // Log warning but don't fail the entire request
+          console.warn(
+            '[Phase 5] Proposal accepted but contract creation failed. ' +
+            'Status set to "accepted". Admin must create contract manually.'
+          )
+        }
+      } else {
+        // No vesting service configured - just move to accepted
+        console.log('[Phase 5] Vesting service not configured. Skipping contract creation.')
+        newStatus = 'accepted'
+      }
+      
+      // Update proposal with new status and contract tx hash
+      const updateData: Partial<Proposal> = { status: newStatus }
+      if (contractTxHash) {
+        updateData.contract_agreement_tx = contractTxHash
+      }
+      
+      const { data: updated, error: updateError } = await supabase
+        .from('proposals')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (updateError) {
+        console.error('Error updating proposal:', updateError)
+        throw updateError
+      }
+      
+      return jsonResponse({ 
+        success: true, 
+        proposal: updated as Proposal,
+        message: contractTxHash 
+          ? 'Agreement created on blockchain! You can now start working on the deliverable.'
+          : 'Proposal accepted successfully',
+        contractTxHash,
+      })
+      
     } else {
+      // Reject action
       newStatus = 'rejected'
       console.log(
         `Pioneer ${wallet} rejected ${proposal.status === 'counter_offer_pending' ? 'counter-offer' : 'approval'} ` +
-        `for proposal ${params.id}`
+        `for proposal ${id}`
       )
+      
+      // Update proposal
+      const { data: updated, error: updateError } = await supabase
+        .from('proposals')
+        .update({ status: newStatus })
+        .eq('id', id)
+        .select()
+        .single()
+      
+      if (updateError) {
+        console.error('Error updating proposal:', updateError)
+        throw updateError
+      }
+      
+      return jsonResponse({ 
+        success: true, 
+        proposal: updated as Proposal,
+        message: 'Proposal rejected'
+      })
     }
-    
-    // Update proposal
-    const { data: updated, error: updateError } = await supabase
-      .from('proposals')
-      .update({ status: newStatus })
-      .eq('id', params.id)
-      .select()
-      .single()
-    
-    if (updateError) {
-      console.error('Error updating proposal:', updateError)
-      throw updateError
-    }
-    
-    return jsonResponse({ 
-      success: true, 
-      proposal: updated as Proposal,
-      message: `Proposal ${action}ed successfully`
-    })
     
   } catch (error: any) {
     // Handle authorization errors

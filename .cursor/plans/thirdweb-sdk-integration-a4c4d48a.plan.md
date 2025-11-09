@@ -1,895 +1,599 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 f407df75-7a3a-4b89-86ea-ed2011bf5aaf -->
-# Phase 4 Refinement: Minimal-Invasive Admin Review & Double Handshake
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 b8f93285-b9be-462a-b64e-c04b1a88395c -->
+# Phase 5 Refinement: Minimal-Invasive Smart Contract Development
 
 ## Context: What We've Built
 
-### Phase 1-3 Complete ✅
+### Phase 1-4 Complete ✅
 
-- **Database:** proposals table (basic schema)
-- **Auth:** Secure wallet authentication with sessions
-- **Proposal Form:** Co-founders can submit proposals
-- **API:** POST /api/proposals, GET /api/proposals/me
+- **Database:** proposals table with status field
+- **Auth:** Secure wallet authentication
+- **Proposals:** Co-founders can submit proposals
+- **Double Handshake:** Admin reviews, pioneer accepts
+- **Final State:** Proposals reach 'accepted' status
 
-### Current Proposals Table Schema
+### What Happens Next?
 
-```sql
-proposals (
-  id UUID PRIMARY KEY,
-  created_at TIMESTAMPTZ,
-  creator_wallet_address TEXT,
-  title TEXT,
-  description TEXT,
-  deliverable TEXT,  -- Note: missing from Phase 1!
-  requested_cstake_amount NUMERIC
-)
-```
+When a proposal reaches 'accepted' status, tokens need to be:
 
-## Phase 4 Goal: The "Double Handshake"
+1. **Locked in escrow** (createAgreement)
+2. **Work completed** by pioneer
+3. **Confirmed** by pioneer (confirmWorkDone)
+4. **Verified** by admin
+5. **Released** to pioneer (releaseAgreement)
 
-Implement the core CrowdStaking concept where **both parties must agree**:
+This requires a **smart contract** to manage the escrow trustlessly.
 
-1. **Foundation reviews proposal** → Can accept, reject, or counter-offer
-2. **Pioneer responds** → Can accept or reject counter-offer
-3. **Agreement reached** → Both parties said "yes"
+## Phase 5 Goal: Token Escrow via Smart Contract
 
-**This is the "Wizard of Oz" phase** - foundation acts as manual mediator before AI automation.
+Implement VestingContract that:
 
-## What We Need to Add
-
-### Database Changes (Minimal)
-
-Add 3 columns to proposals table:
-
-- `status` - Track proposal state
-- `foundation_offer_cstake_amount` - Counter-offer amount
-- `foundation_notes` - Reason/explanation
-
-### New Features
-
-1. Admin panel to view all proposals
-2. Admin actions (accept/reject/counter-offer)
-3. Pioneer view to see and respond to admin actions
-4. Status state machine to enforce valid transitions
+- Locks $CSTAKE tokens when agreement is reached
+- Allows pioneer to confirm work completion
+- Allows admin to release tokens after verification
+- Provides transparent, on-chain record
 
 ## Minimal-Invasive Strategy
 
-**What we'll build:**
+**What we'll do:**
 
-- Simple status field (string enum, not complex state machine initially)
-- Admin check via environment variable (hardcoded wallet)
-- Basic admin UI (list + detail view)
-- Three admin actions
-- Pioneer response UI in existing dashboard
-- No audit trail database (add later if needed)
+- Write minimal Solidity contract (150 lines)
+- Deploy to testnet first (Base Sepolia)
+- Use ThirdWeb for deployment (no Hardhat setup)
+- Backend service to interact with contract
+- Simple UUID to uint256 conversion
+- Manual admin wallet for foundation
 
 **What we'll skip:**
 
-- ❌ Complex state machine library
-- ❌ Multiple admin roles/permissions
-- ❌ Email notifications (add later)
-- ❌ Audit log database (use console.log for now)
-- ❌ Advanced negotiation (one counter-offer only for MVP)
+- ❌ Complex Hardhat/Foundry setup (use ThirdWeb)
+- ❌ Extensive test suite (basic tests only)
+- ❌ Gas optimization (premature)
+- ❌ Multi-sig admin (single wallet for MVP)
+- ❌ Pausable functionality (add later if needed)
+- ❌ Upgradeable contracts (deploy new one if needed)
 
-## Status State Machine (Simplified)
+## Critical Decision: Use ThirdWeb for Deployment
 
+**Why ThirdWeb over Hardhat?**
+
+- Already integrated in project
+- One-click deployment via dashboard
+- Automatic verification on Basescan
+- No complex tooling setup
+- Can still write custom Solidity
+
+**Trade-off:** Less local testing, but faster MVP.
+
+## Smart Contract Specification
+
+### VestingContract.sol (Simplified)
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
+contract VestingContract {
+    struct Agreement {
+        address contributor;
+        uint256 amount;
+        bool pioneerConfirmed;
+        bool foundationConfirmed;
+        bool exists;
+    }
+    
+    mapping(uint256 => Agreement) public agreements;
+    
+    IERC20 public immutable cstakeToken;
+    address public foundationWallet;
+    
+    event AgreementCreated(uint256 indexed proposalId, address indexed contributor, uint256 amount);
+    event PioneerConfirmed(uint256 indexed proposalId);
+    event AgreementReleased(uint256 indexed proposalId, address indexed contributor, uint256 amount);
+    
+    constructor(address _cstakeToken, address _foundationWallet) {
+        cstakeToken = IERC20(_cstakeToken);
+        foundationWallet = _foundationWallet;
+    }
+    
+    modifier onlyFoundation() {
+        require(msg.sender == foundationWallet, "Not foundation");
+        _;
+    }
+    
+    function createAgreement(uint256 _proposalId, address _contributor, uint256 _amount) 
+        external 
+        onlyFoundation 
+    {
+        require(!agreements[_proposalId].exists, "Agreement exists");
+        require(_contributor != address(0), "Invalid contributor");
+        require(_amount > 0, "Amount must be > 0");
+        
+        // Pull tokens from foundation into contract
+        require(
+            cstakeToken.transferFrom(msg.sender, address(this), _amount),
+            "Transfer failed"
+        );
+        
+        agreements[_proposalId] = Agreement(_contributor, _amount, false, false, true);
+        emit AgreementCreated(_proposalId, _contributor, _amount);
+    }
+    
+    function confirmWorkDone(uint256 _proposalId) external {
+        Agreement storage agreement = agreements[_proposalId];
+        require(agreement.exists, "No agreement");
+        require(msg.sender == agreement.contributor, "Not contributor");
+        require(!agreement.pioneerConfirmed, "Already confirmed");
+        
+        agreement.pioneerConfirmed = true;
+        emit PioneerConfirmed(_proposalId);
+    }
+    
+    function releaseAgreement(uint256 _proposalId) external onlyFoundation {
+        Agreement storage agreement = agreements[_proposalId];
+        require(agreement.exists, "No agreement");
+        require(agreement.pioneerConfirmed, "Pioneer not confirmed");
+        require(!agreement.foundationConfirmed, "Already released");
+        
+        agreement.foundationConfirmed = true;
+        uint256 amount = agreement.amount;
+        
+        // Release tokens to contributor
+        require(
+            cstakeToken.transfer(agreement.contributor, amount),
+            "Transfer failed"
+        );
+        
+        emit AgreementReleased(_proposalId, agreement.contributor, amount);
+        delete agreements[_proposalId]; // Save gas
+    }
+    
+    function getAgreement(uint256 _proposalId) 
+        external 
+        view 
+        returns (Agreement memory) 
+    {
+        return agreements[_proposalId];
+    }
+}
 ```
-pending_review (initial)
-  ├→ rejected (by admin)
-  ├→ counter_offer_pending (by admin)
-  └→ approved (by admin)
 
-counter_offer_pending
-  ├→ rejected (by pioneer)
-  └→ accepted (by pioneer)
-
-approved
-  └→ accepted (by pioneer)
-
-accepted (final - ready for smart contract)
-rejected (final)
-```
-
-**5 states total** - simple string enum, no complex library needed.
+**Total: ~100 lines, simple and auditable.**
 
 ## Refined Actionable Tickets
 
-### PHASE-4-TICKET-001: Add Status Fields to Proposals Table
+### PHASE-5-TICKET-001: Write VestingContract.sol
 
-**Priority:** P0 | **Time:** 30 min
+**Priority:** P0 | **Time:** 2 hours
 
-**Goal:** Extend proposals table with status and negotiation fields
+**Goal:** Write complete smart contract in Solidity
 
 **What to Do:**
 
-1. Use Supabase MCP to apply migration
-2. Add 3 new columns: status, foundation_offer_cstake_amount, foundation_notes
-3. Set default status to 'pending_review'
-4. Update existing proposals to have status (if any)
+1. Create `contracts/VestingContract.sol`
+2. Implement complete contract as specified above
+3. Add NatSpec comments for documentation
+4. Ensure compiles with Solidity ^0.8.20
+
+**Files to Create:**
+
+- `contracts/VestingContract.sol`
+
+**Definition of Done:**
+
+- [ ] Contract code complete with all functions
+- [ ] Uses OpenZeppelin IERC20
+- [ ] onlyFoundation modifier works
+- [ ] All events defined and emitted
+- [ ] NatSpec documentation added
+- [ ] Compiles without errors (can test on Remix)
+- [ ] No obvious security issues
+
+**Contract Functions:**
+
+- `createAgreement(proposalId, contributor, amount)` - Foundation only
+- `confirmWorkDone(proposalId)` - Contributor only
+- `releaseAgreement(proposalId)` - Foundation only
+- `getAgreement(proposalId)` - View function
+
+---
+
+### PHASE-5-TICKET-002: Deploy Mock $CSTAKE Token (Testnet Only)
+
+**Priority:** P0 | **Time:** 30 min
+
+**Goal:** Deploy a simple ERC20 token to Base Sepolia for testing
+
+**What to Do:**
+
+1. Use ThirdWeb dashboard to deploy ERC20 token
+2. Name: "CrowdStaking Test Token"
+3. Symbol: $CSTAKE
+4. Mint 1,000,000 tokens to foundation wallet
+5. Save token address
+
+**Definition of Done:**
+
+- [ ] Token deployed to Base Sepolia
+- [ ] Token address saved in .env
+- [ ] Foundation wallet has 1M tokens
+- [ ] Can view token on Base Sepolia Basescan
+- [ ] Token contract verified
+
+**Alternative:** Use existing testnet token if available.
+
+**Environment Variable:**
+
+```
+CSTAKE_TOKEN_ADDRESS_TESTNET=0x...
+```
+
+---
+
+### PHASE-5-TICKET-003: Deploy VestingContract to Testnet
+
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Deploy VestingContract to Base Sepolia using ThirdWeb
+
+**What to Do:**
+
+1. Go to ThirdWeb dashboard
+2. Upload VestingContract.sol
+3. Deploy to Base Sepolia
+4. Constructor params:
+
+   - _cstakeToken: from PHASE-5-TICKET-002
+   - _foundationWallet: admin wallet address
+
+5. Verify contract on Basescan
+6. Save contract address
+
+**Files to Edit:**
+
+- `.env.local` (add contract address)
+- `.env.example` (document)
+
+**Definition of Done:**
+
+- [ ] Contract deployed to Base Sepolia
+- [ ] Contract verified on Basescan
+- [ ] Constructor parameters correct
+- [ ] Can view contract on block explorer
+- [ ] Contract address saved in environment
+- [ ] Foundation wallet approved for token spending
+
+**Environment Variables:**
+
+```
+VESTING_CONTRACT_ADDRESS_TESTNET=0x...
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+```
+
+**Important:** Foundation wallet must approve VestingContract to spend tokens:
+
+```
+CSTAKE.approve(vestingContractAddress, MAX_UINT256)
+```
+
+---
+
+### PHASE-5-TICKET-004: Create UUID to uint256 Conversion Utility
+
+**Priority:** P0 | **Time:** 30 min
+
+**Goal:** Convert proposal UUID from database to uint256 for smart contract
+
+**What to Do:**
+
+1. Create `src/lib/contracts/utils.ts`
+2. Implement uuidToUint256() function
+3. Use keccak256 hash of UUID string
+4. Test with sample UUIDs
+5. Ensure deterministic conversion
+
+**Files to Create:**
+
+- `src/lib/contracts/utils.ts`
+
+**Definition of Done:**
+
+- [ ] Function converts UUID string to bigint
+- [ ] Conversion is deterministic (same UUID = same uint256)
+- [ ] Different UUIDs produce different uint256s
+- [ ] Works with ethers.js types
+- [ ] Unit tests pass
+- [ ] TypeScript types correct
+
+**Code Pattern:**
+
+```typescript
+// src/lib/contracts/utils.ts
+import { keccak256, toUtf8Bytes } from 'ethers'
+
+export function uuidToUint256(uuid: string): bigint {
+  // Remove hyphens from UUID
+  const cleanUuid = uuid.replace(/-/g, '')
+  
+  // Hash the UUID to get uint256
+  const hash = keccak256(toUtf8Bytes(cleanUuid))
+  
+  // Convert hex string to bigint
+  return BigInt(hash)
+}
+
+// Example usage:
+// uuidToUint256('123e4567-e89b-12d3-a456-426614174000')
+// → 12345678901234567890n
+```
+
+---
+
+### PHASE-5-TICKET-005: Create Contract Interaction Service
+
+**Priority:** P0 | **Time:** 2 hours
+
+**Goal:** Build backend service to interact with VestingContract
+
+**What to Do:**
+
+1. Install ethers.js: `npm install ethers`
+2. Create `src/lib/contracts/vestingService.ts`
+3. Implement createAgreement function
+4. Implement releaseAgreement function
+5. Implement getAgreement function (read-only)
+6. Setup provider and signer
+
+**Files to Create:**
+
+- `src/lib/contracts/vestingService.ts`
+- `src/lib/contracts/abi.ts` (contract ABI)
+
+**Definition of Done:**
+
+- [ ] ethers.js installed
+- [ ] Contract ABI extracted and imported
+- [ ] Can call createAgreement from backend
+- [ ] Can call releaseAgreement from backend
+- [ ] Can read agreement data
+- [ ] Foundation wallet private key securely loaded
+- [ ] Error handling for failed transactions
+- [ ] Gas estimation working
+
+**Code Pattern:**
+
+```typescript
+// src/lib/contracts/vestingService.ts
+import { ethers } from 'ethers'
+import { VESTING_ABI } from './abi'
+import { uuidToUint256 } from './utils'
+
+const RPC_URL = process.env.BASE_SEPOLIA_RPC_URL!
+const CONTRACT_ADDRESS = process.env.VESTING_CONTRACT_ADDRESS_TESTNET!
+const FOUNDATION_PRIVATE_KEY = process.env.FOUNDATION_WALLET_PRIVATE_KEY!
+
+export class VestingService {
+  private provider: ethers.JsonRpcProvider
+  private signer: ethers.Wallet
+  private contract: ethers.Contract
+  
+  constructor() {
+    this.provider = new ethers.JsonRpcProvider(RPC_URL)
+    this.signer = new ethers.Wallet(FOUNDATION_PRIVATE_KEY, this.provider)
+    this.contract = new ethers.Contract(
+      CONTRACT_ADDRESS,
+      VESTING_ABI,
+      this.signer
+    )
+  }
+  
+  async createAgreement(
+    proposalId: string,
+    contributorAddress: string,
+    amount: bigint
+  ): Promise<string> {
+    try {
+      const proposalIdUint = uuidToUint256(proposalId)
+      
+      // Call contract function
+      const tx = await this.contract.createAgreement(
+        proposalIdUint,
+        contributorAddress,
+        amount
+      )
+      
+      // Wait for confirmation
+      const receipt = await tx.wait()
+      
+      return receipt.hash
+    } catch (error) {
+      console.error('Create agreement failed:', error)
+      throw error
+    }
+  }
+  
+  async releaseAgreement(proposalId: string): Promise<string> {
+    try {
+      const proposalIdUint = uuidToUint256(proposalId)
+      
+      const tx = await this.contract.releaseAgreement(proposalIdUint)
+      const receipt = await tx.wait()
+      
+      return receipt.hash
+    } catch (error) {
+      console.error('Release agreement failed:', error)
+      throw error
+    }
+  }
+  
+  async getAgreement(proposalId: string) {
+    const proposalIdUint = uuidToUint256(proposalId)
+    return await this.contract.getAgreement(proposalIdUint)
+  }
+}
+
+// Singleton instance
+export const vestingService = new VestingService()
+```
+
+---
+
+### PHASE-5-TICKET-006: Add Contract Fields to Proposals Table
+
+**Priority:** P1 | **Time:** 20 min
+
+**Goal:** Track contract interaction data in database
+
+**What to Do:**
+
+1. Add migration for new fields
+2. Add columns:
+
+   - `contract_agreement_tx` - Transaction hash for createAgreement
+   - `contract_release_tx` - Transaction hash for releaseAgreement
+   - `pioneer_confirmed_at` - Timestamp when pioneer confirmed
+
+3. Update Proposal TypeScript type
 
 **Migration SQL:**
 
 ```sql
 ALTER TABLE proposals
-  ADD COLUMN status TEXT NOT NULL DEFAULT 'pending_review',
-  ADD COLUMN foundation_offer_cstake_amount NUMERIC,
-  ADD COLUMN foundation_notes TEXT;
-
--- Add check constraint for valid statuses
-ALTER TABLE proposals
-  ADD CONSTRAINT valid_status 
-  CHECK (status IN (
-    'pending_review',
-    'counter_offer_pending', 
-    'approved',
-    'accepted',
-    'rejected'
-  ));
+  ADD COLUMN contract_agreement_tx TEXT,
+  ADD COLUMN contract_release_tx TEXT,
+  ADD COLUMN pioneer_confirmed_at TIMESTAMPTZ;
 ```
 
 **Definition of Done:**
 
-- [ ] Migration applied successfully
-- [ ] New columns exist in table
-- [ ] Existing proposals have status 'pending_review'
-- [ ] Check constraint prevents invalid statuses
-- [ ] Can query proposals by status
-- [ ] No breaking changes to existing code
+- [ ] Migration applied
+- [ ] New columns exist
+- [ ] Proposal type updated
+- [ ] No breaking changes
 
 ---
 
-### PHASE-4-TICKET-002: Update Proposal Types with Status
-
-**Priority:** P0 | **Time:** 15 min
-
-**Goal:** Add status fields to TypeScript types
-
-**What to Do:**
-
-1. Update `src/types/proposal.ts`
-2. Add status field to Proposal interface
-3. Add foundation fields
-4. Export status type
-
-**Files to Edit:**
-
-- `src/types/proposal.ts`
-
-**Definition of Done:**
-
-- [ ] Status type defined as union of valid strings
-- [ ] Proposal interface includes new fields
-- [ ] TypeScript compilation succeeds
-- [ ] Types exported for use in components
-
-**Code Pattern:**
-
-```typescript
-// src/types/proposal.ts (UPDATE)
-
-export type ProposalStatus = 
-  | 'pending_review'
-  | 'counter_offer_pending'
-  | 'approved'
-  | 'accepted'
-  | 'rejected'
-
-export interface Proposal extends ProposalFormData {
-  id: string
-  creator_wallet_address: string
-  created_at: string
-  status: ProposalStatus
-  foundation_offer_cstake_amount?: number
-  foundation_notes?: string
-}
-```
-
----
-
-### PHASE-4-TICKET-003: Admin Check Utility
-
-**Priority:** P0 | **Time:** 20 min
-
-**Goal:** Create simple admin authorization check
-
-**What to Do:**
-
-1. Add ADMIN_WALLET_ADDRESS to .env
-2. Create `src/lib/auth/admin.ts`
-3. Add isAdmin() function
-4. Add requireAdmin() middleware-style function
-
-**Files to Create:**
-
-- `src/lib/auth/admin.ts`
-
-**Files to Edit:**
-
-- `.env.local` (add admin wallet)
-- `.env.example` (document admin wallet)
-
-**Definition of Done:**
-
-- [ ] Admin wallet address in environment
-- [ ] isAdmin(wallet) function works
-- [ ] requireAdmin(request) throws if not admin
-- [ ] Works with existing auth system
-- [ ] Case-insensitive address comparison
-- [ ] Multiple admin addresses supported (comma-separated)
-
-**Code Pattern:**
-
-```typescript
-// src/lib/auth/admin.ts
-import { requireAuth } from './auth'
-
-export function isAdmin(walletAddress: string): boolean {
-  const adminAddresses = process.env.ADMIN_WALLET_ADDRESS
-    ?.split(',')
-    .map(addr => addr.trim().toLowerCase()) || []
-  
-  return adminAddresses.includes(walletAddress.toLowerCase())
-}
-
-export function requireAdmin(request: Request): string {
-  const wallet = requireAuth(request)
-  
-  if (!isAdmin(wallet)) {
-    throw new Error('Forbidden - Admin access required')
-  }
-  
-  return wallet
-}
-```
-
----
-
-### PHASE-4-TICKET-004: API GET /api/proposals/admin
-
-**Priority:** P0 | **Time:** 30 min
-
-**Goal:** Create admin endpoint to fetch all proposals
-
-**What to Do:**
-
-1. Create `src/app/api/proposals/admin/route.ts`
-2. Implement GET handler with admin auth
-3. Return all proposals sorted by created_at
-4. Optional: Filter by status via query param
-
-**Files to Create:**
-
-- `src/app/api/proposals/admin/route.ts`
-
-**Definition of Done:**
-
-- [ ] GET `/api/proposals/admin` endpoint works
-- [ ] Requires admin authentication
-- [ ] Returns all proposals (not just own)
-- [ ] Sorted by created_at DESC (newest first)
-- [ ] Includes all fields (status, foundation_notes, etc.)
-- [ ] Optional ?status=pending_review filter works
-- [ ] Returns 403 for non-admins
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/proposals/admin/route.ts
-import { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { jsonResponse, errorResponse } from '@/lib/api'
-import { requireAdmin } from '@/lib/auth/admin'
-
-export async function GET(request: NextRequest) {
-  try {
-    requireAdmin(request)
-    
-    const { searchParams } = new URL(request.url)
-    const statusFilter = searchParams.get('status')
-    
-    let query = supabase
-      .from('proposals')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (statusFilter) {
-      query = query.eq('status', statusFilter)
-    }
-    
-    const { data, error } = await query
-    
-    if (error) throw error
-    
-    return jsonResponse({ success: true, proposals: data })
-  } catch (error) {
-    if (error.message.includes('Forbidden')) {
-      return errorResponse(error.message, 403)
-    }
-    return errorResponse(error.message, 500)
-  }
-}
-```
-
----
-
-### PHASE-4-TICKET-005: API PUT /api/proposals/admin/[id]
+### PHASE-5-TICKET-007: API Endpoint - Create Agreement (Auto-trigger)
 
 **Priority:** P0 | **Time:** 1 hour
 
-**Goal:** Create admin endpoint to update proposal status and fields
+**Goal:** Automatically create smart contract agreement when proposal is accepted by pioneer
 
 **What to Do:**
 
-1. Create `src/app/api/proposals/admin/[id]/route.ts`
-2. Implement PUT handler for admin actions
-3. Accept action type (accept/reject/counter_offer)
-4. Validate status transitions
-5. Update proposal in database
+1. Update `src/app/api/proposals/respond/[id]/route.ts`
+2. When pioneer accepts (status → 'accepted'), trigger contract creation
+3. Call vestingService.createAgreement()
+4. Save transaction hash to database
+5. Update proposal status to 'work_in_progress'
 
-**Files to Create:**
-
-- `src/app/api/proposals/admin/[id]/route.ts`
-
-**Definition of Done:**
-
-- [ ] PUT `/api/proposals/admin/:id` endpoint works
-- [ ] Requires admin authentication
-- [ ] Accepts action type in body
-- [ ] Validates current status allows action
-- [ ] Updates status correctly for each action
-- [ ] Saves foundation_offer and notes for counter-offer
-- [ ] Returns updated proposal
-- [ ] Returns 400 if invalid transition
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/proposals/admin/[id]/route.ts
-import { NextRequest } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { jsonResponse, errorResponse } from '@/lib/api'
-import { requireAdmin } from '@/lib/auth/admin'
-import type { ProposalStatus } from '@/types/proposal'
-
-type AdminAction = 'accept' | 'reject' | 'counter_offer'
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    requireAdmin(request)
-    
-    const { action, foundation_offer_cstake_amount, foundation_notes } = 
-      await request.json()
-    
-    // Get current proposal
-    const { data: proposal, error: fetchError } = await supabase
-      .from('proposals')
-      .select('*')
-      .eq('id', params.id)
-      .single()
-    
-    if (fetchError || !proposal) {
-      return errorResponse('Proposal not found', 404)
-    }
-    
-    // Validate action on current status
-    if (proposal.status !== 'pending_review') {
-      return errorResponse('Proposal already processed', 400)
-    }
-    
-    // Determine new status and fields
-    let updates: any = {}
-    
-    switch (action as AdminAction) {
-      case 'accept':
-        updates = { status: 'approved' }
-        break
-      
-      case 'reject':
-        updates = { 
-          status: 'rejected',
-          foundation_notes 
-        }
-        break
-      
-      case 'counter_offer':
-        if (!foundation_offer_cstake_amount) {
-          return errorResponse('Counter offer amount required', 400)
-        }
-        updates = {
-          status: 'counter_offer_pending',
-          foundation_offer_cstake_amount,
-          foundation_notes,
-        }
-        break
-      
-      default:
-        return errorResponse('Invalid action', 400)
-    }
-    
-    // Update proposal
-    const { data: updated, error: updateError } = await supabase
-      .from('proposals')
-      .update(updates)
-      .eq('id', params.id)
-      .select()
-      .single()
-    
-    if (updateError) throw updateError
-    
-    return jsonResponse({ success: true, proposal: updated })
-  } catch (error) {
-    if (error.message.includes('Forbidden')) {
-      return errorResponse(error.message, 403)
-    }
-    return errorResponse(error.message, 500)
-  }
-}
-```
-
----
-
-### PHASE-4-TICKET-006: Admin Panel Page Structure
-
-**Priority:** P0 | **Time:** 45 min
-
-**Goal:** Create basic admin panel with proposals list
-
-**What to Do:**
-
-1. Create `src/app/admin/proposals/page.tsx`
-2. Check if user is admin (client-side)
-3. Fetch proposals from admin API
-4. Display list with key info
-5. Add basic styling
-
-**Files to Create:**
-
-- `src/app/admin/proposals/page.tsx`
-- `src/app/admin/layout.tsx` (optional admin layout)
-
-**Definition of Done:**
-
-- [ ] Page accessible at `/admin/proposals`
-- [ ] Shows 403/redirect if not admin
-- [ ] Fetches and displays all proposals
-- [ ] Shows title, creator, status, amount
-- [ ] Clickable to view detail
-- [ ] Loading state while fetching
-- [ ] Empty state if no proposals
-- [ ] Mobile responsive
-
-**Code Pattern:**
-
-```typescript
-// src/app/admin/proposals/page.tsx
-'use client'
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/hooks/useAuth'
-import { isAdmin } from '@/lib/auth/admin'
-import { Layout } from '@/components/Layout'
-import type { Proposal } from '@/types/proposal'
-import Link from 'next/link'
-
-export default function AdminProposalsPage() {
-  const { wallet } = useAuth()
-  const [proposals, setProposals] = useState<Proposal[]>([])
-  const [loading, setLoading] = useState(true)
-  
-  // Check admin access
-  if (!wallet || !isAdmin(wallet)) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
-            <p className="text-gray-600">Admin access required</p>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
-  
-  useEffect(() => {
-    fetchProposals()
-  }, [])
-  
-  const fetchProposals = async () => {
-    try {
-      const response = await fetch('/api/proposals/admin')
-      const { proposals } = await response.json()
-      setProposals(proposals)
-    } catch (error) {
-      console.error('Failed to fetch proposals:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-  
-  return (
-    <Layout>
-      <div className="max-w-7xl mx-auto py-12 px-4">
-        <h1 className="text-4xl font-bold mb-8">Admin: Review Proposals</h1>
-        
-        {loading ? (
-          <p>Loading proposals...</p>
-        ) : proposals.length === 0 ? (
-          <p className="text-gray-600">No proposals yet.</p>
-        ) : (
-          <div className="space-y-4">
-            {proposals.map(proposal => (
-              <Link
-                key={proposal.id}
-                href={`/admin/proposals/${proposal.id}`}
-                className="block bg-white border rounded-lg p-6 hover:shadow-lg transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold">{proposal.title}</h3>
-                    <p className="text-sm text-gray-600">
-                      From: {proposal.creator_wallet_address.slice(0, 10)}...
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <StatusBadge status={proposal.status} />
-                    <p className="text-sm mt-1">
-                      {proposal.requested_cstake_amount} $CSTAKE
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </Layout>
-  )
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const colors = {
-    pending_review: 'bg-yellow-100 text-yellow-800',
-    counter_offer_pending: 'bg-blue-100 text-blue-800',
-    approved: 'bg-green-100 text-green-800',
-    accepted: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-  }
-  
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors[status]}`}>
-      {status.replace('_', ' ')}
-    </span>
-  )
-}
-```
-
----
-
-### PHASE-4-TICKET-007: Admin Proposal Detail View
-
-**Priority:** P0 | **Time:** 1 hour
-
-**Goal:** Create detailed view of single proposal with action buttons
-
-**What to Do:**
-
-1. Create `src/app/admin/proposals/[id]/page.tsx`
-2. Fetch proposal by ID
-3. Display all proposal details
-4. Show action buttons based on status
-5. Handle admin actions
-
-**Files to Create:**
-
-- `src/app/admin/proposals/[id]/page.tsx`
-
-**Definition of Done:**
-
-- [ ] Page accessible at `/admin/proposals/:id`
-- [ ] Displays full proposal content
-- [ ] Markdown rendered for description/deliverable
-- [ ] Shows creator info and status
-- [ ] Action buttons visible for pending_review
-- [ ] No actions shown for final states (accepted/rejected)
-- [ ] Back button to proposals list
-
-**Code Pattern:**
-
-```typescript
-// src/app/admin/proposals/[id]/page.tsx
-'use client'
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import ReactMarkdown from 'react-markdown'
-import type { Proposal } from '@/types/proposal'
-import { Layout } from '@/components/Layout'
-
-export default function AdminProposalDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const [proposal, setProposal] = useState<Proposal | null>(null)
-  const [loading, setLoading] = useState(true)
-  
-  useEffect(() => {
-    fetchProposal()
-  }, [params.id])
-  
-  const fetchProposal = async () => {
-    try {
-      const response = await fetch('/api/proposals/admin')
-      const { proposals } = await response.json()
-      const found = proposals.find((p: Proposal) => p.id === params.id)
-      setProposal(found)
-    } catch (error) {
-      console.error('Failed to fetch proposal:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-  
-  const handleAction = async (action: string, data?: any) => {
-    try {
-      const response = await fetch(`/api/proposals/admin/${params.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ...data }),
-      })
-      
-      if (!response.ok) throw new Error('Action failed')
-      
-      // Refresh proposal
-      await fetchProposal()
-    } catch (error) {
-      console.error('Action failed:', error)
-      alert('Action failed. Please try again.')
-    }
-  }
-  
-  if (loading) return <Layout><p>Loading...</p></Layout>
-  if (!proposal) return <Layout><p>Proposal not found</p></Layout>
-  
-  return (
-    <Layout>
-      <div className="max-w-4xl mx-auto py-12 px-4">
-        <button
-          onClick={() => router.back()}
-          className="mb-6 text-gray-600 hover:text-gray-900"
-        >
-          ← Back to Proposals
-        </button>
-        
-        <div className="bg-white border rounded-lg p-8">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold mb-2">{proposal.title}</h1>
-            <p className="text-sm text-gray-600">
-              From: {proposal.creator_wallet_address}
-            </p>
-            <p className="text-lg font-semibold mt-2">
-              Requested: {proposal.requested_cstake_amount} $CSTAKE
-            </p>
-            <StatusBadge status={proposal.status} />
-          </div>
-          
-          <div className="space-y-6">
-            <div>
-              <h3 className="font-semibold mb-2">Description</h3>
-              <div className="prose max-w-none">
-                <ReactMarkdown>{proposal.description}</ReactMarkdown>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="font-semibold mb-2">Deliverable</h3>
-              <div className="prose max-w-none">
-                <ReactMarkdown>{proposal.deliverable}</ReactMarkdown>
-              </div>
-            </div>
-          </div>
-          
-          {/* Action buttons - next ticket */}
-          {proposal.status === 'pending_review' && (
-            <div className="mt-8 flex gap-4">
-              <button className="bg-green-600 text-white px-6 py-3 rounded-lg">
-                Accept
-              </button>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg">
-                Counter-Offer
-              </button>
-              <button className="bg-red-600 text-white px-6 py-3 rounded-lg">
-                Reject
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </Layout>
-  )
-}
-```
-
----
-
-### PHASE-4-TICKET-008: Admin Action Modals (Accept/Reject/Counter-Offer)
-
-**Priority:** P0 | **Time:** 1.5 hours
-
-**Goal:** Create modals for each admin action with confirmation
-
-**What to Do:**
-
-1. Create modal components for each action
-2. Accept modal - simple confirmation
-3. Reject modal - requires notes
-4. Counter-offer modal - requires amount + notes
-5. Wire up to API calls
-
-**Files to Create:**
-
-- `src/components/admin/AcceptModal.tsx`
-- `src/components/admin/RejectModal.tsx`
-- `src/components/admin/CounterOfferModal.tsx`
-
-**Definition of Done:**
-
-- [ ] Accept modal shows confirmation
-- [ ] Reject modal has notes textarea (required)
-- [ ] Counter-offer modal has amount input + notes
-- [ ] All modals styled consistently
-- [ ] Form validation in modals
-- [ ] Submit buttons trigger API calls
-- [ ] Modals close after success
-- [ ] Error handling in modals
-
-**Code Pattern:**
-
-```typescript
-// src/components/admin/CounterOfferModal.tsx
-'use client'
-import { useState } from 'react'
-
-interface CounterOfferModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onSubmit: (amount: number, notes: string) => Promise<void>
-  currentAmount: number
-}
-
-export function CounterOfferModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  currentAmount,
-}: CounterOfferModalProps) {
-  const [amount, setAmount] = useState(currentAmount * 0.8) // Suggest 80%
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  
-  if (!isOpen) return null
-  
-  const handleSubmit = async () => {
-    if (!amount || amount <= 0) {
-      alert('Please enter a valid amount')
-      return
-    }
-    
-    try {
-      setSubmitting(true)
-      await onSubmit(amount, notes)
-      onClose()
-    } catch (error) {
-      console.error('Counter-offer failed:', error)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-  
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-lg w-full p-6">
-        <h2 className="text-2xl font-bold mb-4">Counter-Offer</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <p className="text-sm text-gray-600 mb-2">
-              Requested: {currentAmount} $CSTAKE
-            </p>
-            <label className="block text-sm font-semibold mb-2">
-              Your Offer (in $CSTAKE) *
-            </label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder="e.g., 1200"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-semibold mb-2">
-              Explanation (optional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              className="w-full px-4 py-2 border rounded-lg"
-              placeholder="Explain why you're offering a different amount..."
-            />
-          </div>
-        </div>
-        
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-lg disabled:opacity-50"
-          >
-            {submitting ? 'Sending...' : 'Send Counter-Offer'}
-          </button>
-          <button
-            onClick={onClose}
-            className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Similar patterns for AcceptModal and RejectModal
-```
-
----
-
-### PHASE-4-TICKET-009: Pioneer Response API Endpoint
-
-**Priority:** P0 | **Time:** 45 min
-
-**Goal:** Create endpoint for pioneers to accept/reject counter-offers or approvals
-
-**What to Do:**
-
-1. Create `src/app/api/proposals/respond/[id]/route.ts`
-2. Implement PUT handler
-3. Verify user is proposal creator
-4. Accept two actions: accept/reject
-5. Update status accordingly
-
-**Files to Create:**
+**Files to Edit:**
 
 - `src/app/api/proposals/respond/[id]/route.ts`
 
 **Definition of Done:**
 
-- [ ] PUT `/api/proposals/respond/:id` endpoint works
-- [ ] Requires authentication
-- [ ] Only proposal creator can respond
-- [ ] Accepts action: accept or reject
-- [ ] Works for counter_offer_pending status
-- [ ] Works for approved status
-- [ ] Updates status to 'accepted' or 'rejected'
-- [ ] Returns 403 if not creator
+- [ ] When pioneer accepts, contract is called
+- [ ] Agreement created on blockchain
+- [ ] Transaction hash saved to DB
+- [ ] Status updated to 'work_in_progress'
+- [ ] Error handling if contract call fails
+- [ ] Pioneer sees success message
+- [ ] Can view transaction on Basescan
 
 **Code Pattern:**
 
 ```typescript
-// src/app/api/proposals/respond/[id]/route.ts
+// In respond/[id]/route.ts (UPDATE)
+import { vestingService } from '@/lib/contracts/vestingService'
+
+// After pioneer accepts
+if (action === 'accept' && ['counter_offer_pending', 'approved'].includes(proposal.status)) {
+  try {
+    // Determine agreed amount
+    const agreedAmount = proposal.foundation_offer_cstake_amount 
+      || proposal.requested_cstake_amount
+    
+    // Create agreement on blockchain
+    const txHash = await vestingService.createAgreement(
+      proposal.id,
+      proposal.creator_wallet_address,
+      BigInt(agreedAmount * 1e18) // Convert to wei (assuming 18 decimals)
+    )
+    
+    // Update DB with transaction and new status
+    const { data: updated, error } = await supabase
+      .from('proposals')
+      .update({
+        status: 'work_in_progress',
+        contract_agreement_tx: txHash,
+      })
+      .eq('id', params.id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    
+    return jsonResponse({ 
+      success: true, 
+      proposal: updated,
+      message: 'Agreement created on blockchain. You can now start work!'
+    })
+  } catch (error) {
+    // Revert status if contract fails
+    return errorResponse('Failed to create blockchain agreement', 500)
+  }
+}
+```
+
+---
+
+### PHASE-5-TICKET-008: API Endpoint - Confirm Work (Pioneer)
+
+**Priority:** P0 | **Time:** 45 min
+
+**Goal:** Allow pioneer to confirm work completion via smart contract
+
+**What to Do:**
+
+1. Create `src/app/api/contracts/confirm-work/[id]/route.ts`
+2. Verify proposal is in 'work_in_progress' status
+3. Verify caller is contributor
+4. Call contract confirmWorkDone from pioneer's wallet
+5. Update DB with confirmation timestamp
+
+**Files to Create:**
+
+- `src/app/api/contracts/confirm-work/[id]/route.ts`
+
+**Definition of Done:**
+
+- [ ] POST endpoint works
+- [ ] Requires pioneer authentication
+- [ ] Only works if status is 'work_in_progress'
+- [ ] Calls smart contract function
+- [ ] Updates pioneer_confirmed_at timestamp
+- [ ] Returns success with transaction hash
+- [ ] Error handling
+
+**Note:** Pioneer must sign transaction themselves (not foundation wallet).
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/contracts/confirm-work/[id]/route.ts
 import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonResponse, errorResponse } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
 
-export async function PUT(
+export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const wallet = requireAuth(request)
-    const { action } = await request.json()
     
     // Get proposal
     const { data: proposal, error: fetchError } = await supabase
@@ -902,29 +606,36 @@ export async function PUT(
       return errorResponse('Proposal not found', 404)
     }
     
-    // Verify this is the creator
+    // Verify caller is creator
     if (proposal.creator_wallet_address.toLowerCase() !== wallet.toLowerCase()) {
-      return errorResponse('Forbidden - Not your proposal', 403)
+      return errorResponse('Forbidden', 403)
     }
     
-    // Validate status allows response
-    if (!['counter_offer_pending', 'approved'].includes(proposal.status)) {
-      return errorResponse('Proposal cannot be responded to', 400)
+    // Verify status
+    if (proposal.status !== 'work_in_progress') {
+      return errorResponse('Work not in progress', 400)
     }
     
-    // Update based on action
-    const newStatus = action === 'accept' ? 'accepted' : 'rejected'
+    // TODO: Call contract from FRONTEND (pioneer signs transaction)
+    // For now, just update timestamp
+    // Real implementation needs frontend to call contract directly
     
-    const { data: updated, error: updateError } = await supabase
+    const { data: updated, error } = await supabase
       .from('proposals')
-      .update({ status: newStatus })
+      .update({
+        pioneer_confirmed_at: new Date().toISOString(),
+      })
       .eq('id', params.id)
       .select()
       .single()
     
-    if (updateError) throw updateError
+    if (error) throw error
     
-    return jsonResponse({ success: true, proposal: updated })
+    return jsonResponse({ 
+      success: true, 
+      proposal: updated,
+      message: 'Work confirmation recorded. Awaiting admin approval.'
+    })
   } catch (error) {
     return errorResponse(error.message, 500)
   }
@@ -933,20 +644,115 @@ export async function PUT(
 
 ---
 
-### PHASE-4-TICKET-010: Pioneer Response UI in Dashboard
+### PHASE-5-TICKET-009: API Endpoint - Release Agreement (Admin)
 
-**Priority:** P0 | **Time:** 1 hour
+**Priority:** P0 | **Time:** 45 min
 
-**Goal:** Add UI in co-founder dashboard to see and respond to admin actions
+**Goal:** Allow admin to release tokens after verifying work
 
 **What to Do:**
 
-1. Update `src/app/cofounder-dashboard/page.tsx`
-2. Fetch user's proposals
-3. Highlight proposals needing action
-4. Show counter-offer details
-5. Add accept/reject buttons
-6. Handle response submission
+1. Create `src/app/api/contracts/release-agreement/[id]/route.ts`
+2. Verify admin authentication
+3. Verify pioneer has confirmed work
+4. Call vestingService.releaseAgreement()
+5. Update status to 'completed'
+6. Save release transaction hash
+
+**Files to Create:**
+
+- `src/app/api/contracts/release-agreement/[id]/route.ts`
+
+**Definition of Done:**
+
+- [ ] POST endpoint works
+- [ ] Requires admin authentication
+- [ ] Verifies pioneer confirmed work first
+- [ ] Calls smart contract releaseAgreement
+- [ ] Updates status to 'completed'
+- [ ] Saves transaction hash
+- [ ] Returns success
+- [ ] Error handling
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/contracts/release-agreement/[id]/route.ts
+import { NextRequest } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { jsonResponse, errorResponse } from '@/lib/api'
+import { requireAdmin } from '@/lib/auth/admin'
+import { vestingService } from '@/lib/contracts/vestingService'
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    requireAdmin(request)
+    
+    // Get proposal
+    const { data: proposal, error: fetchError } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+    
+    if (fetchError || !proposal) {
+      return errorResponse('Proposal not found', 404)
+    }
+    
+    // Verify work is in progress and pioneer confirmed
+    if (proposal.status !== 'work_in_progress') {
+      return errorResponse('Proposal not in progress', 400)
+    }
+    
+    if (!proposal.pioneer_confirmed_at) {
+      return errorResponse('Pioneer has not confirmed work completion', 400)
+    }
+    
+    // Release tokens via smart contract
+    const txHash = await vestingService.releaseAgreement(proposal.id)
+    
+    // Update DB
+    const { data: updated, error } = await supabase
+      .from('proposals')
+      .update({
+        status: 'completed',
+        contract_release_tx: txHash,
+      })
+      .eq('id', params.id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    
+    return jsonResponse({ 
+      success: true, 
+      proposal: updated,
+      txHash,
+      message: 'Tokens released to contributor!'
+    })
+  } catch (error) {
+    return errorResponse(error.message, 500)
+  }
+}
+```
+
+---
+
+### PHASE-5-TICKET-010: Frontend - Confirm Work Button
+
+**Priority:** P1 | **Time:** 30 min
+
+**Goal:** Add UI for pioneer to confirm work completion
+
+**What to Do:**
+
+1. Update cofounder dashboard
+2. Show "Confirm Work Done" button for work_in_progress proposals
+3. Call /api/contracts/confirm-work endpoint
+4. Show success/error feedback
 
 **Files to Edit:**
 
@@ -954,176 +760,172 @@ export async function PUT(
 
 **Definition of Done:**
 
-- [ ] Dashboard shows user's proposals
-- [ ] Proposals with counter_offer_pending highlighted
-- [ ] Shows foundation's offer amount and notes
-- [ ] Accept and reject buttons visible
-- [ ] Confirmation before accepting/rejecting
-- [ ] Status updates after response
-- [ ] Error handling
+- [ ] Button visible for work_in_progress proposals
+- [ ] Button calls confirm-work API
+- [ ] Shows loading state
+- [ ] Shows success message
+- [ ] Shows error if fails
+- [ ] Updates UI after confirmation
 - [ ] Mobile responsive
 
 **Code Pattern:**
 
 ```typescript
-// Add to cofounder-dashboard/page.tsx
-import { useEffect, useState } from 'react'
-import type { Proposal } from '@/types/proposal'
-
-const [proposals, setProposals] = useState<Proposal[]>([])
-
-useEffect(() => {
-  fetchMyProposals()
-}, [])
-
-const fetchMyProposals = async () => {
-  const response = await fetch('/api/proposals/me')
-  const { proposals } = await response.json()
-  setProposals(proposals)
-}
-
-const handleResponse = async (proposalId: string, action: 'accept' | 'reject') => {
-  if (!confirm(`Are you sure you want to ${action} this offer?`)) return
-  
-  try {
-    const response = await fetch(`/api/proposals/respond/${proposalId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action }),
-    })
-    
-    if (!response.ok) throw new Error('Failed to respond')
-    
-    // Refresh proposals
-    await fetchMyProposals()
-    alert(`Successfully ${action}ed!`)
-  } catch (error) {
-    alert('Failed to respond. Please try again.')
-  }
-}
-
-// In JSX
-{proposals.map(proposal => (
-  <div key={proposal.id} className="border rounded-lg p-4">
-    <h3 className="font-bold">{proposal.title}</h3>
-    <StatusBadge status={proposal.status} />
-    
-    {proposal.status === 'counter_offer_pending' && (
-      <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
-        <p className="font-semibold mb-2">Counter-Offer Received</p>
-        <p>
-          Foundation offers: {proposal.foundation_offer_cstake_amount} $CSTAKE
-          <span className="text-gray-600 ml-2">
-            (You requested: {proposal.requested_cstake_amount})
-          </span>
-        </p>
-        {proposal.foundation_notes && (
-          <p className="text-sm text-gray-600 mt-2">
-            "{proposal.foundation_notes}"
-          </p>
-        )}
-        <div className="flex gap-3 mt-4">
-          <button
-            onClick={() => handleResponse(proposal.id, 'accept')}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg"
-          >
-            Accept Offer
-          </button>
-          <button
-            onClick={() => handleResponse(proposal.id, 'reject')}
-            className="bg-gray-600 text-white px-4 py-2 rounded-lg"
-          >
-            Reject
-          </button>
-        </div>
-      </div>
-    )}
-    
-    {proposal.status === 'approved' && (
-      <div className="mt-4 bg-green-50 border border-green-200 rounded p-4">
-        <p className="font-semibold mb-2">✅ Proposal Approved!</p>
-        <p>Foundation approved your request for {proposal.requested_cstake_amount} $CSTAKE</p>
-        <button
-          onClick={() => handleResponse(proposal.id, 'accept')}
-          className="mt-3 bg-green-600 text-white px-6 py-2 rounded-lg"
-        >
-          Accept & Start Work
-        </button>
-      </div>
-    )}
+// In cofounder-dashboard/page.tsx
+{proposal.status === 'work_in_progress' && !proposal.pioneer_confirmed_at && (
+  <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded p-4">
+    <p className="font-semibold mb-2">Work in Progress</p>
+    <p className="text-sm mb-3">
+      Have you completed the work? Mark it as done to request review.
+    </p>
+    <button
+      onClick={() => handleConfirmWork(proposal.id)}
+      className="bg-green-600 text-white px-6 py-2 rounded-lg"
+    >
+      ✅ Mark Work as Complete
+    </button>
   </div>
-))}
+)}
+
+{proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
+  <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
+    <p className="font-semibold">⏳ Awaiting Admin Review</p>
+    <p className="text-sm text-gray-600">
+      You marked this work as complete. The foundation will review and release tokens.
+    </p>
+  </div>
+)}
 ```
 
 ---
 
-### PHASE-4-TICKET-011: E2E Integration Test - Double Handshake
+### PHASE-5-TICKET-011: Frontend - Admin Release Tokens Button
 
-**Priority:** P0 | **Time:** 45 min
+**Priority:** P1 | **Time:** 30 min
 
-**Goal:** Test complete double handshake flow from both sides
+**Goal:** Add UI for admin to release tokens after verifying work
 
 **What to Do:**
 
-1. Test as co-founder: Submit proposal
-2. Test as admin: Review and counter-offer
-3. Test as co-founder: Accept counter-offer
-4. Verify final status is 'accepted'
-5. Test reject flows
-6. Test edge cases
+1. Update admin proposal detail page
+2. Show "Release Tokens" button if pioneer confirmed work
+3. Call /api/contracts/release-agreement endpoint
+4. Show transaction hash
+5. Link to Basescan
+
+**Files to Edit:**
+
+- `src/app/admin/proposals/[id]/page.tsx`
 
 **Definition of Done:**
 
-- [ ] Can submit proposal as co-founder
-- [ ] Can view proposal in admin panel
-- [ ] Can accept proposal as admin
-- [ ] Can reject proposal as admin
-- [ ] Can send counter-offer as admin
-- [ ] Co-founder sees counter-offer
-- [ ] Co-founder can accept counter-offer
-- [ ] Co-founder can reject counter-offer
-- [ ] Final status updates correctly
-- [ ] Both UIs update in real-time
-- [ ] All error cases handled
+- [ ] Button visible when pioneer confirmed work
+- [ ] Button calls release-agreement API
+- [ ] Shows loading state during blockchain transaction
+- [ ] Shows success with transaction hash
+- [ ] Links to Basescan to view transaction
+- [ ] Shows error if fails
+- [ ] Updates proposal status after release
+
+**Code Pattern:**
+
+```typescript
+// In admin proposal detail
+{proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
+  <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
+    <p className="font-semibold mb-2">✅ Pioneer Confirmed Work Complete</p>
+    <p className="text-sm text-gray-600 mb-4">
+      Confirmed at: {new Date(proposal.pioneer_confirmed_at).toLocaleString()}
+    </p>
+    <button
+      onClick={() => handleReleaseTokens(proposal.id)}
+      disabled={releasing}
+      className="bg-green-600 text-white px-6 py-3 rounded-lg disabled:opacity-50"
+    >
+      {releasing ? 'Releasing Tokens...' : '💰 Release Tokens to Contributor'}
+    </button>
+  </div>
+)}
+
+{proposal.status === 'completed' && (
+  <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
+    <p className="font-semibold mb-2">✅ Completed</p>
+    <p className="text-sm text-gray-600 mb-2">
+      Tokens released successfully!
+    </p>
+    {proposal.contract_release_tx && (
+      <a
+        href={`https://sepolia.basescan.org/tx/${proposal.contract_release_tx}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline text-sm"
+      >
+        View transaction on Basescan →
+      </a>
+    )}
+  </div>
+)}
+```
+
+---
+
+### PHASE-5-TICKET-012: E2E Integration Test - Complete Lifecycle
+
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Test complete proposal lifecycle including smart contract interactions
+
+**What to Do:**
+
+1. Test full flow from proposal to token release
+2. Verify blockchain state matches DB state
+3. Check token balances before/after
+4. Test error cases
+5. Verify all transaction hashes valid
+
+**Definition of Done:**
+
+- [ ] Can submit and accept proposal
+- [ ] Agreement created on blockchain
+- [ ] Can confirm work as pioneer
+- [ ] Can release tokens as admin
+- [ ] Tokens transferred to pioneer wallet
+- [ ] All transaction hashes valid
+- [ ] All statuses update correctly
+- [ ] Can view transactions on Basescan
+- [ ] Error handling works
+- [ ] Mobile UI tested
 
 **Test Checklist:**
 
 ```
-Happy Path - Accept:
-✓ Submit proposal as co-founder
-✓ Login as admin
-✓ View proposal in admin panel
-✓ Click "Accept"
-✓ Confirm acceptance
-✓ Logout admin
-✓ Login as co-founder
-✓ See "Approved" status
-✓ Click "Accept & Start Work"
-✓ Status becomes "accepted"
+Setup:
+✓ Foundation wallet has $CSTAKE tokens
+✓ Foundation wallet approved VestingContract
 
-Happy Path - Counter-Offer:
-✓ Submit proposal (10,000 $CSTAKE)
-✓ Login as admin
-✓ Click "Counter-Offer"
-✓ Enter 8,000 $CSTAKE + explanation
-✓ Submit counter-offer
-✓ Logout admin
-✓ Login as co-founder
-✓ See counter-offer with amounts
-✓ Click "Accept Offer"
-✓ Status becomes "accepted"
+Full Lifecycle:
+✓ Pioneer submits proposal
+✓ Admin accepts proposal
+✓ Pioneer accepts (triggers contract)
+✓ Check Basescan: createAgreement transaction
+✓ Verify agreement exists in contract
+✓ Pioneer confirms work done
+✓ Admin clicks "Release Tokens"
+✓ Check Basescan: releaseAgreement transaction
+✓ Verify tokens received in pioneer wallet
+✓ Verify proposal status = 'completed'
 
-Reject Paths:
-✓ Admin rejects with reason
-✓ Status becomes "rejected"
-✓ Co-founder rejects counter-offer
-✓ Status becomes "rejected"
+Token Balances:
+✓ Check pioneer balance before (0 $CSTAKE)
+✓ Check pioneer balance after (agreed amount)
+✓ Check contract balance = 0 after release
 
 Edge Cases:
-✓ Try to respond to already-accepted proposal
-✓ Try to admin-action already-processed proposal
-✓ Non-admin tries to access admin panel
-✓ Non-creator tries to respond to proposal
+✓ Try to release before pioneer confirms (should fail)
+✓ Try to create duplicate agreement (should fail)
+✓ Try to confirm work twice (should fail on contract)
+✓ Non-admin tries to release (should fail)
+✓ Non-pioneer tries to confirm (should fail)
 ```
 
 ---
@@ -1132,94 +934,121 @@ Edge Cases:
 
 **Do these tickets in exact order:**
 
-1. **PHASE-4-TICKET-001** - Add status fields to DB (30 min)
-2. **PHASE-4-TICKET-002** - Update TypeScript types (15 min)
-3. **PHASE-4-TICKET-003** - Admin check utility (20 min)
-4. **PHASE-4-TICKET-004** - API GET /admin (30 min)
-5. **PHASE-4-TICKET-005** - API PUT /admin/:id (1 hour)
-6. **PHASE-4-TICKET-006** - Admin panel page (45 min)
-7. **PHASE-4-TICKET-007** - Admin detail view (1 hour)
-8. **PHASE-4-TICKET-008** - Admin action modals (1.5 hours)
-9. **PHASE-4-TICKET-009** - Pioneer respond API (45 min)
-10. **PHASE-4-TICKET-010** - Pioneer response UI (1 hour)
-11. **PHASE-4-TICKET-011** - E2E integration test (45 min)
+1. **PHASE-5-TICKET-001** - Write VestingContract.sol (2 hours)
+2. **PHASE-5-TICKET-002** - Deploy mock $CSTAKE token (30 min)
+3. **PHASE-5-TICKET-003** - Deploy VestingContract (1 hour)
+4. **PHASE-5-TICKET-004** - UUID to uint256 utility (30 min)
+5. **PHASE-5-TICKET-005** - Contract interaction service (2 hours)
+6. **PHASE-5-TICKET-006** - Add contract fields to DB (20 min)
+7. **PHASE-5-TICKET-007** - Auto-trigger createAgreement (1 hour)
+8. **PHASE-5-TICKET-008** - Confirm work API (45 min)
+9. **PHASE-5-TICKET-009** - Release agreement API (45 min)
+10. **PHASE-5-TICKET-010** - Frontend confirm work button (30 min)
+11. **PHASE-5-TICKET-011** - Frontend release tokens button (30 min)
+12. **PHASE-5-TICKET-012** - E2E integration test (1 hour)
 
-**Total Estimated Time: 8.5 hours**
+**Total Estimated Time: 11 hours**
 
-## Database Schema After Phase 4
+## New Dependencies
 
-```sql
-proposals (
-  id UUID PRIMARY KEY,
-  created_at TIMESTAMPTZ,
-  creator_wallet_address TEXT,
-  title TEXT,
-  description TEXT,
-  deliverable TEXT,
-  requested_cstake_amount NUMERIC,
-  
-  -- NEW in Phase 4:
-  status TEXT DEFAULT 'pending_review',
-  foundation_offer_cstake_amount NUMERIC,
-  foundation_notes TEXT
-)
+```json
+{
+  "dependencies": {
+    "ethers": "^6.13.4"
+  }
+}
 ```
 
-## Status Flow Visualization
+## Updated Status Flow
 
 ```
-Pioneer submits → pending_review
-                       ↓
-                  Admin reviews
-                  ↙    ↓    ↘
-            reject  accept  counter_offer
-              ↓       ↓          ↓
-          rejected  approved  counter_offer_pending
-                      ↓          ↙        ↘
-                   Pioneer    accept    reject
-                   accepts      ↓          ↓
-                      ↓      accepted  rejected
-                  accepted
+pending_review → approved/counter_offer_pending → accepted
+                                                      ↓
+                                          [BLOCKCHAIN: createAgreement]
+                                                      ↓
+                                              work_in_progress
+                                                      ↓
+                                          pioneer confirms work
+                                                      ↓
+                                          admin verifies & releases
+                                                      ↓
+                                          [BLOCKCHAIN: releaseAgreement]
+                                                      ↓
+                                                 completed
+```
+
+## Environment Variables Summary
+
+```bash
+# From previous phases
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+ADMIN_WALLET_ADDRESS=0x...
+
+# New in Phase 5
+CSTAKE_TOKEN_ADDRESS_TESTNET=0x...
+VESTING_CONTRACT_ADDRESS_TESTNET=0x...
+BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
+FOUNDATION_WALLET_PRIVATE_KEY=0x... # NEVER COMMIT!
 ```
 
 ## What We're Skipping
 
-- ❌ Multiple rounds of negotiation (one counter-offer only)
-- ❌ Email notifications
-- ❌ Push notifications
-- ❌ Audit log database table
-- ❌ Admin activity dashboard
-- ❌ Proposal comments/discussion
-- ❌ File attachments
-- ❌ Proposal amendments
+- ❌ Hardhat/Foundry test suite
+- ❌ Gas optimization analysis
+- ❌ Formal verification
+- ❌ Multi-signature admin wallet
+- ❌ Pausable/upgradeable contracts
+- ❌ Slashing for incomplete work
+- ❌ Partial releases (milestones)
+- ❌ Dispute resolution mechanism
 
-These can be added post-MVP.
+These can be added in Phase 6+ or post-MVP.
+
+## Security Considerations
+
+✅ **What we're doing right:**
+
+- Using OpenZeppelin IERC20
+- onlyFoundation modifier
+- Require statements for validation
+- Double confirmation (pioneer + admin)
+- Event emission for transparency
+
+⚠️ **What to audit before mainnet:**
+
+- Re-entrancy (not applicable here but verify)
+- Integer overflow (Solidity 0.8+ protects)
+- Access control (simple but verify)
+- Token approval mechanism
+- Front-running considerations
 
 ## Success Criteria
 
-After Phase 4 is complete:
+After Phase 5 is complete:
 
-✅ Admins can review proposals
+✅ Smart contract deployed to testnet
 
-✅ Admins can accept/reject/counter-offer
+✅ Tokens locked in escrow on agreement
 
-✅ Pioneers see and respond to admin actions
+✅ Pioneer can confirm work completion
 
-✅ Double Handshake concept implemented
+✅ Admin can release tokens after verification
 
-✅ Both parties must agree before proceeding
+✅ All transactions on-chain and verifiable
 
-✅ Status transitions enforced
+✅ Complete lifecycle tested end-to-end
 
-✅ Ready for Phase 5 (Smart Contracts)
+✅ Ready for Phase 6 (Dashboard enhancements)
 
-## Next Steps After Phase 4
+## Next Steps After Phase 5
 
-Once Double Handshake works:
+Once smart contracts work:
 
-- Phase 5: Smart contract for token escrow
-- Phase 6: Work completion and verification
-- Phase 7: Token release
-- Phase 8: Co-founder dashboard enhancements
+- Phase 6: Co-founder dashboard with wallet balance, token price
+- Phase 7: Admin dashboard with analytics
+- Phase 8: Polish, testing, launch prep
+- Phase 9: Mainnet deployment
 
-The proposal lifecycle is now functional from submission to acceptance!
+The core CrowdStaking mechanism is now fully functional with trustless escrow!

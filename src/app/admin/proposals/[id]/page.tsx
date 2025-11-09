@@ -18,7 +18,7 @@ import type { Proposal } from '@/types/proposal'
 export default function AdminProposalDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const { wallet, isConnecting } = useAuth()
+  const { wallet } = useAuth()
   const [proposal, setProposal] = useState<Proposal | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -31,12 +31,12 @@ export default function AdminProposalDetailPage() {
   const hasAdminAccess = wallet && isAdmin(wallet)
   
   useEffect(() => {
-    if (!isConnecting && hasAdminAccess) {
+    if (hasAdminAccess) {
       fetchProposal()
-    } else if (!isConnecting && !hasAdminAccess) {
+    } else {
       setLoading(false)
     }
-  }, [params.id, hasAdminAccess, isConnecting])
+  }, [params.id, hasAdminAccess])
   
   const fetchProposal = async () => {
     try {
@@ -96,8 +96,42 @@ export default function AdminProposalDetailPage() {
     }
   }
   
+  const [releasingTokens, setReleasingTokens] = useState(false)
+  
+  const handleReleaseTokens = async () => {
+    if (!confirm('Möchtest du die Tokens wirklich an den Pioneer freigeben?')) {
+      return
+    }
+    
+    try {
+      setReleasingTokens(true)
+      
+      const response = await fetch(`/api/contracts/release-agreement/${params.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to release tokens')
+      }
+      
+      const data = await response.json()
+      
+      // Refresh proposal
+      await fetchProposal()
+      
+      alert(data.message || 'Tokens erfolgreich freigegeben!')
+    } catch (err: any) {
+      console.error('Release tokens failed:', err)
+      alert(`Token-Freigabe fehlgeschlagen: ${err.message}`)
+    } finally {
+      setReleasingTokens(false)
+    }
+  }
+  
   // Loading state
-  if (isConnecting || loading) {
+  if (loading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -262,11 +296,89 @@ export default function AdminProposalDetailPage() {
             </div>
           )}
           
-          {!canTakeAction && (
+          {!canTakeAction && proposal.status !== 'work_in_progress' && proposal.status !== 'completed' && (
             <div className="pt-6 border-t border-gray-200">
               <p className="text-gray-600">
                 Dieses Proposal wurde bereits bearbeitet.
               </p>
+            </div>
+          )}
+          
+          {/* Work in Progress - Waiting for Pioneer Confirmation */}
+          {proposal.status === 'work_in_progress' && !proposal.pioneer_confirmed_at && (
+            <div className="pt-6 border-t border-gray-200">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <p className="font-semibold text-yellow-900 mb-2">
+                  ⏳ Pioneer arbeitet an der Aufgabe
+                </p>
+                <p className="text-sm text-gray-700 mb-3">
+                  Die Blockchain-Vereinbarung wurde erstellt. Warte darauf, dass der Pioneer die Arbeit als abgeschlossen markiert.
+                </p>
+                {proposal.contract_agreement_tx && (
+                  <a
+                    href={`https://${process.env.NODE_ENV === 'development' ? 'sepolia.' : ''}basescan.org/tx/${proposal.contract_agreement_tx}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    📜 Blockchain-Vereinbarung anzeigen →
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Work in Progress - Pioneer Confirmed, Ready to Release */}
+          {proposal.status === 'work_in_progress' && proposal.pioneer_confirmed_at && (
+            <div className="pt-6 border-t border-gray-200">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <p className="font-semibold text-green-900 mb-2">
+                  ✅ Pioneer hat die Arbeit als abgeschlossen markiert
+                </p>
+                <p className="text-sm text-gray-700 mb-2">
+                  Bestätigt am: {new Date(proposal.pioneer_confirmed_at).toLocaleString('de-DE', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Überprüfe die Arbeit und gib die Tokens frei, wenn alles in Ordnung ist.
+                </p>
+                <button
+                  onClick={handleReleaseTokens}
+                  disabled={releasingTokens}
+                  className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {releasingTokens ? '⏳ Gebe Tokens frei...' : '💰 Tokens freigeben'}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Completed State */}
+          {proposal.status === 'completed' && (
+            <div className="pt-6 border-t border-gray-200">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                <p className="font-semibold text-green-900 mb-2">
+                  ✅ Abgeschlossen
+                </p>
+                <p className="text-sm text-gray-700 mb-3">
+                  Tokens wurden erfolgreich an den Pioneer freigegeben!
+                </p>
+                {proposal.contract_release_tx && (
+                  <a
+                    href={`https://${process.env.NODE_ENV === 'development' ? 'sepolia.' : ''}basescan.org/tx/${proposal.contract_release_tx}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-green-600 hover:underline"
+                  >
+                    📜 Token-Release-Transaktion anzeigen →
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -324,9 +436,19 @@ function StatusBadge({ status }: { status: string }) {
       label: 'Genehmigt'
     },
     accepted: {
+      bg: 'bg-blue-100',
+      text: 'text-blue-800',
+      label: 'Akzeptiert'
+    },
+    work_in_progress: {
+      bg: 'bg-orange-100',
+      text: 'text-orange-800',
+      label: 'In Arbeit'
+    },
+    completed: {
       bg: 'bg-green-100',
       text: 'text-green-800',
-      label: 'Akzeptiert'
+      label: 'Abgeschlossen'
     },
     rejected: {
       bg: 'bg-red-100',

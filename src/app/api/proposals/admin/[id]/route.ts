@@ -41,9 +41,12 @@ interface AdminActionRequest {
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params (Next.js 16 change)
+    const { id } = await params
+
     // Verify admin authentication
     const adminWallet = requireAdmin(request)
     
@@ -60,7 +63,7 @@ export async function PUT(
     const { data: proposal, error: fetchError } = await supabase
       .from('proposals')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     
     if (fetchError || !proposal) {
@@ -84,9 +87,9 @@ export async function PUT(
         newStatus = 'approved'
         updates = { 
           status: newStatus,
-          foundation_notes: foundation_notes || null
+          foundation_notes: foundation_notes || undefined
         }
-        console.log(`Admin ${adminWallet} approved proposal ${params.id}`)
+        console.log(`Admin ${adminWallet} approved proposal ${id}`)
         break
       
       case 'reject':
@@ -95,7 +98,7 @@ export async function PUT(
           status: newStatus,
           foundation_notes: foundation_notes || 'Proposal rejected by admin'
         }
-        console.log(`Admin ${adminWallet} rejected proposal ${params.id}`)
+        console.log(`Admin ${adminWallet} rejected proposal ${id}`)
         break
       
       case 'counter_offer':
@@ -106,10 +109,10 @@ export async function PUT(
         updates = {
           status: newStatus,
           foundation_offer_cstake_amount,
-          foundation_notes: foundation_notes || null
+          foundation_notes: foundation_notes || undefined
         }
         console.log(
-          `Admin ${adminWallet} made counter-offer on proposal ${params.id}: ` +
+          `Admin ${adminWallet} made counter-offer on proposal ${id}: ` +
           `${foundation_offer_cstake_amount} (requested: ${proposal.requested_cstake_amount})`
         )
         break
@@ -119,7 +122,7 @@ export async function PUT(
     const { data: updated, error: updateError } = await supabase
       .from('proposals')
       .update(updates)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
     
