@@ -88,20 +88,26 @@ export function requireAuth(request: Request | NextRequest): string {
 /**
  * Checks if a wallet address is an admin
  * 
- * MVP APPROACH: Hardcoded admin addresses
- * PHASE 3: Will move to database-based role system
+ * PHASE 4: Reads admin addresses from ADMIN_WALLET_ADDRESS environment variable
+ * Supports multiple admin addresses separated by commas
  * 
  * @param walletAddress - Wallet address to check
  * @returns true if wallet is an admin
  */
 export function isAdmin(walletAddress: string): boolean {
-  // MVP: Hardcoded admin wallets (lowercase)
-  const adminWallets: string[] = [
-    // Add admin wallet addresses here
-    // Example: '0x1234567890123456789012345678901234567890'
-  ]
+  const adminAddressesEnv = process.env.ADMIN_WALLET_ADDRESS
   
-  return adminWallets.includes(walletAddress.toLowerCase())
+  if (!adminAddressesEnv) {
+    console.warn('⚠️ ADMIN_WALLET_ADDRESS not set in environment')
+    return false
+  }
+  
+  const adminAddresses = adminAddressesEnv
+    .split(',')
+    .map(addr => addr.trim().toLowerCase())
+    .filter(addr => addr.length > 0)
+  
+  return adminAddresses.includes(walletAddress.toLowerCase())
 }
 
 /**

@@ -38,6 +38,21 @@ export const proposalSchema = z.object({
 export type ProposalFormData = z.infer<typeof proposalSchema>
 
 /**
+ * Status of a proposal in the double handshake process
+ * - pending_review: Initial state, awaiting admin review
+ * - counter_offer_pending: Admin made counter-offer, awaiting pioneer response
+ * - approved: Admin approved, awaiting pioneer acceptance
+ * - accepted: Both parties agreed (final success state)
+ * - rejected: Rejected by admin or pioneer (final failure state)
+ */
+export type ProposalStatus = 
+  | 'pending_review'
+  | 'counter_offer_pending'
+  | 'approved'
+  | 'accepted'
+  | 'rejected'
+
+/**
  * Complete proposal interface including database fields
  * Used when fetching proposals from the API
  */
@@ -49,6 +64,9 @@ export interface Proposal {
   deliverable: string
   requested_cstake_amount: number
   created_at: string
+  status: ProposalStatus
+  foundation_offer_cstake_amount?: number
+  foundation_notes?: string
 }
 
 /**

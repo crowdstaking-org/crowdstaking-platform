@@ -1,430 +1,708 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 30f05b95-d9a2-4869-92b0-e942fde339cf -->
-# Phase 3 Refinement: Minimal-Invasive Proposal Submission Form
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 f407df75-7a3a-4b89-86ea-ed2011bf5aaf -->
+# Phase 4 Refinement: Minimal-Invasive Admin Review & Double Handshake
 
-## Context: What We've Built So Far
+## Context: What We've Built
 
-### Phase 1 ✅
+### Phase 1-3 Complete ✅
 
-- Supabase database with `proposals` table (minimal schema)
-- API endpoint `POST /api/proposals` (basic version)
-- API helpers for responses
+- **Database:** proposals table (basic schema)
+- **Auth:** Secure wallet authentication with sessions
+- **Proposal Form:** Co-founders can submit proposals
+- **API:** POST /api/proposals, GET /api/proposals/me
 
-### Phase 2 ✅
+### Current Proposals Table Schema
 
-- Secure wallet authentication
-- Session management
-- ProtectedRoute component
-- Auth hooks
+```sql
+proposals (
+  id UUID PRIMARY KEY,
+  created_at TIMESTAMPTZ,
+  creator_wallet_address TEXT,
+  title TEXT,
+  description TEXT,
+  deliverable TEXT,  -- Note: missing from Phase 1!
+  requested_cstake_amount NUMERIC
+)
+```
 
-### Phase 3 Goal
+## Phase 4 Goal: The "Double Handshake"
 
-Build **complete proposal submission experience** for co-founders:
+Implement the core CrowdStaking concept where **both parties must agree**:
 
-- Beautiful, user-friendly form
-- Markdown editor for rich content
-- Real-time validation
-- Preview before submit
-- Success/error handling
-- Integration with existing API
+1. **Foundation reviews proposal** → Can accept, reject, or counter-offer
+2. **Pioneer responds** → Can accept or reject counter-offer
+3. **Agreement reached** → Both parties said "yes"
 
-## What Exists Already
+**This is the "Wizard of Oz" phase** - foundation acts as manual mediator before AI automation.
 
-From USERFLOW.md analysis, we found:
+## What We Need to Add
 
-- ❌ No `/dashboard/propose` page exists yet
-- ✅ Basic proposal flow mocked in UI
-- ✅ Design system components available
+### Database Changes (Minimal)
+
+Add 3 columns to proposals table:
+
+- `status` - Track proposal state
+- `foundation_offer_cstake_amount` - Counter-offer amount
+- `foundation_notes` - Reason/explanation
+
+### New Features
+
+1. Admin panel to view all proposals
+2. Admin actions (accept/reject/counter-offer)
+3. Pioneer view to see and respond to admin actions
+4. Status state machine to enforce valid transitions
 
 ## Minimal-Invasive Strategy
 
-**Leverage what exists:**
-
-- Use existing Tailwind design system
-- Use existing Layout component
-- Reuse form patterns from other pages
-- Simple approach first, enhance later
-
 **What we'll build:**
 
-1. Form UI with 4 fields (title, description, deliverable, amount)
-2. Markdown editor (library)
-3. Client-side validation (Zod)
-4. Preview component
-5. Submit handler
-6. Success/error states
+- Simple status field (string enum, not complex state machine initially)
+- Admin check via environment variable (hardcoded wallet)
+- Basic admin UI (list + detail view)
+- Three admin actions
+- Pioneer response UI in existing dashboard
+- No audit trail database (add later if needed)
 
 **What we'll skip:**
 
-- ❌ Draft saving (add later)
-- ❌ File attachments (not in MVP)
-- ❌ AI-assisted writing (post-MVP)
-- ❌ Template system (post-MVP)
+- ❌ Complex state machine library
+- ❌ Multiple admin roles/permissions
+- ❌ Email notifications (add later)
+- ❌ Audit log database (use console.log for now)
+- ❌ Advanced negotiation (one counter-offer only for MVP)
 
-## Required Dependencies Analysis
+## Status State Machine (Simplified)
 
-Need to install:
+```
+pending_review (initial)
+  ├→ rejected (by admin)
+  ├→ counter_offer_pending (by admin)
+  └→ approved (by admin)
 
-- `react-hook-form` - Form state management
-- `zod` - Schema validation
-- `react-markdown` - Markdown rendering
-- `react-simplemde-editor` - Markdown editor (lightweight)
+counter_offer_pending
+  ├→ rejected (by pioneer)
+  └→ accepted (by pioneer)
 
-Total bundle size: ~200kb (acceptable for MVP)
+approved
+  └→ accepted (by pioneer)
+
+accepted (final - ready for smart contract)
+rejected (final)
+```
+
+**5 states total** - simple string enum, no complex library needed.
 
 ## Refined Actionable Tickets
 
-### PHASE-3-TICKET-001: Install Form Dependencies
+### PHASE-4-TICKET-001: Add Status Fields to Proposals Table
 
-**Priority:** P0 | **Time:** 10 min
+**Priority:** P0 | **Time:** 30 min
 
-**Goal:** Install necessary packages for form handling and markdown
+**Goal:** Extend proposals table with status and negotiation fields
 
 **What to Do:**
 
-1. Install react-hook-form for form state
-2. Install zod for validation
-3. Install react-markdown for rendering
-4. Install simplemde-markdown-editor + react-simplemde-editor
+1. Use Supabase MCP to apply migration
+2. Add 3 new columns: status, foundation_offer_cstake_amount, foundation_notes
+3. Set default status to 'pending_review'
+4. Update existing proposals to have status (if any)
 
-**Commands:**
+**Migration SQL:**
 
-```bash
-npm install react-hook-form zod
-npm install react-markdown remark-gfm
-npm install simplemde-markdown-editor react-simplemde-editor
-npm install --save-dev @types/react-simplemde-editor
+```sql
+ALTER TABLE proposals
+  ADD COLUMN status TEXT NOT NULL DEFAULT 'pending_review',
+  ADD COLUMN foundation_offer_cstake_amount NUMERIC,
+  ADD COLUMN foundation_notes TEXT;
+
+-- Add check constraint for valid statuses
+ALTER TABLE proposals
+  ADD CONSTRAINT valid_status 
+  CHECK (status IN (
+    'pending_review',
+    'counter_offer_pending', 
+    'approved',
+    'accepted',
+    'rejected'
+  ));
 ```
 
 **Definition of Done:**
 
-- [ ] All packages installed in package.json
-- [ ] No dependency conflicts
-- [ ] TypeScript types available
-- [ ] Can import packages without errors
-- [ ] `npm run build` succeeds
+- [ ] Migration applied successfully
+- [ ] New columns exist in table
+- [ ] Existing proposals have status 'pending_review'
+- [ ] Check constraint prevents invalid statuses
+- [ ] Can query proposals by status
+- [ ] No breaking changes to existing code
 
 ---
 
-### PHASE-3-TICKET-002: Create Proposal Schema & Types
+### PHASE-4-TICKET-002: Update Proposal Types with Status
 
-**Priority:** P0 | **Time:** 20 min
+**Priority:** P0 | **Time:** 15 min
 
-**Goal:** Define TypeScript types and Zod validation schema for proposals
+**Goal:** Add status fields to TypeScript types
 
 **What to Do:**
 
-1. Create `src/types/proposal.ts`
-2. Define Proposal interface
-3. Create Zod schema matching API expectations
-4. Export both for reuse
+1. Update `src/types/proposal.ts`
+2. Add status field to Proposal interface
+3. Add foundation fields
+4. Export status type
 
-**Files to Create:**
+**Files to Edit:**
 
 - `src/types/proposal.ts`
 
 **Definition of Done:**
 
-- [ ] Proposal interface defined
-- [ ] Zod schema matches interface
-- [ ] Schema validates all 4 fields
-- [ ] Min/max lengths enforced
-- [ ] Amount must be positive number
+- [ ] Status type defined as union of valid strings
+- [ ] Proposal interface includes new fields
+- [ ] TypeScript compilation succeeds
 - [ ] Types exported for use in components
 
 **Code Pattern:**
 
 ```typescript
-// src/types/proposal.ts
-import { z } from 'zod'
+// src/types/proposal.ts (UPDATE)
 
-export const proposalSchema = z.object({
-  title: z.string()
-    .min(5, 'Title must be at least 5 characters')
-    .max(100, 'Title must be less than 100 characters'),
-  
-  description: z.string()
-    .min(50, 'Description must be at least 50 characters')
-    .max(5000, 'Description must be less than 5000 characters'),
-  
-  deliverable: z.string()
-    .min(20, 'Deliverable must be at least 20 characters')
-    .max(2000, 'Deliverable must be less than 2000 characters'),
-  
-  requested_cstake_amount: z.number()
-    .positive('Amount must be greater than 0')
-    .max(1000000, 'Amount too large'),
-})
-
-export type ProposalFormData = z.infer<typeof proposalSchema>
+export type ProposalStatus = 
+  | 'pending_review'
+  | 'counter_offer_pending'
+  | 'approved'
+  | 'accepted'
+  | 'rejected'
 
 export interface Proposal extends ProposalFormData {
   id: string
   creator_wallet_address: string
   created_at: string
+  status: ProposalStatus
+  foundation_offer_cstake_amount?: number
+  foundation_notes?: string
 }
 ```
 
 ---
 
-### PHASE-3-TICKET-003: Create Markdown Editor Component
+### PHASE-4-TICKET-003: Admin Check Utility
 
-**Priority:** P0 | **Time:** 1 hour
+**Priority:** P0 | **Time:** 20 min
 
-**Goal:** Build reusable markdown editor component with preview
+**Goal:** Create simple admin authorization check
 
 **What to Do:**
 
-1. Create `src/components/forms/MarkdownEditor.tsx`
-2. Wrap SimpleMDE with React component
-3. Add toolbar configuration
-4. Style to match design system
-5. Add character counter
-6. Make it controlled component (value + onChange)
+1. Add ADMIN_WALLET_ADDRESS to .env
+2. Create `src/lib/auth/admin.ts`
+3. Add isAdmin() function
+4. Add requireAdmin() middleware-style function
 
 **Files to Create:**
 
-- `src/components/forms/MarkdownEditor.tsx`
-- Import SimpleMDE CSS in component
+- `src/lib/auth/admin.ts`
+
+**Files to Edit:**
+
+- `.env.local` (add admin wallet)
+- `.env.example` (document admin wallet)
 
 **Definition of Done:**
 
-- [ ] Component renders markdown editor
-- [ ] Toolbar has basic formatting (bold, italic, lists, links)
-- [ ] Preview tab works
-- [ ] Character counter shows remaining chars
-- [ ] Styled consistently with design
-- [ ] Works as controlled component
+- [ ] Admin wallet address in environment
+- [ ] isAdmin(wallet) function works
+- [ ] requireAdmin(request) throws if not admin
+- [ ] Works with existing auth system
+- [ ] Case-insensitive address comparison
+- [ ] Multiple admin addresses supported (comma-separated)
+
+**Code Pattern:**
+
+```typescript
+// src/lib/auth/admin.ts
+import { requireAuth } from './auth'
+
+export function isAdmin(walletAddress: string): boolean {
+  const adminAddresses = process.env.ADMIN_WALLET_ADDRESS
+    ?.split(',')
+    .map(addr => addr.trim().toLowerCase()) || []
+  
+  return adminAddresses.includes(walletAddress.toLowerCase())
+}
+
+export function requireAdmin(request: Request): string {
+  const wallet = requireAuth(request)
+  
+  if (!isAdmin(wallet)) {
+    throw new Error('Forbidden - Admin access required')
+  }
+  
+  return wallet
+}
+```
+
+---
+
+### PHASE-4-TICKET-004: API GET /api/proposals/admin
+
+**Priority:** P0 | **Time:** 30 min
+
+**Goal:** Create admin endpoint to fetch all proposals
+
+**What to Do:**
+
+1. Create `src/app/api/proposals/admin/route.ts`
+2. Implement GET handler with admin auth
+3. Return all proposals sorted by created_at
+4. Optional: Filter by status via query param
+
+**Files to Create:**
+
+- `src/app/api/proposals/admin/route.ts`
+
+**Definition of Done:**
+
+- [ ] GET `/api/proposals/admin` endpoint works
+- [ ] Requires admin authentication
+- [ ] Returns all proposals (not just own)
+- [ ] Sorted by created_at DESC (newest first)
+- [ ] Includes all fields (status, foundation_notes, etc.)
+- [ ] Optional ?status=pending_review filter works
+- [ ] Returns 403 for non-admins
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/proposals/admin/route.ts
+import { NextRequest } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { jsonResponse, errorResponse } from '@/lib/api'
+import { requireAdmin } from '@/lib/auth/admin'
+
+export async function GET(request: NextRequest) {
+  try {
+    requireAdmin(request)
+    
+    const { searchParams } = new URL(request.url)
+    const statusFilter = searchParams.get('status')
+    
+    let query = supabase
+      .from('proposals')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (statusFilter) {
+      query = query.eq('status', statusFilter)
+    }
+    
+    const { data, error } = await query
+    
+    if (error) throw error
+    
+    return jsonResponse({ success: true, proposals: data })
+  } catch (error) {
+    if (error.message.includes('Forbidden')) {
+      return errorResponse(error.message, 403)
+    }
+    return errorResponse(error.message, 500)
+  }
+}
+```
+
+---
+
+### PHASE-4-TICKET-005: API PUT /api/proposals/admin/[id]
+
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Create admin endpoint to update proposal status and fields
+
+**What to Do:**
+
+1. Create `src/app/api/proposals/admin/[id]/route.ts`
+2. Implement PUT handler for admin actions
+3. Accept action type (accept/reject/counter_offer)
+4. Validate status transitions
+5. Update proposal in database
+
+**Files to Create:**
+
+- `src/app/api/proposals/admin/[id]/route.ts`
+
+**Definition of Done:**
+
+- [ ] PUT `/api/proposals/admin/:id` endpoint works
+- [ ] Requires admin authentication
+- [ ] Accepts action type in body
+- [ ] Validates current status allows action
+- [ ] Updates status correctly for each action
+- [ ] Saves foundation_offer and notes for counter-offer
+- [ ] Returns updated proposal
+- [ ] Returns 400 if invalid transition
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/proposals/admin/[id]/route.ts
+import { NextRequest } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { jsonResponse, errorResponse } from '@/lib/api'
+import { requireAdmin } from '@/lib/auth/admin'
+import type { ProposalStatus } from '@/types/proposal'
+
+type AdminAction = 'accept' | 'reject' | 'counter_offer'
+
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    requireAdmin(request)
+    
+    const { action, foundation_offer_cstake_amount, foundation_notes } = 
+      await request.json()
+    
+    // Get current proposal
+    const { data: proposal, error: fetchError } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+    
+    if (fetchError || !proposal) {
+      return errorResponse('Proposal not found', 404)
+    }
+    
+    // Validate action on current status
+    if (proposal.status !== 'pending_review') {
+      return errorResponse('Proposal already processed', 400)
+    }
+    
+    // Determine new status and fields
+    let updates: any = {}
+    
+    switch (action as AdminAction) {
+      case 'accept':
+        updates = { status: 'approved' }
+        break
+      
+      case 'reject':
+        updates = { 
+          status: 'rejected',
+          foundation_notes 
+        }
+        break
+      
+      case 'counter_offer':
+        if (!foundation_offer_cstake_amount) {
+          return errorResponse('Counter offer amount required', 400)
+        }
+        updates = {
+          status: 'counter_offer_pending',
+          foundation_offer_cstake_amount,
+          foundation_notes,
+        }
+        break
+      
+      default:
+        return errorResponse('Invalid action', 400)
+    }
+    
+    // Update proposal
+    const { data: updated, error: updateError } = await supabase
+      .from('proposals')
+      .update(updates)
+      .eq('id', params.id)
+      .select()
+      .single()
+    
+    if (updateError) throw updateError
+    
+    return jsonResponse({ success: true, proposal: updated })
+  } catch (error) {
+    if (error.message.includes('Forbidden')) {
+      return errorResponse(error.message, 403)
+    }
+    return errorResponse(error.message, 500)
+  }
+}
+```
+
+---
+
+### PHASE-4-TICKET-006: Admin Panel Page Structure
+
+**Priority:** P0 | **Time:** 45 min
+
+**Goal:** Create basic admin panel with proposals list
+
+**What to Do:**
+
+1. Create `src/app/admin/proposals/page.tsx`
+2. Check if user is admin (client-side)
+3. Fetch proposals from admin API
+4. Display list with key info
+5. Add basic styling
+
+**Files to Create:**
+
+- `src/app/admin/proposals/page.tsx`
+- `src/app/admin/layout.tsx` (optional admin layout)
+
+**Definition of Done:**
+
+- [ ] Page accessible at `/admin/proposals`
+- [ ] Shows 403/redirect if not admin
+- [ ] Fetches and displays all proposals
+- [ ] Shows title, creator, status, amount
+- [ ] Clickable to view detail
+- [ ] Loading state while fetching
+- [ ] Empty state if no proposals
 - [ ] Mobile responsive
 
 **Code Pattern:**
 
 ```typescript
-// src/components/forms/MarkdownEditor.tsx
+// src/app/admin/proposals/page.tsx
 'use client'
-import { useMemo } from 'react'
-import dynamic from 'next/dynamic'
-import 'simplemde/dist/simplemde.min.css'
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
+import { isAdmin } from '@/lib/auth/admin'
+import { Layout } from '@/components/Layout'
+import type { Proposal } from '@/types/proposal'
+import Link from 'next/link'
 
-// Dynamic import to avoid SSR issues
-const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
-  ssr: false,
-})
-
-interface MarkdownEditorProps {
-  value: string
-  onChange: (value: string) => void
-  placeholder?: string
-  maxLength?: number
+export default function AdminProposalsPage() {
+  const { wallet } = useAuth()
+  const [proposals, setProposals] = useState<Proposal[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Check admin access
+  if (!wallet || !isAdmin(wallet)) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-4">Access Denied</h1>
+            <p className="text-gray-600">Admin access required</p>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+  
+  useEffect(() => {
+    fetchProposals()
+  }, [])
+  
+  const fetchProposals = async () => {
+    try {
+      const response = await fetch('/api/proposals/admin')
+      const { proposals } = await response.json()
+      setProposals(proposals)
+    } catch (error) {
+      console.error('Failed to fetch proposals:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+  
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto py-12 px-4">
+        <h1 className="text-4xl font-bold mb-8">Admin: Review Proposals</h1>
+        
+        {loading ? (
+          <p>Loading proposals...</p>
+        ) : proposals.length === 0 ? (
+          <p className="text-gray-600">No proposals yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {proposals.map(proposal => (
+              <Link
+                key={proposal.id}
+                href={`/admin/proposals/${proposal.id}`}
+                className="block bg-white border rounded-lg p-6 hover:shadow-lg transition-shadow"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-xl font-bold">{proposal.title}</h3>
+                    <p className="text-sm text-gray-600">
+                      From: {proposal.creator_wallet_address.slice(0, 10)}...
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <StatusBadge status={proposal.status} />
+                    <p className="text-sm mt-1">
+                      {proposal.requested_cstake_amount} $CSTAKE
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  )
 }
 
-export function MarkdownEditor({
-  value,
-  onChange,
-  placeholder,
-  maxLength,
-}: MarkdownEditorProps) {
-  const options = useMemo(() => ({
-    spellChecker: false,
-    placeholder: placeholder || 'Write here...',
-    status: maxLength ? [
-      {
-        className: 'character-count',
-        onUpdate: (el: HTMLElement) => {
-          const remaining = maxLength - value.length
-          el.innerHTML = `${remaining} characters remaining`
-        },
-      },
-    ] : false,
-    toolbar: [
-      'bold', 'italic', 'heading', '|',
-      'quote', 'unordered-list', 'ordered-list', '|',
-      'link', 'preview', 'guide',
-    ],
-  }), [value.length, maxLength, placeholder])
-
+function StatusBadge({ status }: { status: string }) {
+  const colors = {
+    pending_review: 'bg-yellow-100 text-yellow-800',
+    counter_offer_pending: 'bg-blue-100 text-blue-800',
+    approved: 'bg-green-100 text-green-800',
+    accepted: 'bg-green-100 text-green-800',
+    rejected: 'bg-red-100 text-red-800',
+  }
+  
   return (
-    <div className="markdown-editor">
-      <SimpleMDE
-        value={value}
-        onChange={onChange}
-        options={options}
-      />
-    </div>
+    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors[status]}`}>
+      {status.replace('_', ' ')}
+    </span>
   )
 }
 ```
 
 ---
 
-### PHASE-3-TICKET-004: Create Proposal Form Page
+### PHASE-4-TICKET-007: Admin Proposal Detail View
 
-**Priority:** P0 | **Time:** 1.5 hours
+**Priority:** P0 | **Time:** 1 hour
 
-**Goal:** Build complete proposal submission form page
+**Goal:** Create detailed view of single proposal with action buttons
 
 **What to Do:**
 
-1. Create `src/app/dashboard/propose/page.tsx`
-2. Setup react-hook-form with Zod validation
-3. Add all 4 form fields:
-
-   - Title (input)
-   - Description (markdown editor)
-   - Deliverable (markdown editor)
-   - Amount (number input)
-
-4. Wrap in ProtectedRoute
-5. Add submit handler
-6. Style with existing design system
+1. Create `src/app/admin/proposals/[id]/page.tsx`
+2. Fetch proposal by ID
+3. Display all proposal details
+4. Show action buttons based on status
+5. Handle admin actions
 
 **Files to Create:**
 
-- `src/app/dashboard/propose/page.tsx`
+- `src/app/admin/proposals/[id]/page.tsx`
 
 **Definition of Done:**
 
-- [ ] Page accessible at `/dashboard/propose`
-- [ ] Protected by authentication
-- [ ] Form has all 4 required fields
-- [ ] Real-time validation on blur
-- [ ] Error messages display inline
-- [ ] Submit button disabled when invalid
-- [ ] Loading state during submission
-- [ ] Mobile responsive
+- [ ] Page accessible at `/admin/proposals/:id`
+- [ ] Displays full proposal content
+- [ ] Markdown rendered for description/deliverable
+- [ ] Shows creator info and status
+- [ ] Action buttons visible for pending_review
+- [ ] No actions shown for final states (accepted/rejected)
+- [ ] Back button to proposals list
 
 **Code Pattern:**
 
 ```typescript
-// src/app/dashboard/propose/page.tsx
+// src/app/admin/proposals/[id]/page.tsx
 'use client'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { proposalSchema, ProposalFormData } from '@/types/proposal'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { MarkdownEditor } from '@/components/forms/MarkdownEditor'
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
+import type { Proposal } from '@/types/proposal'
 import { Layout } from '@/components/Layout'
 
-export default function ProposePage() {
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting, isValid },
-  } = useForm<ProposalFormData>({
-    resolver: zodResolver(proposalSchema),
-    mode: 'onBlur',
-  })
-
-  const onSubmit = async (data: ProposalFormData) => {
+export default function AdminProposalDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const [proposal, setProposal] = useState<Proposal | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    fetchProposal()
+  }, [params.id])
+  
+  const fetchProposal = async () => {
     try {
-      const response = await fetch('/api/proposals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      
-      if (!response.ok) throw new Error('Failed to submit')
-      
-      // Handle success (next ticket)
+      const response = await fetch('/api/proposals/admin')
+      const { proposals } = await response.json()
+      const found = proposals.find((p: Proposal) => p.id === params.id)
+      setProposal(found)
     } catch (error) {
-      // Handle error (next ticket)
+      console.error('Failed to fetch proposal:', error)
+    } finally {
+      setLoading(false)
     }
   }
-
+  
+  const handleAction = async (action: string, data?: any) => {
+    try {
+      const response = await fetch(`/api/proposals/admin/${params.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...data }),
+      })
+      
+      if (!response.ok) throw new Error('Action failed')
+      
+      // Refresh proposal
+      await fetchProposal()
+    } catch (error) {
+      console.error('Action failed:', error)
+      alert('Action failed. Please try again.')
+    }
+  }
+  
+  if (loading) return <Layout><p>Loading...</p></Layout>
+  if (!proposal) return <Layout><p>Proposal not found</p></Layout>
+  
   return (
     <Layout>
-      <ProtectedRoute>
-        <div className="max-w-4xl mx-auto py-12 px-4">
-          <h1 className="text-4xl font-bold mb-8">Submit a Proposal</h1>
+      <div className="max-w-4xl mx-auto py-12 px-4">
+        <button
+          onClick={() => router.back()}
+          className="mb-6 text-gray-600 hover:text-gray-900"
+        >
+          ← Back to Proposals
+        </button>
+        
+        <div className="bg-white border rounded-lg p-8">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold mb-2">{proposal.title}</h1>
+            <p className="text-sm text-gray-600">
+              From: {proposal.creator_wallet_address}
+            </p>
+            <p className="text-lg font-semibold mt-2">
+              Requested: {proposal.requested_cstake_amount} $CSTAKE
+            </p>
+            <StatusBadge status={proposal.status} />
+          </div>
           
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Title Field */}
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Proposal Title *
-              </label>
-              <input
-                {...register('title')}
-                type="text"
-                placeholder="e.g., Logo & Brand Identity Design"
-                className="w-full px-4 py-3 border rounded-lg"
-              />
-              {errors.title && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.title.message}
-                </p>
-              )}
+              <h3 className="font-semibold mb-2">Description</h3>
+              <div className="prose max-w-none">
+                <ReactMarkdown>{proposal.description}</ReactMarkdown>
+              </div>
             </div>
-
-            {/* Description Field */}
+            
             <div>
-              <label className="block text-sm font-semibold mb-2">
-                Description * <span className="text-gray-500">(What will you do?)</span>
-              </label>
-              <MarkdownEditor
-                value={watch('description') || ''}
-                onChange={(value) => setValue('description', value)}
-                placeholder="Describe your proposal in detail..."
-                maxLength={5000}
-              />
-              {errors.description && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.description.message}
-                </p>
-              )}
+              <h3 className="font-semibold mb-2">Deliverable</h3>
+              <div className="prose max-w-none">
+                <ReactMarkdown>{proposal.deliverable}</ReactMarkdown>
+              </div>
             </div>
-
-            {/* Deliverable Field */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Deliverable * <span className="text-gray-500">(What's the result?)</span>
-              </label>
-              <MarkdownEditor
-                value={watch('deliverable') || ''}
-                onChange={(value) => setValue('deliverable', value)}
-                placeholder="What will you deliver? Include links if applicable..."
-                maxLength={2000}
-              />
-              {errors.deliverable && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.deliverable.message}
-                </p>
-              )}
+          </div>
+          
+          {/* Action buttons - next ticket */}
+          {proposal.status === 'pending_review' && (
+            <div className="mt-8 flex gap-4">
+              <button className="bg-green-600 text-white px-6 py-3 rounded-lg">
+                Accept
+              </button>
+              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg">
+                Counter-Offer
+              </button>
+              <button className="bg-red-600 text-white px-6 py-3 rounded-lg">
+                Reject
+              </button>
             </div>
-
-            {/* Amount Field */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Requested $CSTAKE Amount *
-              </label>
-              <input
-                {...register('requested_cstake_amount', { valueAsNumber: true })}
-                type="number"
-                step="0.01"
-                placeholder="e.g., 1500"
-                className="w-full px-4 py-3 border rounded-lg"
-              />
-              {errors.requested_cstake_amount && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.requested_cstake_amount.message}
-                </p>
-              )}
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={!isValid || isSubmitting}
-              className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       hover:bg-blue-700 transition-colors"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
-            </button>
-          </form>
+          )}
         </div>
-      </ProtectedRoute>
+      </div>
     </Layout>
   )
 }
@@ -432,407 +710,221 @@ export default function ProposePage() {
 
 ---
 
-### PHASE-3-TICKET-005: Update API Endpoint for Validation
+### PHASE-4-TICKET-008: Admin Action Modals (Accept/Reject/Counter-Offer)
 
-**Priority:** P1 | **Time:** 30 min
+**Priority:** P0 | **Time:** 1.5 hours
 
-**Goal:** Add server-side validation to POST /api/proposals endpoint
-
-**What to Do:**
-
-1. Update `src/app/api/proposals/route.ts` from Phase 1
-2. Import proposalSchema from types
-3. Validate request body with Zod
-4. Return 400 with validation errors if invalid
-5. Maintain existing functionality
-
-**Files to Edit:**
-
-- `src/app/api/proposals/route.ts` (from PHASE-1-TICKET-007)
-
-**Definition of Done:**
-
-- [ ] Request body validated with Zod schema
-- [ ] Returns 400 if validation fails
-- [ ] Returns specific error messages
-- [ ] Still saves to database on success
-- [ ] Wallet address still extracted from auth
-- [ ] Backward compatible with Phase 1 tests
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/proposals/route.ts (UPDATE)
-import { proposalSchema } from '@/types/proposal'
-
-export async function POST(request: NextRequest) {
-  try {
-    const wallet = requireAuth(request)
-    const body = await request.json()
-    
-    // Validate with Zod
-    const validation = proposalSchema.safeParse(body)
-    if (!validation.success) {
-      return errorResponse(
-        validation.error.errors[0].message,
-        400
-      )
-    }
-    
-    const data = validation.data
-    
-    // Save to database
-    const { data: proposal, error } = await supabase
-      .from('proposals')
-      .insert({
-        creator_wallet_address: wallet,
-        title: data.title,
-        description: data.description,
-        deliverable: data.deliverable,
-        requested_cstake_amount: data.requested_cstake_amount,
-      })
-      .select()
-      .single()
-    
-    if (error) throw error
-    
-    return jsonResponse({ success: true, proposal }, 201)
-  } catch (error) {
-    return errorResponse(error.message, 500)
-  }
-}
-```
-
----
-
-### PHASE-3-TICKET-006: Success/Error Handling UI
-
-**Priority:** P1 | **Time:** 45 min
-
-**Goal:** Add user feedback for successful submission and errors
+**Goal:** Create modals for each admin action with confirmation
 
 **What to Do:**
 
-1. Create success modal/page component
-2. Create error toast/notification component
-3. Update form to show success state
-4. Update form to show error state
-5. Redirect to dashboard on success
+1. Create modal components for each action
+2. Accept modal - simple confirmation
+3. Reject modal - requires notes
+4. Counter-offer modal - requires amount + notes
+5. Wire up to API calls
 
 **Files to Create:**
 
-- `src/components/SuccessModal.tsx` (or use existing if available)
-- `src/components/ErrorToast.tsx` (or use library like react-hot-toast)
+- `src/components/admin/AcceptModal.tsx`
+- `src/components/admin/RejectModal.tsx`
+- `src/components/admin/CounterOfferModal.tsx`
 
 **Definition of Done:**
 
-- [ ] Success state shows celebratory message
-- [ ] Success explains next steps
-- [ ] Success provides link to dashboard
-- [ ] Error state shows specific error message
-- [ ] Error provides retry button
-- [ ] Network errors handled gracefully
-- [ ] Form can be resubmitted after error
+- [ ] Accept modal shows confirmation
+- [ ] Reject modal has notes textarea (required)
+- [ ] Counter-offer modal has amount input + notes
+- [ ] All modals styled consistently
+- [ ] Form validation in modals
+- [ ] Submit buttons trigger API calls
+- [ ] Modals close after success
+- [ ] Error handling in modals
 
 **Code Pattern:**
 
 ```typescript
-// Add to ProposePage component
-import { useRouter } from 'next/navigation'
+// src/components/admin/CounterOfferModal.tsx
+'use client'
 import { useState } from 'react'
 
-const router = useRouter()
-const [submitError, setSubmitError] = useState<string | null>(null)
-const [submitSuccess, setSubmitSuccess] = useState(false)
-
-const onSubmit = async (data: ProposalFormData) => {
-  try {
-    setSubmitError(null)
-    
-    const response = await fetch('/api/proposals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Submission failed')
-    }
-    
-    setSubmitSuccess(true)
-    // Redirect after 2 seconds
-    setTimeout(() => router.push('/cofounder-dashboard'), 2000)
-  } catch (error) {
-    setSubmitError(error.message)
-  }
-}
-
-// Success Modal
-{submitSuccess && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white rounded-xl p-8 max-w-md">
-      <div className="text-center">
-        <div className="text-6xl mb-4">✅</div>
-        <h2 className="text-2xl font-bold mb-2">Proposal Submitted!</h2>
-        <p className="text-gray-600 mb-4">
-          Your proposal is now pending review. We'll notify you when there's an update.
-        </p>
-        <button
-          onClick={() => router.push('/cofounder-dashboard')}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
-        >
-          Go to Dashboard
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-// Error Display
-{submitError && (
-  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-    <p className="text-red-800">{submitError}</p>
-  </div>
-)}
-```
-
----
-
-### PHASE-3-TICKET-007: Add Preview Tab/Modal
-
-**Priority:** P2 | **Time:** 1 hour
-
-**Goal:** Allow users to preview formatted proposal before submitting
-
-**What to Do:**
-
-1. Create `src/components/ProposalPreview.tsx`
-2. Use react-markdown to render description and deliverable
-3. Add "Preview" button to form
-4. Show modal with formatted proposal
-5. Include all field values in preview
-
-**Files to Create:**
-
-- `src/components/ProposalPreview.tsx`
-
-**Definition of Done:**
-
-- [ ] Preview button appears above submit
-- [ ] Preview shows all fields formatted
-- [ ] Markdown renders correctly
-- [ ] Preview modal is readable and styled
-- [ ] Can close preview and edit
-- [ ] Preview updates when form changes
-- [ ] Mobile responsive
-
-**Code Pattern:**
-
-```typescript
-// src/components/ProposalPreview.tsx
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import type { ProposalFormData } from '@/types/proposal'
-
-interface ProposalPreviewProps {
-  data: ProposalFormData
+interface CounterOfferModalProps {
   isOpen: boolean
   onClose: () => void
+  onSubmit: (amount: number, notes: string) => Promise<void>
+  currentAmount: number
 }
 
-export function ProposalPreview({ data, isOpen, onClose }: ProposalPreviewProps) {
+export function CounterOfferModal({
+  isOpen,
+  onClose,
+  onSubmit,
+  currentAmount,
+}: CounterOfferModalProps) {
+  const [amount, setAmount] = useState(currentAmount * 0.8) // Suggest 80%
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  
   if (!isOpen) return null
+  
+  const handleSubmit = async () => {
+    if (!amount || amount <= 0) {
+      alert('Please enter a valid amount')
+      return
+    }
+    
+    try {
+      setSubmitting(true)
+      await onSubmit(amount, notes)
+      onClose()
+    } catch (error) {
+      console.error('Counter-offer failed:', error)
+    } finally {
+      setSubmitting(false)
+    }
+  }
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl max-w-3xl max-h-[90vh] overflow-auto p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Preview</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            ✕
+      <div className="bg-white rounded-xl max-w-lg w-full p-6">
+        <h2 className="text-2xl font-bold mb-4">Counter-Offer</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm text-gray-600 mb-2">
+              Requested: {currentAmount} $CSTAKE
+            </p>
+            <label className="block text-sm font-semibold mb-2">
+              Your Offer (in $CSTAKE) *
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="e.g., 1200"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold mb-2">
+              Explanation (optional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              className="w-full px-4 py-2 border rounded-lg"
+              placeholder="Explain why you're offering a different amount..."
+            />
+          </div>
+        </div>
+        
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="flex-1 bg-blue-600 text-white py-3 rounded-lg disabled:opacity-50"
+          >
+            {submitting ? 'Sending...' : 'Send Counter-Offer'}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg"
+          >
+            Cancel
           </button>
         </div>
-        
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              {data.title}
-            </h3>
-            <p className="text-sm text-gray-500">
-              Requesting {data.requested_cstake_amount} $CSTAKE
-            </p>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-2">Description</h4>
-            <div className="prose max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {data.description}
-              </ReactMarkdown>
-            </div>
-          </div>
-          
-          <div>
-            <h4 className="font-semibold mb-2">Deliverable</h4>
-            <div className="prose max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {data.deliverable}
-              </ReactMarkdown>
-            </div>
-          </div>
-        </div>
-        
-        <button
-          onClick={onClose}
-          className="mt-6 w-full bg-gray-900 text-white py-3 rounded-lg"
-        >
-          Close Preview
-        </button>
       </div>
     </div>
   )
 }
+
+// Similar patterns for AcceptModal and RejectModal
 ```
 
 ---
 
-### PHASE-3-TICKET-008: Add Help Text & Guidelines
+### PHASE-4-TICKET-009: Pioneer Response API Endpoint
 
-**Priority:** P2 | **Time:** 30 min
+**Priority:** P0 | **Time:** 45 min
 
-**Goal:** Add helpful guidance for users filling out the form
-
-**What to Do:**
-
-1. Add info tooltips next to field labels
-2. Add "Tips" section to page
-3. Include examples of good proposals
-4. Add character counters
-5. Add formatting guide for markdown
-
-**Files to Edit:**
-
-- `src/app/dashboard/propose/page.tsx`
-
-**Definition of Done:**
-
-- [ ] Help text for each field
-- [ ] Examples of good content
-- [ ] Markdown formatting guide
-- [ ] Character counters visible
-- [ ] Tips section above or beside form
-- [ ] Not overwhelming or cluttered
-
-**Code Pattern:**
-
-```typescript
-// Add to ProposePage
-<div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-  <h3 className="font-bold text-lg mb-3">💡 Tips for a Great Proposal</h3>
-  <ul className="space-y-2 text-sm">
-    <li>✅ Be specific about what you'll deliver</li>
-    <li>✅ Include examples or portfolio links</li>
-    <li>✅ Explain why you're the right person for this</li>
-    <li>✅ Set a fair token amount based on complexity</li>
-    <li>❌ Don't be vague or overpromise</li>
-  </ul>
-</div>
-
-// Add markdown formatting guide
-<details className="mb-4">
-  <summary className="cursor-pointer text-sm text-gray-600">
-    Markdown Formatting Guide
-  </summary>
-  <div className="mt-2 text-sm text-gray-600 space-y-1">
-    <p><code>**bold**</code> → <strong>bold</strong></p>
-    <p><code>*italic*</code> → <em>italic</em></p>
-    <p><code>[link](url)</code> → <a href="#">link</a></p>
-    <p><code>- item</code> → • item</p>
-  </div>
-</details>
-```
-
----
-
-### PHASE-3-TICKET-009: Update Navigation CTA
-
-**Priority:** P1 | **Time:** 15 min
-
-**Goal:** Connect homepage "Make a Proposal" button to new form page
+**Goal:** Create endpoint for pioneers to accept/reject counter-offers or approvals
 
 **What to Do:**
 
-1. Find all "Make a Proposal" CTAs in codebase
-2. Update hrefs to `/dashboard/propose`
-3. Verify links work from all pages
-4. Test navigation flow
-
-**Files to Edit:**
-
-- `src/components/NewHeroSection.tsx`
-- `src/components/FinalCTASection.tsx`
-- Any other CTA locations
-
-**Definition of Done:**
-
-- [ ] All "Make a Proposal" buttons link to `/dashboard/propose`
-- [ ] Navigation works from homepage
-- [ ] Navigation works from other pages
-- [ ] Auth flow works (connect -> sign -> see form)
-- [ ] No broken links
-
----
-
-### PHASE-3-TICKET-010: Create GET /api/proposals/me Endpoint
-
-**Priority:** P1 | **Time:** 30 min
-
-**Goal:** Allow users to fetch their own proposals
-
-**What to Do:**
-
-1. Create `src/app/api/proposals/me/route.ts`
-2. Implement GET handler
-3. Get wallet from auth
-4. Query proposals by creator_wallet_address
-5. Return sorted by created_at DESC
+1. Create `src/app/api/proposals/respond/[id]/route.ts`
+2. Implement PUT handler
+3. Verify user is proposal creator
+4. Accept two actions: accept/reject
+5. Update status accordingly
 
 **Files to Create:**
 
-- `src/app/api/proposals/me/route.ts`
+- `src/app/api/proposals/respond/[id]/route.ts`
 
 **Definition of Done:**
 
-- [ ] GET `/api/proposals/me` endpoint works
+- [ ] PUT `/api/proposals/respond/:id` endpoint works
 - [ ] Requires authentication
-- [ ] Returns only user's own proposals
-- [ ] Sorted newest first
-- [ ] Returns empty array if no proposals
-- [ ] Proper error handling
+- [ ] Only proposal creator can respond
+- [ ] Accepts action: accept or reject
+- [ ] Works for counter_offer_pending status
+- [ ] Works for approved status
+- [ ] Updates status to 'accepted' or 'rejected'
+- [ ] Returns 403 if not creator
 
 **Code Pattern:**
 
 ```typescript
-// src/app/api/proposals/me/route.ts
+// src/app/api/proposals/respond/[id]/route.ts
 import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonResponse, errorResponse } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const wallet = requireAuth(request)
+    const { action } = await request.json()
     
-    const { data, error } = await supabase
+    // Get proposal
+    const { data: proposal, error: fetchError } = await supabase
       .from('proposals')
       .select('*')
-      .eq('creator_wallet_address', wallet)
-      .order('created_at', { ascending: false })
+      .eq('id', params.id)
+      .single()
     
-    if (error) throw error
+    if (fetchError || !proposal) {
+      return errorResponse('Proposal not found', 404)
+    }
     
-    return jsonResponse({ success: true, proposals: data })
+    // Verify this is the creator
+    if (proposal.creator_wallet_address.toLowerCase() !== wallet.toLowerCase()) {
+      return errorResponse('Forbidden - Not your proposal', 403)
+    }
+    
+    // Validate status allows response
+    if (!['counter_offer_pending', 'approved'].includes(proposal.status)) {
+      return errorResponse('Proposal cannot be responded to', 400)
+    }
+    
+    // Update based on action
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected'
+    
+    const { data: updated, error: updateError } = await supabase
+      .from('proposals')
+      .update({ status: newStatus })
+      .eq('id', params.id)
+      .select()
+      .single()
+    
+    if (updateError) throw updateError
+    
+    return jsonResponse({ success: true, proposal: updated })
   } catch (error) {
     return errorResponse(error.message, 500)
   }
@@ -841,63 +933,197 @@ export async function GET(request: NextRequest) {
 
 ---
 
-### PHASE-3-TICKET-011: Integration Test - Complete Flow
+### PHASE-4-TICKET-010: Pioneer Response UI in Dashboard
 
-**Priority:** P0 | **Time:** 30 min
+**Priority:** P0 | **Time:** 1 hour
 
-**Goal:** Test entire proposal submission flow end-to-end
+**Goal:** Add UI in co-founder dashboard to see and respond to admin actions
 
 **What to Do:**
 
-1. Open app in browser
-2. Connect wallet and authenticate
-3. Navigate to "Make a Proposal"
-4. Fill out form with valid data
-5. Preview proposal
-6. Submit proposal
-7. Verify success message
-8. Check proposal in Supabase
-9. Verify proposal appears in `/api/proposals/me`
+1. Update `src/app/cofounder-dashboard/page.tsx`
+2. Fetch user's proposals
+3. Highlight proposals needing action
+4. Show counter-offer details
+5. Add accept/reject buttons
+6. Handle response submission
+
+**Files to Edit:**
+
+- `src/app/cofounder-dashboard/page.tsx`
 
 **Definition of Done:**
 
-- [ ] Can access form when authenticated
-- [ ] Cannot access form without auth
-- [ ] All validations work correctly
-- [ ] Markdown editor works
-- [ ] Preview shows formatted content
-- [ ] Submission succeeds
-- [ ] Success message appears
-- [ ] Proposal saved in database with correct wallet
-- [ ] Can fetch proposal via API
-- [ ] Form clears/redirects after success
-- [ ] Mobile responsive at all steps
+- [ ] Dashboard shows user's proposals
+- [ ] Proposals with counter_offer_pending highlighted
+- [ ] Shows foundation's offer amount and notes
+- [ ] Accept and reject buttons visible
+- [ ] Confirmation before accepting/rejecting
+- [ ] Status updates after response
+- [ ] Error handling
+- [ ] Mobile responsive
+
+**Code Pattern:**
+
+```typescript
+// Add to cofounder-dashboard/page.tsx
+import { useEffect, useState } from 'react'
+import type { Proposal } from '@/types/proposal'
+
+const [proposals, setProposals] = useState<Proposal[]>([])
+
+useEffect(() => {
+  fetchMyProposals()
+}, [])
+
+const fetchMyProposals = async () => {
+  const response = await fetch('/api/proposals/me')
+  const { proposals } = await response.json()
+  setProposals(proposals)
+}
+
+const handleResponse = async (proposalId: string, action: 'accept' | 'reject') => {
+  if (!confirm(`Are you sure you want to ${action} this offer?`)) return
+  
+  try {
+    const response = await fetch(`/api/proposals/respond/${proposalId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    })
+    
+    if (!response.ok) throw new Error('Failed to respond')
+    
+    // Refresh proposals
+    await fetchMyProposals()
+    alert(`Successfully ${action}ed!`)
+  } catch (error) {
+    alert('Failed to respond. Please try again.')
+  }
+}
+
+// In JSX
+{proposals.map(proposal => (
+  <div key={proposal.id} className="border rounded-lg p-4">
+    <h3 className="font-bold">{proposal.title}</h3>
+    <StatusBadge status={proposal.status} />
+    
+    {proposal.status === 'counter_offer_pending' && (
+      <div className="mt-4 bg-blue-50 border border-blue-200 rounded p-4">
+        <p className="font-semibold mb-2">Counter-Offer Received</p>
+        <p>
+          Foundation offers: {proposal.foundation_offer_cstake_amount} $CSTAKE
+          <span className="text-gray-600 ml-2">
+            (You requested: {proposal.requested_cstake_amount})
+          </span>
+        </p>
+        {proposal.foundation_notes && (
+          <p className="text-sm text-gray-600 mt-2">
+            "{proposal.foundation_notes}"
+          </p>
+        )}
+        <div className="flex gap-3 mt-4">
+          <button
+            onClick={() => handleResponse(proposal.id, 'accept')}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg"
+          >
+            Accept Offer
+          </button>
+          <button
+            onClick={() => handleResponse(proposal.id, 'reject')}
+            className="bg-gray-600 text-white px-4 py-2 rounded-lg"
+          >
+            Reject
+          </button>
+        </div>
+      </div>
+    )}
+    
+    {proposal.status === 'approved' && (
+      <div className="mt-4 bg-green-50 border border-green-200 rounded p-4">
+        <p className="font-semibold mb-2">✅ Proposal Approved!</p>
+        <p>Foundation approved your request for {proposal.requested_cstake_amount} $CSTAKE</p>
+        <button
+          onClick={() => handleResponse(proposal.id, 'accept')}
+          className="mt-3 bg-green-600 text-white px-6 py-2 rounded-lg"
+        >
+          Accept & Start Work
+        </button>
+      </div>
+    )}
+  </div>
+))}
+```
+
+---
+
+### PHASE-4-TICKET-011: E2E Integration Test - Double Handshake
+
+**Priority:** P0 | **Time:** 45 min
+
+**Goal:** Test complete double handshake flow from both sides
+
+**What to Do:**
+
+1. Test as co-founder: Submit proposal
+2. Test as admin: Review and counter-offer
+3. Test as co-founder: Accept counter-offer
+4. Verify final status is 'accepted'
+5. Test reject flows
+6. Test edge cases
+
+**Definition of Done:**
+
+- [ ] Can submit proposal as co-founder
+- [ ] Can view proposal in admin panel
+- [ ] Can accept proposal as admin
+- [ ] Can reject proposal as admin
+- [ ] Can send counter-offer as admin
+- [ ] Co-founder sees counter-offer
+- [ ] Co-founder can accept counter-offer
+- [ ] Co-founder can reject counter-offer
+- [ ] Final status updates correctly
+- [ ] Both UIs update in real-time
+- [ ] All error cases handled
 
 **Test Checklist:**
 
 ```
-✓ Navigate to homepage
-✓ Click "Make a Proposal"
-✓ Redirected to auth if not connected
-✓ Connect wallet via MetaMask
-✓ Sign authentication message
-✓ See proposal form
-✓ Enter title (test validation: too short, too long, valid)
-✓ Enter description with markdown (bold, lists, links)
-✓ Enter deliverable
-✓ Enter amount (test: negative, zero, valid)
-✓ See validation errors inline
-✓ Fix all errors
-✓ Click "Preview"
-✓ Verify markdown renders correctly
-✓ Close preview
-✓ Click "Submit"
-✓ See loading state
-✓ See success message
-✓ Redirected to dashboard
-✓ Open Supabase dashboard
-✓ Verify proposal exists with correct data
-✓ Test on mobile device
+Happy Path - Accept:
+✓ Submit proposal as co-founder
+✓ Login as admin
+✓ View proposal in admin panel
+✓ Click "Accept"
+✓ Confirm acceptance
+✓ Logout admin
+✓ Login as co-founder
+✓ See "Approved" status
+✓ Click "Accept & Start Work"
+✓ Status becomes "accepted"
+
+Happy Path - Counter-Offer:
+✓ Submit proposal (10,000 $CSTAKE)
+✓ Login as admin
+✓ Click "Counter-Offer"
+✓ Enter 8,000 $CSTAKE + explanation
+✓ Submit counter-offer
+✓ Logout admin
+✓ Login as co-founder
+✓ See counter-offer with amounts
+✓ Click "Accept Offer"
+✓ Status becomes "accepted"
+
+Reject Paths:
+✓ Admin rejects with reason
+✓ Status becomes "rejected"
+✓ Co-founder rejects counter-offer
+✓ Status becomes "rejected"
+
+Edge Cases:
+✓ Try to respond to already-accepted proposal
+✓ Try to admin-action already-processed proposal
+✓ Non-admin tries to access admin panel
+✓ Non-creator tries to respond to proposal
 ```
 
 ---
@@ -906,128 +1132,94 @@ export async function GET(request: NextRequest) {
 
 **Do these tickets in exact order:**
 
-1. **PHASE-3-TICKET-001** - Install dependencies (10 min)
-2. **PHASE-3-TICKET-002** - Create schema & types (20 min)
-3. **PHASE-3-TICKET-003** - Markdown editor component (1 hour)
-4. **PHASE-3-TICKET-004** - Proposal form page (1.5 hours)
-5. **PHASE-3-TICKET-005** - Update API validation (30 min)
-6. **PHASE-3-TICKET-006** - Success/error handling (45 min)
-7. **PHASE-3-TICKET-007** - Preview modal (1 hour)
-8. **PHASE-3-TICKET-008** - Help text & guidelines (30 min)
-9. **PHASE-3-TICKET-009** - Update navigation CTAs (15 min)
-10. **PHASE-3-TICKET-010** - GET /api/proposals/me (30 min)
-11. **PHASE-3-TICKET-011** - Integration test (30 min)
+1. **PHASE-4-TICKET-001** - Add status fields to DB (30 min)
+2. **PHASE-4-TICKET-002** - Update TypeScript types (15 min)
+3. **PHASE-4-TICKET-003** - Admin check utility (20 min)
+4. **PHASE-4-TICKET-004** - API GET /admin (30 min)
+5. **PHASE-4-TICKET-005** - API PUT /admin/:id (1 hour)
+6. **PHASE-4-TICKET-006** - Admin panel page (45 min)
+7. **PHASE-4-TICKET-007** - Admin detail view (1 hour)
+8. **PHASE-4-TICKET-008** - Admin action modals (1.5 hours)
+9. **PHASE-4-TICKET-009** - Pioneer respond API (45 min)
+10. **PHASE-4-TICKET-010** - Pioneer response UI (1 hour)
+11. **PHASE-4-TICKET-011** - E2E integration test (45 min)
 
-**Total Estimated Time: 7 hours**
+**Total Estimated Time: 8.5 hours**
 
-## Dependencies Check
+## Database Schema After Phase 4
 
-```json
-{
-  "dependencies": {
-    "react-hook-form": "^7.53.2",
-    "zod": "^3.23.8",
-    "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.0",
-    "simplemde-markdown-editor": "^1.11.2",
-    "react-simplemde-editor": "^5.2.0"
-  },
-  "devDependencies": {
-    "@types/react-simplemde-editor": "^5.0.0",
-    "@hookform/resolvers": "^3.9.1"
-  }
-}
+```sql
+proposals (
+  id UUID PRIMARY KEY,
+  created_at TIMESTAMPTZ,
+  creator_wallet_address TEXT,
+  title TEXT,
+  description TEXT,
+  deliverable TEXT,
+  requested_cstake_amount NUMERIC,
+  
+  -- NEW in Phase 4:
+  status TEXT DEFAULT 'pending_review',
+  foundation_offer_cstake_amount NUMERIC,
+  foundation_notes TEXT
+)
 ```
 
-**Bundle size impact:** ~200kb (reasonable for rich editor)
+## Status Flow Visualization
 
-## What We're Not Doing (Deferred)
+```
+Pioneer submits → pending_review
+                       ↓
+                  Admin reviews
+                  ↙    ↓    ↘
+            reject  accept  counter_offer
+              ↓       ↓          ↓
+          rejected  approved  counter_offer_pending
+                      ↓          ↙        ↘
+                   Pioneer    accept    reject
+                   accepts      ↓          ↓
+                      ↓      accepted  rejected
+                  accepted
+```
 
-From original TICKETS.md, these are deferred:
+## What We're Skipping
 
-- ❌ TICKET-026: Advanced markdown editor (using simple one)
-- ❌ Draft saving to database
-- ❌ Image upload for proposals
-- ❌ AI-assisted proposal writing
-- ❌ Proposal templates
-- ❌ Multi-step wizard
-- ❌ Collaborative editing
+- ❌ Multiple rounds of negotiation (one counter-offer only)
+- ❌ Email notifications
+- ❌ Push notifications
+- ❌ Audit log database table
+- ❌ Admin activity dashboard
+- ❌ Proposal comments/discussion
+- ❌ File attachments
+- ❌ Proposal amendments
 
-These can be added post-MVP based on user feedback.
+These can be added post-MVP.
 
 ## Success Criteria
 
-After Phase 3 is complete:
+After Phase 4 is complete:
 
-✅ Co-founders can submit proposals
+✅ Admins can review proposals
 
-✅ Beautiful, user-friendly form
+✅ Admins can accept/reject/counter-offer
 
-✅ Markdown support for rich content
+✅ Pioneers see and respond to admin actions
 
-✅ Real-time validation
+✅ Double Handshake concept implemented
 
-✅ Preview before submit
+✅ Both parties must agree before proceeding
 
-✅ Success/error feedback
+✅ Status transitions enforced
 
-✅ Proposals saved to database
+✅ Ready for Phase 5 (Smart Contracts)
 
-✅ Ready for Phase 4 (Admin Review)
+## Next Steps After Phase 4
 
-## User Experience Flow
+Once Double Handshake works:
 
-```
-Homepage
-  ↓ "Make a Proposal" CTA
-Auth Check
-  ↓ Connect Wallet → Sign Message
-Proposal Form
-  ↓ Fill out 4 fields
-  ↓ Use markdown for rich content
-  ↓ See validation feedback
-  ↓ Preview formatted proposal
-  ↓ Submit
-Success Message
-  ↓ Redirect to Dashboard
-View Proposals List
-```
+- Phase 5: Smart contract for token escrow
+- Phase 6: Work completion and verification
+- Phase 7: Token release
+- Phase 8: Co-founder dashboard enhancements
 
-## Next Steps After Phase 3
-
-Once proposal submission works:
-
-- Phase 4: Admin panel to review proposals
-- Phase 5: Status state machine (pending, approved, rejected)
-- Phase 6: Negotiation flow (counter-offers)
-- Phase 7: Smart contracts for escrow
-
-Proposals are now entering the system, ready for admin review in Phase 4.
-
-### To-dos
-
-- [ ] CS-001: Install ThirdWeb packages
-- [ ] CS-002: Setup .env files
-- [ ] CS-003: Create ThirdWeb config file
-- [ ] CS-004: Wrap app in ThirdWebProvider
-- [ ] CS-005: Add ConnectWallet button to Navigation
-- [ ] CS-006: Create useWalletAuth hook (client-only)
-- [ ] CS-007: Create Supabase project
-- [ ] CS-008: Setup Supabase client
-- [ ] CS-009: Create users table schema
-- [ ] CS-010: Create proposals table schema
-- [ ] CS-011: POST /api/proposals endpoint
-- [ ] CS-012: GET /api/proposals/me endpoint
-- [ ] CS-013: GET /api/proposals/:id endpoint
-- [ ] CS-014: PUT /api/proposals/:id/respond endpoint
-- [ ] CS-015: Create ProposalForm component
-- [ ] CS-016: Create submit-proposal page
-- [ ] CS-017: Add Submit Proposal CTAs (closes Gap #1)
-- [ ] CS-018: Connect proposal-review page to API (closes Gap #4)
-- [ ] CS-019: Connect MyContributionsTab to API
-- [ ] CS-020: Create MCP client wrapper
-- [ ] CS-021: Create /api/wallet/tokens endpoint
-- [ ] CS-022: Create TokenBalance component
-- [ ] CS-023: Add balance to cofounder dashboard
-- [ ] CS-024: Integrate real data in Proposals tab (closes Gap #8)
-- [ ] CS-025: Add back link to liquidity success (closes Gap #9)
+The proposal lifecycle is now functional from submission to acceptance!

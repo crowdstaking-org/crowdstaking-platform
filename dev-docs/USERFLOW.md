@@ -1,9 +1,14 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-09 (Phase 3 Complete)
+**Last Updated:** 2025-11-09 (Phase 4 Complete - Double Handshake)
 **Status:** Current state of codebase - marks gaps and dead ends
 
 **Recent Updates:**
+- ✅ Phase 4: Complete Double Handshake implementation
+- ✅ Admin panel for proposal review (/admin/proposals)
+- ✅ Admin actions: Accept, Reject, Counter-Offer
+- ✅ Pioneer response UI in Cofounder Dashboard
+- ✅ Full status state machine (5 states)
 - ✅ Phase 3: Complete proposal submission flow
 - ✅ Added /dashboard/propose with full-featured form
 - ✅ Real-time validation & Markdown support
@@ -131,7 +136,90 @@
 
 ---
 
-## 2. CO-FOUNDER JOURNEY (Discover & Contribute)
+## 2. ADMIN JOURNEY (Review & Negotiate Proposals) ✅ NEW (Phase 4)
+
+```
+[ADMIN LOGIN]
+    │
+    │ (Connect Admin Wallet - requires ADMIN_WALLET_ADDRESS in .env)
+    │
+    ▼
+[ADMIN PROPOSALS LIST] /admin/proposals
+    │
+    ├─ Statistics Dashboard:
+    │  ├─ Total Proposals
+    │  ├─ Pending Review (yellow)
+    │  ├─ Counter-Offers (purple)
+    │  └─ Accepted (green)
+    │
+    ├─ Proposals List (sorted by created_at DESC):
+    │  ├─ Title, Creator, Status Badge
+    │  ├─ Requested Amount
+    │  └─ (Click Proposal) ────────────┐
+    │                                   │
+    │                                   ▼
+    └──────────────────> [ADMIN PROPOSAL DETAIL] /admin/proposals/:id
+                              │
+                              ├─ Full Proposal Details:
+                              │  ├─ Title, Creator Wallet
+                              │  ├─ Description (Markdown rendered)
+                              │  ├─ Deliverable (Markdown rendered)
+                              │  ├─ Requested Amount
+                              │  ├─ Status Badge
+                              │  └─ Foundation Notes (if any)
+                              │
+                              ├─ Actions (only if status = 'pending_review'):
+                              │  │
+                              │  ├─ (Accept) ────────────┐
+                              │  │                       │
+                              │  │                       ▼
+                              │  │              [Accept Modal]
+                              │  │               ├─ Optional Notes
+                              │  │               ├─ (Confirm)
+                              │  │               │   └──> Status: approved ✅
+                              │  │               │         └──> Pioneer sees in Dashboard
+                              │  │               │               └──> Can accept to finalize
+                              │  │               │
+                              │  │               └─ (Cancel)
+                              │  │
+                              │  ├─ (Counter-Offer) ────┐
+                              │  │                     │
+                              │  │                     ▼
+                              │  │            [Counter-Offer Modal]
+                              │  │             ├─ Amount Input (required, suggested 80%)
+                              │  │             ├─ Explanation (optional)
+                              │  │             ├─ (Submit)
+                              │  │             │   └──> Status: counter_offer_pending 🤝
+                              │  │             │         └──> Pioneer sees in Dashboard
+                              │  │             │               └──> Can accept/reject
+                              │  │             │
+                              │  │             └─ (Cancel)
+                              │  │
+                              │  └─ (Reject) ───────────┐
+                              │                        │
+                              │                        ▼
+                              │                [Reject Modal]
+                              │                 ├─ Notes (required - reason)
+                              │                 ├─ (Confirm)
+                              │                 │   └──> Status: rejected ❌
+                              │                 │         └──> Flow ends
+                              │                 │
+                              │                 └─ (Cancel)
+                              │
+                              └─ (Back to List)
+                                  └──> [ADMIN PROPOSALS LIST]
+
+✅ COMPLETED (Phase 4): Admin Review System
+    Full Double Handshake implementation with:
+    - Admin panel & detail views
+    - Three admin actions (accept/reject/counter-offer)
+    - Status state machine enforcement
+    - API endpoints with authorization
+```
+
+---
+
+## 3. CO-FOUNDER JOURNEY (Discover & Contribute)
 
 ```
 [HOME PAGE]
@@ -192,16 +280,36 @@
     │    │
     │    └─ Search & Filter Missions
     │
-    ├─── Tab: My Contributions
+    ├─── Tab: My Contributions ✅ UPDATED (Phase 4)
     │    │
-    │    ├─ View Submitted Proposals (via /api/proposals/me) ✅ NEW
-    │    │  ├─ Pending proposals
-    │    │  ├─ Active contributions (approved)
-    │    │  ├─ Completed contributions
-    │    │  └─ Draft proposals (future)
+    │    ├─ View Submitted Proposals (via /api/proposals/me)
+    │    │  │
+    │    │  ├─ Sub-tabs: Alle, Pending Review, Aktion erforderlich, Akzeptiert, Abgelehnt
+    │    │  │
+    │    │  ├─ Proposal Cards mit Status Badge:
+    │    │  │  ├─ pending_review → Wartet auf Admin Review
+    │    │  │  │
+    │    │  │  ├─ counter_offer_pending → 🤝 Counter-Offer Response UI
+    │    │  │  │   ├─ Zeigt Foundation Offer vs. Request
+    │    │  │  │   ├─ Zeigt Foundation Notes
+    │    │  │  │   └─ Actions:
+    │    │  │  │       ├─ (Accept Counter-Offer) → Status: accepted ✅
+    │    │  │  │       └─ (Reject Counter-Offer) → Status: rejected ❌
+    │    │  │  │
+    │    │  │  ├─ approved → ✅ Approval Response UI
+    │    │  │  │   ├─ "Proposal genehmigt!" message
+    │    │  │  │   ├─ Zeigt Foundation Notes (optional)
+    │    │  │  │   └─ (Accept & Start Work) → Status: accepted ✅
+    │    │  │  │
+    │    │  │  ├─ accepted → 🎉 Double Handshake Complete!
+    │    │  │  │   └─ Ready to start work [!GAP!] Work tracking interface
+    │    │  │  │
+    │    │  │  └─ rejected → ❌ Shows rejection reason
+    │    │  │
+    │    │  └─ API: PUT /api/proposals/respond/:id (accept/reject)
     │    │
     │    └─ [!GAP!] No work submission interface yet
-    │         (Planned: Phase 4+ - Track work progress)
+    │         (Planned: Phase 5+ - Track work progress, milestones)
     │
     ├─── Tab: Portfolio
     │    └─ [!DEAD END!] "Portfolio view coming soon..."
@@ -213,9 +321,16 @@
 ✅ COMPLETED (Phase 3): Proposal Submission Flow
     [Discover Mission] -> [Proposal Form] -> [Submit to Founder]
     
+✅ COMPLETED (Phase 4): Double Handshake Flow
+    [Pioneer Submits] -> [Admin Reviews] -> [Admin Accept/Reject/Counter] 
+    -> [Pioneer Responds] -> [Both Agreed: accepted ✅]
+    
     API Endpoints:
     - POST /api/proposals (create new proposal)
     - GET /api/proposals/me (fetch user's proposals)
+    - GET /api/proposals/admin (admin: fetch all proposals)
+    - PUT /api/proposals/admin/:id (admin: accept/reject/counter_offer)
+    - PUT /api/proposals/respond/:id (pioneer: accept/reject response)
 ```
 
 ---
