@@ -37,10 +37,10 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
                 How It Works
               </Link>
               <Link
-                href="/whitepaper"
+                href="/about"
                 className="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
               >
-                Whitepaper
+                About
               </Link>
             </div>
           </div>

@@ -12,13 +12,13 @@ export function FinalCTASection() {
       <div className="max-w-4xl mx-auto text-center">
         <ScrollReveal direction="up" scale={true} duration={800}>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            The Future Isn't Funded. It's Built.
+            What Are You Waiting For?
           </h2>
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={100} duration={800}>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-12">
-            What are you waiting for?
+            Build the next unicorn. Or become a co-owner of a unicorn.
           </p>
         </ScrollReveal>
 
@@ -31,7 +31,7 @@ export function FinalCTASection() {
 
             <Link href="/discover-projects" className="group flex items-center space-x-3 bg-gray-900 dark:bg-gray-700 text-white px-8 py-4 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors text-lg font-semibold w-full sm:w-auto justify-center btn-hover-lift btn-secondary-glow ripple">
               <Code className="w-5 h-5 icon-slide" />
-              <span>Discover Projects</span>
+              <span>Find Your Mission</span>
             </Link>
           </div>
         </ScrollReveal>
