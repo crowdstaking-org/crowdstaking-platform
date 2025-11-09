@@ -1,5 +1,7 @@
 # CrowdStaking Platform
 
+[![Deploy to DigitalOcean](https://github.com/crowdstaking-org/crowdstaking-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/crowdstaking-org/crowdstaking-platform/actions/workflows/deploy.yml)
+
 **Decentralized Venture Studio for the AI Era**
 
 CrowdStaking transforms creative initiative into liquid ownership. Contributors become co-founders, not contractors.
