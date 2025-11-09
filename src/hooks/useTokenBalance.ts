@@ -34,18 +34,15 @@ export function useTokenBalance() {
     contract,
     method: 'function balanceOf(address) view returns (uint256)',
     params: [account?.address || '0x0000000000000000000000000000000000000000'] as const,
-    // Only query if wallet is connected
-    queryOptions: {
-      enabled: !!account?.address,
-    }
   })
   
   // Convert BigInt to string for safe manipulation
   const balanceRaw = data ? data.toString() : '0'
   
   // Format balance from wei (18 decimals) to human-readable
+  // Use string manipulation to avoid BigInt conversion errors
   const balance = data 
-    ? (Number(data) / 1e18).toString()
+    ? (parseInt(balanceRaw) / 1e18).toString()
     : '0'
   
   // Format with commas and 2 decimals for display

@@ -82,7 +82,7 @@ export default function CofounderDashboardPage() {
             </p>
           </div>
 
-          {/* Wallet Module - Always visible at top */}
+          {/* Wallet Module - Prominently displayed */}
           <div className="mb-8">
             <WalletModule />
           </div>
