@@ -24,14 +24,14 @@ export function MissionsSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-8 mb-12">
+        <div className="grid md:grid-cols-2 gap-8 mb-12 items-stretch">
           <ScrollReveal
             direction="up"
             scale={true}
             duration={900}
             distance={50}
           >
-            <div className="group bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 border-2 border-blue-600 dark:border-blue-500 rounded-xl p-8 shadow-lg card-hover card-shadow-grow card-border-glow cursor-pointer">
+            <div className="h-full flex flex-col group bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 border-2 border-blue-600 dark:border-blue-500 rounded-xl p-8 shadow-lg card-hover card-shadow-grow card-border-glow cursor-pointer">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold text-xl scale-hover">
                   CS
@@ -83,7 +83,7 @@ export function MissionsSection() {
                 </div>
               </div>
 
-              <button className="w-full bg-blue-600 dark:bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group">
+              <button className="w-full bg-blue-600 dark:bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group mt-auto">
                 <span>View Mission & Build</span>
                 <ArrowRight className="w-4 h-4 icon-slide" />
               </button>
@@ -91,7 +91,7 @@ export function MissionsSection() {
           </ScrollReveal>
 
           <ScrollReveal direction="up" delay={200} duration={700}>
-            <div className="group bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8 card-hover card-shadow-grow card-border-glow cursor-pointer">
+            <div className="h-full flex flex-col group bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8 card-hover card-shadow-grow card-border-glow cursor-pointer">
               <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-300 font-bold text-xl scale-hover">
                   TA
@@ -139,7 +139,7 @@ export function MissionsSection() {
                 </div>
               </div>
 
-              <button className="w-full bg-gray-900 dark:bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-secondary-glow group">
+              <button className="w-full bg-gray-900 dark:bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-secondary-glow group mt-auto">
                 <span>View Mission</span>
                 <ArrowRight className="w-4 h-4 icon-slide" />
               </button>

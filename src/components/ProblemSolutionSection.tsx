@@ -21,14 +21,14 @@ export function ProblemSolutionSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 items-stretch">
           <ScrollReveal
             direction="right"
             delay={100}
             distance={60}
             duration={800}
           >
-            <div className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8">
+            <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 rounded-xl p-8">
               <div className="flex items-center space-x-3 mb-6">
                 <Lock className="w-8 h-8 text-red-600 dark:text-red-500" />
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -50,7 +50,7 @@ export function ProblemSolutionSection() {
             distance={60}
             duration={800}
           >
-            <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-600 dark:border-blue-500 rounded-xl p-8">
+            <div className="h-full flex flex-col bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-600 dark:border-blue-500 rounded-xl p-8">
               <div className="flex items-center space-x-3 mb-6">
                 <TrendingUp className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
