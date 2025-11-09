@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter, FileText } from 'lucide-react'
 import { MissionCard } from './MissionCard'
+import Link from 'next/link'
 
 interface DiscoverTabProps {
   onViewProject?: (projectId: string) => void
@@ -44,6 +45,25 @@ export function DiscoverTab({ onViewProject }: DiscoverTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Quick Action CTA */}
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-700 dark:to-blue-700 rounded-xl p-6 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-white text-center sm:text-left">
+            <h3 className="text-xl font-bold mb-1">Ready to Make an Impact?</h3>
+            <p className="text-purple-100 dark:text-purple-200 text-sm">
+              Submit your proposal and become a co-founder
+            </p>
+          </div>
+          <Link
+            href="/dashboard/propose"
+            className="flex items-center space-x-2 bg-white dark:bg-gray-800 text-purple-600 dark:text-purple-400 px-6 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-semibold whitespace-nowrap shadow-lg"
+          >
+            <FileText className="w-5 h-5" />
+            <span>Submit Proposal</span>
+          </Link>
+        </div>
+      </div>
+
       {/* Search & Filters */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
         <div className="relative mb-4">

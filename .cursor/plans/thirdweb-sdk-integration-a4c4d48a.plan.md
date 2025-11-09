@@ -1,728 +1,903 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 331ea004-7171-4d98-b962-29e72fcd91bf -->
-# Phase 2 Refinement: Minimal-Invasive Authentication Upgrade
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 30f05b95-d9a2-4869-92b0-e942fde339cf -->
+# Phase 3 Refinement: Minimal-Invasive Proposal Submission Form
 
-## Context: What Phase 1 Built
+## Context: What We've Built So Far
 
-In Phase 1, we created **simplified auth** that trusts client-provided wallet addresses:
+### Phase 1 ✅
 
-```typescript
-// PHASE-1-TICKET-006 created this:
-export function getAuthenticatedWallet(request: Request): string | null {
-  const wallet = request.headers.get('x-wallet-address')
-  return wallet // Trust client (NOT SECURE)
-}
-```
+- Supabase database with `proposals` table (minimal schema)
+- API endpoint `POST /api/proposals` (basic version)
+- API helpers for responses
 
-**This works for development but is NOT production-ready.** Anyone can impersonate any wallet.
+### Phase 2 ✅
 
-## Phase 2 Goal
+- Secure wallet authentication
+- Session management
+- ProtectedRoute component
+- Auth hooks
 
-Upgrade to **secure wallet authentication** using cryptographic signatures:
+### Phase 3 Goal
 
-1. User signs a message with their wallet (SIWE - Sign-In with Ethereum)
-2. Backend verifies the signature cryptographically
-3. Backend issues a session token
-4. Subsequent requests use session token
+Build **complete proposal submission experience** for co-founders:
 
-**Minimal-invasive approach:** Leverage ThirdWeb SDK v5 auth capabilities instead of building from scratch.
+- Beautiful, user-friendly form
+- Markdown editor for rich content
+- Real-time validation
+- Preview before submit
+- Success/error handling
+- Integration with existing API
 
-## Analysis: ThirdWeb SDK v5 Auth
+## What Exists Already
 
-**Already Installed:** `thirdweb: ^5.111.8` ✅
+From USERFLOW.md analysis, we found:
 
-**ThirdWeb v5 provides:**
-
-- `verifySignature()` - verify wallet signatures
-- `generatePayload()` - create messages to sign
-- Built-in session management utilities
-- No need for separate SIWE library
-
-**Reference:** https://portal.thirdweb.com/typescript/v5/auth
-
-## What We're Upgrading
-
-### From Phase 1 (Simplified)
-
-```typescript
-// Client: Just sends wallet address
-headers: { 'x-wallet-address': '0x123...' }
-
-// Server: Trusts it blindly
-const wallet = request.headers.get('x-wallet-address')
-```
-
-### To Phase 2 (Secure)
-
-```typescript
-// Client: Signs message with wallet
-const signature = await wallet.signMessage(message)
-
-// Server: Verifies signature cryptographically
-const isValid = await verifySignature({ message, signature, address })
-```
+- ❌ No `/dashboard/propose` page exists yet
+- ✅ Basic proposal flow mocked in UI
+- ✅ Design system components available
 
 ## Minimal-Invasive Strategy
 
-**What We'll Do:**
+**Leverage what exists:**
 
-1. Add ThirdWeb auth utilities (small lib)
-2. Create login endpoint that verifies signatures
-3. Use httpOnly cookies for sessions (simple, secure)
-4. Update `getAuthenticatedWallet()` to check session cookie
-5. Add ConnectButton to Navigation (1 line change)
+- Use existing Tailwind design system
+- Use existing Layout component
+- Reuse form patterns from other pages
+- Simple approach first, enhance later
 
-**What We'll Skip:**
+**What we'll build:**
 
-- ❌ Complex JWT token generation (use simple session ID)
-- ❌ Refresh tokens (session expires, re-login)
-- ❌ Database session storage (in-memory Map for MVP, upgrade later)
-- ❌ Multi-device session management
-- ❌ OAuth providers (just wallet for now)
+1. Form UI with 4 fields (title, description, deliverable, amount)
+2. Markdown editor (library)
+3. Client-side validation (Zod)
+4. Preview component
+5. Submit handler
+6. Success/error states
+
+**What we'll skip:**
+
+- ❌ Draft saving (add later)
+- ❌ File attachments (not in MVP)
+- ❌ AI-assisted writing (post-MVP)
+- ❌ Template system (post-MVP)
+
+## Required Dependencies Analysis
+
+Need to install:
+
+- `react-hook-form` - Form state management
+- `zod` - Schema validation
+- `react-markdown` - Markdown rendering
+- `react-simplemde-editor` - Markdown editor (lightweight)
+
+Total bundle size: ~200kb (acceptable for MVP)
 
 ## Refined Actionable Tickets
 
-### PHASE-2-TICKET-001: ThirdWeb Auth Utilities Setup
+### PHASE-3-TICKET-001: Install Form Dependencies
 
-**Priority:** P0 | **Time:** 45 min
+**Priority:** P0 | **Time:** 10 min
 
-**Goal:** Create auth utilities using ThirdWeb SDK for signature verification
+**Goal:** Install necessary packages for form handling and markdown
 
 **What to Do:**
 
-1. Create `src/lib/auth/thirdweb-auth.ts`
-2. Import ThirdWeb v5 auth functions
-3. Create helper: `generateLoginPayload(address)`
-4. Create helper: `verifyLoginSignature(payload, signature)`
-5. Test with a sample wallet address
+1. Install react-hook-form for form state
+2. Install zod for validation
+3. Install react-markdown for rendering
+4. Install simplemde-markdown-editor + react-simplemde-editor
 
-**Files to Create:**
+**Commands:**
 
-- `src/lib/auth/thirdweb-auth.ts`
+```bash
+npm install react-hook-form zod
+npm install react-markdown remark-gfm
+npm install simplemde-markdown-editor react-simplemde-editor
+npm install --save-dev @types/react-simplemde-editor
+```
 
 **Definition of Done:**
 
-- [ ] Can generate a message for user to sign
-- [ ] Can verify a signature against message and address
-- [ ] Verification returns true for valid signatures
-- [ ] Verification returns false for invalid signatures
-- [ ] TypeScript types included
-- [ ] Unit test passes with test data
+- [ ] All packages installed in package.json
+- [ ] No dependency conflicts
+- [ ] TypeScript types available
+- [ ] Can import packages without errors
+- [ ] `npm run build` succeeds
+
+---
+
+### PHASE-3-TICKET-002: Create Proposal Schema & Types
+
+**Priority:** P0 | **Time:** 20 min
+
+**Goal:** Define TypeScript types and Zod validation schema for proposals
+
+**What to Do:**
+
+1. Create `src/types/proposal.ts`
+2. Define Proposal interface
+3. Create Zod schema matching API expectations
+4. Export both for reuse
+
+**Files to Create:**
+
+- `src/types/proposal.ts`
+
+**Definition of Done:**
+
+- [ ] Proposal interface defined
+- [ ] Zod schema matches interface
+- [ ] Schema validates all 4 fields
+- [ ] Min/max lengths enforced
+- [ ] Amount must be positive number
+- [ ] Types exported for use in components
 
 **Code Pattern:**
 
 ```typescript
-// src/lib/auth/thirdweb-auth.ts
-import { verifySignature } from 'thirdweb/auth'
-import { client } from '@/lib/thirdweb'
+// src/types/proposal.ts
+import { z } from 'zod'
 
-export interface LoginPayload {
-  address: string
-  message: string
-  timestamp: number
-  nonce: string
-}
-
-export function generateLoginPayload(address: string): LoginPayload {
-  const timestamp = Date.now()
-  const nonce = Math.random().toString(36).substring(7)
-  const message = `Sign in to CrowdStaking\n\nAddress: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}`
+export const proposalSchema = z.object({
+  title: z.string()
+    .min(5, 'Title must be at least 5 characters')
+    .max(100, 'Title must be less than 100 characters'),
   
-  return { address, message, timestamp, nonce }
-}
+  description: z.string()
+    .min(50, 'Description must be at least 50 characters')
+    .max(5000, 'Description must be less than 5000 characters'),
+  
+  deliverable: z.string()
+    .min(20, 'Deliverable must be at least 20 characters')
+    .max(2000, 'Deliverable must be less than 2000 characters'),
+  
+  requested_cstake_amount: z.number()
+    .positive('Amount must be greater than 0')
+    .max(1000000, 'Amount too large'),
+})
 
-export async function verifyLoginSignature(
-  payload: LoginPayload,
-  signature: string
-): Promise<boolean> {
-  try {
-    const result = await verifySignature({
-      client,
-      message: payload.message,
-      signature,
-      address: payload.address,
-    })
-    return result
-  } catch {
-    return false
-  }
+export type ProposalFormData = z.infer<typeof proposalSchema>
+
+export interface Proposal extends ProposalFormData {
+  id: string
+  creator_wallet_address: string
+  created_at: string
 }
 ```
 
 ---
 
-### PHASE-2-TICKET-002: Simple Session Management
+### PHASE-3-TICKET-003: Create Markdown Editor Component
 
 **Priority:** P0 | **Time:** 1 hour
 
-**Goal:** Create in-memory session storage and cookie helpers
+**Goal:** Build reusable markdown editor component with preview
 
 **What to Do:**
 
-1. Create `src/lib/auth/sessions.ts`
-2. In-memory Map to store sessions: `sessionId -> walletAddress`
-3. Helper to create session
-4. Helper to verify session
-5. Helper to delete session
+1. Create `src/components/forms/MarkdownEditor.tsx`
+2. Wrap SimpleMDE with React component
+3. Add toolbar configuration
+4. Style to match design system
+5. Add character counter
+6. Make it controlled component (value + onChange)
 
 **Files to Create:**
 
-- `src/lib/auth/sessions.ts`
+- `src/components/forms/MarkdownEditor.tsx`
+- Import SimpleMDE CSS in component
 
 **Definition of Done:**
 
-- [ ] Can create session and get session ID
-- [ ] Can verify session ID and get wallet address
-- [ ] Can delete/invalidate session
-- [ ] Sessions auto-expire after 7 days
-- [ ] Session ID is random and secure (crypto.randomUUID)
-- [ ] Works in-memory (no database yet)
-
-**Code Pattern:**
-
-```typescript
-// src/lib/auth/sessions.ts
-interface Session {
-  walletAddress: string
-  createdAt: number
-  expiresAt: number
-}
-
-// In-memory storage (upgrade to Redis/DB later)
-const sessions = new Map<string, Session>()
-
-const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
-
-export function createSession(walletAddress: string): string {
-  const sessionId = crypto.randomUUID()
-  const now = Date.now()
-  
-  sessions.set(sessionId, {
-    walletAddress,
-    createdAt: now,
-    expiresAt: now + SESSION_DURATION,
-  })
-  
-  return sessionId
-}
-
-export function getSession(sessionId: string): string | null {
-  const session = sessions.get(sessionId)
-  if (!session) return null
-  
-  if (Date.now() > session.expiresAt) {
-    sessions.delete(sessionId)
-    return null
-  }
-  
-  return session.walletAddress
-}
-
-export function deleteSession(sessionId: string): void {
-  sessions.delete(sessionId)
-}
-```
-
----
-
-### PHASE-2-TICKET-003: Login API Endpoint
-
-**Priority:** P0 | **Time:** 1 hour
-
-**Goal:** Create `/api/auth/login` endpoint that verifies signature and creates session
-
-**What to Do:**
-
-1. Create `src/app/api/auth/login/route.ts`
-2. Accept POST with { address, message, signature }
-3. Verify signature using thirdweb-auth helper
-4. Create session if valid
-5. Set httpOnly cookie with session ID
-6. Return success/error
-
-**Files to Create:**
-
-- `src/app/api/auth/login/route.ts`
-
-**Definition of Done:**
-
-- [ ] POST `/api/auth/login` endpoint works
-- [ ] Accepts address, message, signature in body
-- [ ] Verifies signature cryptographically
-- [ ] Creates session on success
-- [ ] Sets httpOnly cookie `session_id`
-- [ ] Returns error if signature invalid
-- [ ] Cookie has secure flags (httpOnly, sameSite, secure)
-- [ ] Tested with Postman/curl
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/auth/login/route.ts
-import { NextRequest } from 'next/server'
-import { verifyLoginSignature } from '@/lib/auth/thirdweb-auth'
-import { createSession } from '@/lib/auth/sessions'
-import { jsonResponse, errorResponse } from '@/lib/api'
-
-export async function POST(request: NextRequest) {
-  try {
-    const { address, message, signature, timestamp, nonce } = await request.json()
-    
-    // Verify signature
-    const isValid = await verifyLoginSignature(
-      { address, message, timestamp, nonce },
-      signature
-    )
-    
-    if (!isValid) {
-      return errorResponse('Invalid signature', 401)
-    }
-    
-    // Create session
-    const sessionId = createSession(address)
-    
-    // Set cookie
-    const response = jsonResponse({ 
-      success: true, 
-      address 
-    })
-    
-    response.cookies.set('session_id', sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
-    
-    return response
-  } catch (error) {
-    return errorResponse('Login failed', 500)
-  }
-}
-```
-
----
-
-### PHASE-2-TICKET-004: Logout API Endpoint
-
-**Priority:** P1 | **Time:** 20 min
-
-**Goal:** Create `/api/auth/logout` endpoint to invalidate sessions
-
-**What to Do:**
-
-1. Create `src/app/api/auth/logout/route.ts`
-2. Read session_id from cookie
-3. Delete session from storage
-4. Clear cookie
-5. Return success
-
-**Files to Create:**
-
-- `src/app/api/auth/logout/route.ts`
-
-**Definition of Done:**
-
-- [ ] POST `/api/auth/logout` endpoint works
-- [ ] Reads session_id from cookie
-- [ ] Deletes session from storage
-- [ ] Clears cookie
-- [ ] Returns success even if no session
-- [ ] Works when called from browser
-
-**Code Pattern:**
-
-```typescript
-// src/app/api/auth/logout/route.ts
-import { NextRequest } from 'next/server'
-import { deleteSession } from '@/lib/auth/sessions'
-import { jsonResponse } from '@/lib/api'
-
-export async function POST(request: NextRequest) {
-  const sessionId = request.cookies.get('session_id')?.value
-  
-  if (sessionId) {
-    deleteSession(sessionId)
-  }
-  
-  const response = jsonResponse({ success: true })
-  response.cookies.delete('session_id')
-  
-  return response
-}
-```
-
----
-
-### PHASE-2-TICKET-005: Update Auth Helper to Use Sessions
-
-**Priority:** P0 | **Time:** 30 min
-
-**Goal:** Upgrade `src/lib/auth.ts` from Phase 1 to use real sessions instead of trusting headers
-
-**What to Do:**
-
-1. Update `getAuthenticatedWallet()` function
-2. Read session_id from cookies instead of header
-3. Verify session and return wallet address
-4. Keep same function signature (no breaking changes)
-
-**Files to Edit:**
-
-- `src/lib/auth.ts` (from Phase 1)
-
-**Definition of Done:**
-
-- [ ] `getAuthenticatedWallet(request)` now checks session cookie
-- [ ] Returns wallet address if valid session
-- [ ] Returns null if no session or expired
-- [ ] `requireAuth()` still throws if no auth
-- [ ] No breaking changes to existing API routes
-- [ ] PHASE-1-TICKET-007 endpoint still works
-
-**Code Pattern:**
-
-```typescript
-// src/lib/auth.ts (UPDATE from Phase 1)
-import { getSession } from '@/lib/auth/sessions'
-
-export function getAuthenticatedWallet(request: Request): string | null {
-  // Phase 2: Read from secure session cookie
-  const sessionId = request.cookies.get('session_id')?.value
-  if (!sessionId) return null
-  
-  return getSession(sessionId)
-}
-
-export function requireAuth(request: Request): string {
-  const wallet = getAuthenticatedWallet(request)
-  if (!wallet) {
-    throw new Error('Unauthorized - Please login')
-  }
-  return wallet
-}
-```
-
----
-
-### PHASE-2-TICKET-006: Frontend Auth Hook
-
-**Priority:** P0 | **Time:** 1 hour
-
-**Goal:** Create React hook for wallet login with signature
-
-**What to Do:**
-
-1. Create `src/hooks/useAuth.ts`
-2. Use ThirdWeb's `useActiveAccount()` to get connected wallet
-3. Create `login()` function that:
-
-   - Generates payload
-   - Signs message with wallet
-   - Calls `/api/auth/login`
-
-4. Create `logout()` function
-5. Store auth state in React state
-
-**Files to Create:**
-
-- `src/hooks/useAuth.ts`
-
-**Definition of Done:**
-
-- [ ] `useAuth()` hook returns { wallet, isAuthenticated, login, logout }
-- [ ] `login()` signs message and calls API
-- [ ] `logout()` calls logout API and clears state
-- [ ] Hook works with ThirdWeb ConnectButton
-- [ ] Loading states included
-- [ ] Error handling included
-
-**Code Pattern:**
-
-```typescript
-// src/hooks/useAuth.ts
-'use client'
-import { useState } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
-import { signMessage } from 'thirdweb/wallets'
-import { generateLoginPayload } from '@/lib/auth/thirdweb-auth'
-
-export function useAuth() {
-  const account = useActiveAccount()
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  
-  const login = async () => {
-    if (!account) return
-    
-    try {
-      setIsLoading(true)
-      
-      // Generate payload
-      const payload = generateLoginPayload(account.address)
-      
-      // Sign message
-      const signature = await signMessage({
-        account,
-        message: payload.message,
-      })
-      
-      // Call login API
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, signature }),
-      })
-      
-      if (response.ok) {
-        setIsAuthenticated(true)
-      }
-    } catch (error) {
-      console.error('Login failed:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-  
-  const logout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' })
-    setIsAuthenticated(false)
-  }
-  
-  return {
-    wallet: account?.address,
-    isAuthenticated,
-    isLoading,
-    login,
-    logout,
-  }
-}
-```
-
----
-
-### PHASE-2-TICKET-007: Add ConnectButton to Navigation
-
-**Priority:** P1 | **Time:** 30 min
-
-**Goal:** Replace "Login" button with ThirdWeb ConnectButton
-
-**What to Do:**
-
-1. Update `src/components/Navigation.tsx`
-2. Import `ConnectButton` from thirdweb/react
-3. Replace existing "Login" button
-4. Add auth state display (wallet address when connected)
-5. Style to match design system
-
-**Files to Edit:**
-
-- `src/components/Navigation.tsx`
-
-**Definition of Done:**
-
-- [ ] ConnectButton appears in navigation
-- [ ] Wallet connection works in browser
-- [ ] Shows wallet address when connected
-- [ ] Shows "Connect Wallet" when not connected
+- [ ] Component renders markdown editor
+- [ ] Toolbar has basic formatting (bold, italic, lists, links)
+- [ ] Preview tab works
+- [ ] Character counter shows remaining chars
 - [ ] Styled consistently with design
-- [ ] Works on mobile
-- [ ] Auto-triggers login after connection
+- [ ] Works as controlled component
+- [ ] Mobile responsive
 
 **Code Pattern:**
 
 ```typescript
-// src/components/Navigation.tsx (UPDATE)
-import { ConnectButton } from 'thirdweb/react'
-import { client } from '@/lib/thirdweb'
-import { useAuth } from '@/hooks/useAuth'
+// src/components/forms/MarkdownEditor.tsx
+'use client'
+import { useMemo } from 'react'
+import dynamic from 'next/dynamic'
+import 'simplemde/dist/simplemde.min.css'
 
-export function Navigation() {
-  const { isAuthenticated, login } = useAuth()
-  
+// Dynamic import to avoid SSR issues
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), {
+  ssr: false,
+})
+
+interface MarkdownEditorProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  maxLength?: number
+}
+
+export function MarkdownEditor({
+  value,
+  onChange,
+  placeholder,
+  maxLength,
+}: MarkdownEditorProps) {
+  const options = useMemo(() => ({
+    spellChecker: false,
+    placeholder: placeholder || 'Write here...',
+    status: maxLength ? [
+      {
+        className: 'character-count',
+        onUpdate: (el: HTMLElement) => {
+          const remaining = maxLength - value.length
+          el.innerHTML = `${remaining} characters remaining`
+        },
+      },
+    ] : false,
+    toolbar: [
+      'bold', 'italic', 'heading', '|',
+      'quote', 'unordered-list', 'ordered-list', '|',
+      'link', 'preview', 'guide',
+    ],
+  }), [value.length, maxLength, placeholder])
+
   return (
-    <nav>
-      {/* Other nav items */}
-      
-      <ConnectButton 
-        client={client}
-        onConnect={() => {
-          // Auto-login after connecting wallet
-          if (!isAuthenticated) {
-            login()
-          }
-        }}
+    <div className="markdown-editor">
+      <SimpleMDE
+        value={value}
+        onChange={onChange}
+        options={options}
       />
-    </nav>
+    </div>
   )
 }
 ```
 
 ---
 
-### PHASE-2-TICKET-008: Protected Route Wrapper Component
+### PHASE-3-TICKET-004: Create Proposal Form Page
 
-**Priority:** P1 | **Time:** 45 min
+**Priority:** P0 | **Time:** 1.5 hours
 
-**Goal:** Create reusable component to protect pages requiring auth
+**Goal:** Build complete proposal submission form page
 
 **What to Do:**
 
-1. Create `src/components/ProtectedRoute.tsx`
-2. Check if user is authenticated
-3. Show ConnectButton if not connected
-4. Show "Sign Message" prompt if connected but not authenticated
-5. Show children if fully authenticated
+1. Create `src/app/dashboard/propose/page.tsx`
+2. Setup react-hook-form with Zod validation
+3. Add all 4 form fields:
+
+   - Title (input)
+   - Description (markdown editor)
+   - Deliverable (markdown editor)
+   - Amount (number input)
+
+4. Wrap in ProtectedRoute
+5. Add submit handler
+6. Style with existing design system
 
 **Files to Create:**
 
-- `src/components/ProtectedRoute.tsx`
+- `src/app/dashboard/propose/page.tsx`
 
 **Definition of Done:**
 
-- [ ] Component checks auth state
-- [ ] Blocks access if not authenticated
-- [ ] Shows clear message about what's needed
-- [ ] Includes ConnectButton for wallet connection
-- [ ] Includes login button for signature
-- [ ] Renders children when authenticated
-- [ ] Can be wrapped around any page
-
-**Code Pattern:**
-
-```typescript
-// src/components/ProtectedRoute.tsx
-'use client'
-import { useAuth } from '@/hooks/useAuth'
-import { ConnectButton } from 'thirdweb/react'
-import { client } from '@/lib/thirdweb'
-
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { wallet, isAuthenticated, login, isLoading } = useAuth()
-  
-  if (!wallet) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <h2 className="text-2xl font-bold">Connect Your Wallet</h2>
-        <p className="text-gray-600">You need to connect a wallet to access this page</p>
-        <ConnectButton client={client} />
-      </div>
-    )
-  }
-  
-  if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <h2 className="text-2xl font-bold">Sign In</h2>
-        <p className="text-gray-600">Please sign a message to verify your wallet</p>
-        <button 
-          onClick={login} 
-          disabled={isLoading}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg"
-        >
-          {isLoading ? 'Signing...' : 'Sign Message'}
-        </button>
-      </div>
-    )
-  }
-  
-  return <>{children}</>
-}
-```
-
----
-
-### PHASE-2-TICKET-009: Update Proposal Submit Page with Auth
-
-**Priority:** P0 | **Time:** 20 min
-
-**Goal:** Wrap proposal submission page in ProtectedRoute
-
-**What to Do:**
-
-1. Update proposal form page (from Phase 1 if exists, or create placeholder)
-2. Wrap content with `<ProtectedRoute>`
-3. Test auth flow: Connect -> Sign -> Submit Proposal
-4. Verify API receives authenticated wallet address
-
-**Files to Edit:**
-
-- `src/app/dashboard/propose/page.tsx` (create if doesn't exist)
-
-**Definition of Done:**
-
-- [ ] Page wrapped in ProtectedRoute
-- [ ] Cannot access without wallet connection
-- [ ] Cannot submit without signing message
-- [ ] Wallet address sent to API automatically
-- [ ] API route (PHASE-1-TICKET-007) works with new auth
-- [ ] Full flow tested in browser
+- [ ] Page accessible at `/dashboard/propose`
+- [ ] Protected by authentication
+- [ ] Form has all 4 required fields
+- [ ] Real-time validation on blur
+- [ ] Error messages display inline
+- [ ] Submit button disabled when invalid
+- [ ] Loading state during submission
+- [ ] Mobile responsive
 
 **Code Pattern:**
 
 ```typescript
 // src/app/dashboard/propose/page.tsx
 'use client'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { proposalSchema, ProposalFormData } from '@/types/proposal'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { MarkdownEditor } from '@/components/forms/MarkdownEditor'
+import { Layout } from '@/components/Layout'
 
 export default function ProposePage() {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<ProposalFormData>({
+    resolver: zodResolver(proposalSchema),
+    mode: 'onBlur',
+  })
+
+  const onSubmit = async (data: ProposalFormData) => {
+    try {
+      const response = await fetch('/api/proposals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      
+      if (!response.ok) throw new Error('Failed to submit')
+      
+      // Handle success (next ticket)
+    } catch (error) {
+      // Handle error (next ticket)
+    }
+  }
+
   return (
-    <ProtectedRoute>
-      <div>
-        <h1>Submit Proposal</h1>
-        {/* Form content here */}
-      </div>
-    </ProtectedRoute>
+    <Layout>
+      <ProtectedRoute>
+        <div className="max-w-4xl mx-auto py-12 px-4">
+          <h1 className="text-4xl font-bold mb-8">Submit a Proposal</h1>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            {/* Title Field */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Proposal Title *
+              </label>
+              <input
+                {...register('title')}
+                type="text"
+                placeholder="e.g., Logo & Brand Identity Design"
+                className="w-full px-4 py-3 border rounded-lg"
+              />
+              {errors.title && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.title.message}
+                </p>
+              )}
+            </div>
+
+            {/* Description Field */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Description * <span className="text-gray-500">(What will you do?)</span>
+              </label>
+              <MarkdownEditor
+                value={watch('description') || ''}
+                onChange={(value) => setValue('description', value)}
+                placeholder="Describe your proposal in detail..."
+                maxLength={5000}
+              />
+              {errors.description && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+
+            {/* Deliverable Field */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Deliverable * <span className="text-gray-500">(What's the result?)</span>
+              </label>
+              <MarkdownEditor
+                value={watch('deliverable') || ''}
+                onChange={(value) => setValue('deliverable', value)}
+                placeholder="What will you deliver? Include links if applicable..."
+                maxLength={2000}
+              />
+              {errors.deliverable && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.deliverable.message}
+                </p>
+              )}
+            </div>
+
+            {/* Amount Field */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">
+                Requested $CSTAKE Amount *
+              </label>
+              <input
+                {...register('requested_cstake_amount', { valueAsNumber: true })}
+                type="number"
+                step="0.01"
+                placeholder="e.g., 1500"
+                className="w-full px-4 py-3 border rounded-lg"
+              />
+              {errors.requested_cstake_amount && (
+                <p className="text-red-600 text-sm mt-1">
+                  {errors.requested_cstake_amount.message}
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={!isValid || isSubmitting}
+              className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       hover:bg-blue-700 transition-colors"
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
+            </button>
+          </form>
+        </div>
+      </ProtectedRoute>
+    </Layout>
   )
 }
 ```
 
 ---
 
-### PHASE-2-TICKET-010: End-to-End Auth Flow Test
+### PHASE-3-TICKET-005: Update API Endpoint for Validation
+
+**Priority:** P1 | **Time:** 30 min
+
+**Goal:** Add server-side validation to POST /api/proposals endpoint
+
+**What to Do:**
+
+1. Update `src/app/api/proposals/route.ts` from Phase 1
+2. Import proposalSchema from types
+3. Validate request body with Zod
+4. Return 400 with validation errors if invalid
+5. Maintain existing functionality
+
+**Files to Edit:**
+
+- `src/app/api/proposals/route.ts` (from PHASE-1-TICKET-007)
+
+**Definition of Done:**
+
+- [ ] Request body validated with Zod schema
+- [ ] Returns 400 if validation fails
+- [ ] Returns specific error messages
+- [ ] Still saves to database on success
+- [ ] Wallet address still extracted from auth
+- [ ] Backward compatible with Phase 1 tests
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/proposals/route.ts (UPDATE)
+import { proposalSchema } from '@/types/proposal'
+
+export async function POST(request: NextRequest) {
+  try {
+    const wallet = requireAuth(request)
+    const body = await request.json()
+    
+    // Validate with Zod
+    const validation = proposalSchema.safeParse(body)
+    if (!validation.success) {
+      return errorResponse(
+        validation.error.errors[0].message,
+        400
+      )
+    }
+    
+    const data = validation.data
+    
+    // Save to database
+    const { data: proposal, error } = await supabase
+      .from('proposals')
+      .insert({
+        creator_wallet_address: wallet,
+        title: data.title,
+        description: data.description,
+        deliverable: data.deliverable,
+        requested_cstake_amount: data.requested_cstake_amount,
+      })
+      .select()
+      .single()
+    
+    if (error) throw error
+    
+    return jsonResponse({ success: true, proposal }, 201)
+  } catch (error) {
+    return errorResponse(error.message, 500)
+  }
+}
+```
+
+---
+
+### PHASE-3-TICKET-006: Success/Error Handling UI
+
+**Priority:** P1 | **Time:** 45 min
+
+**Goal:** Add user feedback for successful submission and errors
+
+**What to Do:**
+
+1. Create success modal/page component
+2. Create error toast/notification component
+3. Update form to show success state
+4. Update form to show error state
+5. Redirect to dashboard on success
+
+**Files to Create:**
+
+- `src/components/SuccessModal.tsx` (or use existing if available)
+- `src/components/ErrorToast.tsx` (or use library like react-hot-toast)
+
+**Definition of Done:**
+
+- [ ] Success state shows celebratory message
+- [ ] Success explains next steps
+- [ ] Success provides link to dashboard
+- [ ] Error state shows specific error message
+- [ ] Error provides retry button
+- [ ] Network errors handled gracefully
+- [ ] Form can be resubmitted after error
+
+**Code Pattern:**
+
+```typescript
+// Add to ProposePage component
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+
+const router = useRouter()
+const [submitError, setSubmitError] = useState<string | null>(null)
+const [submitSuccess, setSubmitSuccess] = useState(false)
+
+const onSubmit = async (data: ProposalFormData) => {
+  try {
+    setSubmitError(null)
+    
+    const response = await fetch('/api/proposals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    
+    if (!response.ok) {
+      const error = await response.json()
+      throw new Error(error.error || 'Submission failed')
+    }
+    
+    setSubmitSuccess(true)
+    // Redirect after 2 seconds
+    setTimeout(() => router.push('/cofounder-dashboard'), 2000)
+  } catch (error) {
+    setSubmitError(error.message)
+  }
+}
+
+// Success Modal
+{submitSuccess && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-8 max-w-md">
+      <div className="text-center">
+        <div className="text-6xl mb-4">✅</div>
+        <h2 className="text-2xl font-bold mb-2">Proposal Submitted!</h2>
+        <p className="text-gray-600 mb-4">
+          Your proposal is now pending review. We'll notify you when there's an update.
+        </p>
+        <button
+          onClick={() => router.push('/cofounder-dashboard')}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+        >
+          Go to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+// Error Display
+{submitError && (
+  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+    <p className="text-red-800">{submitError}</p>
+  </div>
+)}
+```
+
+---
+
+### PHASE-3-TICKET-007: Add Preview Tab/Modal
+
+**Priority:** P2 | **Time:** 1 hour
+
+**Goal:** Allow users to preview formatted proposal before submitting
+
+**What to Do:**
+
+1. Create `src/components/ProposalPreview.tsx`
+2. Use react-markdown to render description and deliverable
+3. Add "Preview" button to form
+4. Show modal with formatted proposal
+5. Include all field values in preview
+
+**Files to Create:**
+
+- `src/components/ProposalPreview.tsx`
+
+**Definition of Done:**
+
+- [ ] Preview button appears above submit
+- [ ] Preview shows all fields formatted
+- [ ] Markdown renders correctly
+- [ ] Preview modal is readable and styled
+- [ ] Can close preview and edit
+- [ ] Preview updates when form changes
+- [ ] Mobile responsive
+
+**Code Pattern:**
+
+```typescript
+// src/components/ProposalPreview.tsx
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import type { ProposalFormData } from '@/types/proposal'
+
+interface ProposalPreviewProps {
+  data: ProposalFormData
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function ProposalPreview({ data, isOpen, onClose }: ProposalPreviewProps) {
+  if (!isOpen) return null
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl max-w-3xl max-h-[90vh] overflow-auto p-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">Preview</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            ✕
+          </button>
+        </div>
+        
+        <div className="space-y-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              {data.title}
+            </h3>
+            <p className="text-sm text-gray-500">
+              Requesting {data.requested_cstake_amount} $CSTAKE
+            </p>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold mb-2">Description</h4>
+            <div className="prose max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {data.description}
+              </ReactMarkdown>
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="font-semibold mb-2">Deliverable</h4>
+            <div className="prose max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {data.deliverable}
+              </ReactMarkdown>
+            </div>
+          </div>
+        </div>
+        
+        <button
+          onClick={onClose}
+          className="mt-6 w-full bg-gray-900 text-white py-3 rounded-lg"
+        >
+          Close Preview
+        </button>
+      </div>
+    </div>
+  )
+}
+```
+
+---
+
+### PHASE-3-TICKET-008: Add Help Text & Guidelines
+
+**Priority:** P2 | **Time:** 30 min
+
+**Goal:** Add helpful guidance for users filling out the form
+
+**What to Do:**
+
+1. Add info tooltips next to field labels
+2. Add "Tips" section to page
+3. Include examples of good proposals
+4. Add character counters
+5. Add formatting guide for markdown
+
+**Files to Edit:**
+
+- `src/app/dashboard/propose/page.tsx`
+
+**Definition of Done:**
+
+- [ ] Help text for each field
+- [ ] Examples of good content
+- [ ] Markdown formatting guide
+- [ ] Character counters visible
+- [ ] Tips section above or beside form
+- [ ] Not overwhelming or cluttered
+
+**Code Pattern:**
+
+```typescript
+// Add to ProposePage
+<div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+  <h3 className="font-bold text-lg mb-3">💡 Tips for a Great Proposal</h3>
+  <ul className="space-y-2 text-sm">
+    <li>✅ Be specific about what you'll deliver</li>
+    <li>✅ Include examples or portfolio links</li>
+    <li>✅ Explain why you're the right person for this</li>
+    <li>✅ Set a fair token amount based on complexity</li>
+    <li>❌ Don't be vague or overpromise</li>
+  </ul>
+</div>
+
+// Add markdown formatting guide
+<details className="mb-4">
+  <summary className="cursor-pointer text-sm text-gray-600">
+    Markdown Formatting Guide
+  </summary>
+  <div className="mt-2 text-sm text-gray-600 space-y-1">
+    <p><code>**bold**</code> → <strong>bold</strong></p>
+    <p><code>*italic*</code> → <em>italic</em></p>
+    <p><code>[link](url)</code> → <a href="#">link</a></p>
+    <p><code>- item</code> → • item</p>
+  </div>
+</details>
+```
+
+---
+
+### PHASE-3-TICKET-009: Update Navigation CTA
+
+**Priority:** P1 | **Time:** 15 min
+
+**Goal:** Connect homepage "Make a Proposal" button to new form page
+
+**What to Do:**
+
+1. Find all "Make a Proposal" CTAs in codebase
+2. Update hrefs to `/dashboard/propose`
+3. Verify links work from all pages
+4. Test navigation flow
+
+**Files to Edit:**
+
+- `src/components/NewHeroSection.tsx`
+- `src/components/FinalCTASection.tsx`
+- Any other CTA locations
+
+**Definition of Done:**
+
+- [ ] All "Make a Proposal" buttons link to `/dashboard/propose`
+- [ ] Navigation works from homepage
+- [ ] Navigation works from other pages
+- [ ] Auth flow works (connect -> sign -> see form)
+- [ ] No broken links
+
+---
+
+### PHASE-3-TICKET-010: Create GET /api/proposals/me Endpoint
+
+**Priority:** P1 | **Time:** 30 min
+
+**Goal:** Allow users to fetch their own proposals
+
+**What to Do:**
+
+1. Create `src/app/api/proposals/me/route.ts`
+2. Implement GET handler
+3. Get wallet from auth
+4. Query proposals by creator_wallet_address
+5. Return sorted by created_at DESC
+
+**Files to Create:**
+
+- `src/app/api/proposals/me/route.ts`
+
+**Definition of Done:**
+
+- [ ] GET `/api/proposals/me` endpoint works
+- [ ] Requires authentication
+- [ ] Returns only user's own proposals
+- [ ] Sorted newest first
+- [ ] Returns empty array if no proposals
+- [ ] Proper error handling
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/proposals/me/route.ts
+import { NextRequest } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { jsonResponse, errorResponse } from '@/lib/api'
+import { requireAuth } from '@/lib/auth'
+
+export async function GET(request: NextRequest) {
+  try {
+    const wallet = requireAuth(request)
+    
+    const { data, error } = await supabase
+      .from('proposals')
+      .select('*')
+      .eq('creator_wallet_address', wallet)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    
+    return jsonResponse({ success: true, proposals: data })
+  } catch (error) {
+    return errorResponse(error.message, 500)
+  }
+}
+```
+
+---
+
+### PHASE-3-TICKET-011: Integration Test - Complete Flow
 
 **Priority:** P0 | **Time:** 30 min
 
-**Goal:** Test complete authentication flow in browser
+**Goal:** Test entire proposal submission flow end-to-end
 
 **What to Do:**
 
 1. Open app in browser
-2. Click Connect Wallet
-3. Connect MetaMask/wallet
-4. Sign message
-5. Navigate to protected page
+2. Connect wallet and authenticate
+3. Navigate to "Make a Proposal"
+4. Fill out form with valid data
+5. Preview proposal
 6. Submit proposal
-7. Logout
-8. Verify cannot access protected page
-9. Login again
+7. Verify success message
+8. Check proposal in Supabase
+9. Verify proposal appears in `/api/proposals/me`
 
 **Definition of Done:**
 
-- [ ] Can connect wallet via ConnectButton
-- [ ] Signing message works (MetaMask popup)
-- [ ] Session cookie set after login
-- [ ] Can access protected pages
-- [ ] Proposal submission includes correct wallet address
-- [ ] Logout clears session
-- [ ] Cannot access protected pages after logout
-- [ ] Can login again successfully
-- [ ] All flows work on mobile (responsive)
+- [ ] Can access form when authenticated
+- [ ] Cannot access form without auth
+- [ ] All validations work correctly
+- [ ] Markdown editor works
+- [ ] Preview shows formatted content
+- [ ] Submission succeeds
+- [ ] Success message appears
+- [ ] Proposal saved in database with correct wallet
+- [ ] Can fetch proposal via API
+- [ ] Form clears/redirects after success
+- [ ] Mobile responsive at all steps
 
 **Test Checklist:**
 
 ```
-✓ Connect wallet with MetaMask
-✓ Sign login message
-✓ Session cookie appears in DevTools
-✓ Navigate to /dashboard/propose
-✓ Page loads (not redirected)
-✓ Submit proposal
-✓ Check API receives correct wallet address
-✓ Check proposal in Supabase has correct creator_wallet_address
-✓ Click Logout
-✓ Session cookie deleted
-✓ Try accessing /dashboard/propose
-✓ Redirected to connect wallet
+✓ Navigate to homepage
+✓ Click "Make a Proposal"
+✓ Redirected to auth if not connected
+✓ Connect wallet via MetaMask
+✓ Sign authentication message
+✓ See proposal form
+✓ Enter title (test validation: too short, too long, valid)
+✓ Enter description with markdown (bold, lists, links)
+✓ Enter deliverable
+✓ Enter amount (test: negative, zero, valid)
+✓ See validation errors inline
+✓ Fix all errors
+✓ Click "Preview"
+✓ Verify markdown renders correctly
+✓ Close preview
+✓ Click "Submit"
+✓ See loading state
+✓ See success message
+✓ Redirected to dashboard
+✓ Open Supabase dashboard
+✓ Verify proposal exists with correct data
+✓ Test on mobile device
 ```
 
 ---
@@ -731,100 +906,103 @@ export default function ProposePage() {
 
 **Do these tickets in exact order:**
 
-1. **PHASE-2-TICKET-001** - ThirdWeb auth utilities (45 min)
-2. **PHASE-2-TICKET-002** - Session management (1 hour)
-3. **PHASE-2-TICKET-003** - Login API endpoint (1 hour)
-4. **PHASE-2-TICKET-004** - Logout API endpoint (20 min)
-5. **PHASE-2-TICKET-005** - Update auth helper (30 min)
-6. **PHASE-2-TICKET-006** - Frontend auth hook (1 hour)
-7. **PHASE-2-TICKET-007** - ConnectButton in nav (30 min)
-8. **PHASE-2-TICKET-008** - ProtectedRoute component (45 min)
-9. **PHASE-2-TICKET-009** - Update propose page (20 min)
-10. **PHASE-2-TICKET-010** - E2E test (30 min)
+1. **PHASE-3-TICKET-001** - Install dependencies (10 min)
+2. **PHASE-3-TICKET-002** - Create schema & types (20 min)
+3. **PHASE-3-TICKET-003** - Markdown editor component (1 hour)
+4. **PHASE-3-TICKET-004** - Proposal form page (1.5 hours)
+5. **PHASE-3-TICKET-005** - Update API validation (30 min)
+6. **PHASE-3-TICKET-006** - Success/error handling (45 min)
+7. **PHASE-3-TICKET-007** - Preview modal (1 hour)
+8. **PHASE-3-TICKET-008** - Help text & guidelines (30 min)
+9. **PHASE-3-TICKET-009** - Update navigation CTAs (15 min)
+10. **PHASE-3-TICKET-010** - GET /api/proposals/me (30 min)
+11. **PHASE-3-TICKET-011** - Integration test (30 min)
 
-**Total Estimated Time: 6.5 hours**
+**Total Estimated Time: 7 hours**
 
-## What Changed from Phase 1
+## Dependencies Check
 
-### Phase 1 Auth (Simplified)
-
-```typescript
-// Client: Just sends wallet in header
-headers: { 'x-wallet-address': '0x...' }
-
-// Server: Trusts it
-const wallet = request.headers.get('x-wallet-address')
+```json
+{
+  "dependencies": {
+    "react-hook-form": "^7.53.2",
+    "zod": "^3.23.8",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "simplemde-markdown-editor": "^1.11.2",
+    "react-simplemde-editor": "^5.2.0"
+  },
+  "devDependencies": {
+    "@types/react-simplemde-editor": "^5.0.0",
+    "@hookform/resolvers": "^3.9.1"
+  }
+}
 ```
 
-### Phase 2 Auth (Secure)
+**Bundle size impact:** ~200kb (reasonable for rich editor)
 
-```typescript
-// Client: Signs message, sends signature
-const signature = await signMessage(message)
-POST /api/auth/login { address, message, signature }
+## What We're Not Doing (Deferred)
 
-// Server: Verifies cryptographically, creates session
-const isValid = await verifySignature(...)
-if (isValid) setSessionCookie(sessionId)
+From original TICKETS.md, these are deferred:
 
-// Subsequent requests: Send session cookie
-cookies: { session_id: 'abc-123' }
+- ❌ TICKET-026: Advanced markdown editor (using simple one)
+- ❌ Draft saving to database
+- ❌ Image upload for proposals
+- ❌ AI-assisted proposal writing
+- ❌ Proposal templates
+- ❌ Multi-step wizard
+- ❌ Collaborative editing
 
-// Server: Verify session
-const wallet = getSession(sessionId)
-```
-
-## Security Improvements
-
-✅ **Cryptographic Verification:** Signatures verified on-chain
-
-✅ **Session Management:** httpOnly cookies prevent XSS
-
-✅ **Cannot Impersonate:** Must control private key to sign
-
-✅ **Session Expiration:** Auto-logout after 7 days
-
-✅ **Secure Cookies:** HttpOnly, SameSite, Secure flags
-
-## What We're Still Skipping (For Now)
-
-These can be added later when needed:
-
-- ❌ Database session storage (using in-memory Map)
-- ❌ Refresh tokens (just re-login)
-- ❌ Multi-device session management
-- ❌ Session activity tracking
-- ❌ IP-based session validation
-- ❌ CSRF protection (same-origin + httpOnly cookies sufficient for MVP)
+These can be added post-MVP based on user feedback.
 
 ## Success Criteria
 
-After Phase 2 is complete:
+After Phase 3 is complete:
 
-✅ Secure cryptographic authentication
+✅ Co-founders can submit proposals
 
-✅ Users can login with wallet signature
+✅ Beautiful, user-friendly form
 
-✅ Sessions managed with httpOnly cookies
+✅ Markdown support for rich content
 
-✅ Protected pages require authentication
+✅ Real-time validation
 
-✅ Cannot impersonate other users
+✅ Preview before submit
 
-✅ Proposal submissions include verified wallet address
+✅ Success/error feedback
 
-✅ Ready for Phase 3 (Admin features)
+✅ Proposals saved to database
 
-## Next Steps After Phase 2
+✅ Ready for Phase 4 (Admin Review)
 
-Once authenticated:
+## User Experience Flow
 
-- Build proposal submission form UI (EPIC-002)
-- Add status field to proposals
-- Build admin review panel (EPIC-003)
-- Start smart contract development (EPIC-004)
+```
+Homepage
+  ↓ "Make a Proposal" CTA
+Auth Check
+  ↓ Connect Wallet → Sign Message
+Proposal Form
+  ↓ Fill out 4 fields
+  ↓ Use markdown for rich content
+  ↓ See validation feedback
+  ↓ Preview formatted proposal
+  ↓ Submit
+Success Message
+  ↓ Redirect to Dashboard
+View Proposals List
+```
 
-Authentication is now production-ready and won't block any features.
+## Next Steps After Phase 3
+
+Once proposal submission works:
+
+- Phase 4: Admin panel to review proposals
+- Phase 5: Status state machine (pending, approved, rejected)
+- Phase 6: Negotiation flow (counter-offers)
+- Phase 7: Smart contracts for escrow
+
+Proposals are now entering the system, ready for admin review in Phase 4.
 
 ### To-dos
 

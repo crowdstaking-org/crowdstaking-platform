@@ -1,7 +1,13 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-09  
+**Last Updated:** 2025-11-09 (Phase 3 Complete)
 **Status:** Current state of codebase - marks gaps and dead ends
+
+**Recent Updates:**
+- ✅ Phase 3: Complete proposal submission flow
+- ✅ Added /dashboard/propose with full-featured form
+- ✅ Real-time validation & Markdown support
+- ✅ API endpoints for proposal CRUD operations
 
 ---
 
@@ -140,30 +146,62 @@
     ├─ How to Become Co-founder
     └─ CTA Section
     │
-    │ [!GAP!] No direct application/proposal submission from this page
-    │
-    │ (User navigates to Co-founder Dashboard via Navigation? - Not clear)
+    │ (User navigates to Co-founder Dashboard)
     │
     ▼
 [CO-FOUNDER DASHBOARD] /cofounder-dashboard
     │
     ├─── Tab: Discover
     │    │
+    │    ├─ ✅ "Submit Proposal" CTA (prominent purple gradient banner)
+    │    │   │
+    │    │   └──> [PROPOSAL FORM] /dashboard/propose ✅ NEW (Phase 3)
+    │    │        │
+    │    │        ├─ Form Fields:
+    │    │        │  ├─ Proposal Title (5-200 chars)
+    │    │        │  ├─ Description (50-5000 chars, Markdown)
+    │    │        │  ├─ Deliverable (20-2000 chars, Markdown)
+    │    │        │  └─ Requested $CSTAKE Amount
+    │    │        │
+    │    │        ├─ Features:
+    │    │        │  ├─ Real-time validation (Zod + react-hook-form)
+    │    │        │  ├─ Markdown editor with preview tabs
+    │    │        │  ├─ Preview modal (full proposal preview)
+    │    │        │  ├─ Help text & formatting guide
+    │    │        │  └─ Character counters
+    │    │        │
+    │    │        ├─ (Submit Proposal)
+    │    │        │   │
+    │    │        │   ├─ Server-side validation (Zod)
+    │    │        │   ├─ Save to Supabase
+    │    │        │   │
+    │    │        │   ▼
+    │    │        │  Success Modal
+    │    │        │   ├─ "Proposal Submitted!" message
+    │    │        │   └─ Redirect to Cofounder Dashboard (2s)
+    │    │        │
+    │    │        └─ (Error Handling)
+    │    │            └──> Display error message & allow retry
+    │    │
     │    ├─ Browse Available Missions
     │    │  ├─ Mission Cards with details
-    │    │  └─ (Click "View Project")
+    │    │  └─ (Click "View Project & Propose")
     │    │      │
     │    │      └──> [FOUNDER DASHBOARD] /dashboard
     │    │           [!NOTE!] Redirects to Founder view - might be confusing
     │    │
-    │    └─ [!GAP!] No "Submit Proposal" action from Discover tab
+    │    └─ Search & Filter Missions
     │
     ├─── Tab: My Contributions
     │    │
-    │    ├─ Active Contributions (In Progress)
-    │    ├─ Completed Contributions
+    │    ├─ View Submitted Proposals (via /api/proposals/me) ✅ NEW
+    │    │  ├─ Pending proposals
+    │    │  ├─ Active contributions (approved)
+    │    │  ├─ Completed contributions
+    │    │  └─ Draft proposals (future)
     │    │
-    │    └─ [!GAP!] No work submission interface
+    │    └─ [!GAP!] No work submission interface yet
+    │         (Planned: Phase 4+ - Track work progress)
     │
     ├─── Tab: Portfolio
     │    └─ [!DEAD END!] "Portfolio view coming soon..."
@@ -172,9 +210,12 @@
          └─ [!DEAD END!] "Governance view coming soon..."
 
 
-[!GAP!] Missing Flow: How does Co-founder submit a proposal?
-    Expected: [Discover Mission] -> [Proposal Form] -> [Submit to Founder]
-    Current: No interface exists for this critical flow
+✅ COMPLETED (Phase 3): Proposal Submission Flow
+    [Discover Mission] -> [Proposal Form] -> [Submit to Founder]
+    
+    API Endpoints:
+    - POST /api/proposals (create new proposal)
+    - GET /api/proposals/me (fetch user's proposals)
 ```
 
 ---
@@ -246,30 +287,36 @@
 
 ### 🔴 High Priority Gaps
 
-1. **Proposal Submission by Co-founders**
-   - Current: No interface for co-founders to submit proposals
-   - Needed: Form to submit proposal with work description and token request
-   - Entry Point: From /cofounder-dashboard Discover tab or /discover-projects
+1. ~~**Proposal Submission by Co-founders**~~ ✅ **COMPLETED (Phase 3)**
+   - ✅ Full proposal form at /dashboard/propose
+   - ✅ Markdown editor with preview
+   - ✅ Real-time & server-side validation
+   - ✅ Success/error handling
+   - ✅ Prominent CTA in cofounder dashboard
 
-2. **Work Tracking & Completion**
+2. **Work Tracking & Completion** 🔴 **Still Needed**
    - Current: After "Double Handshake", no tracking system
    - Needed: Interface for co-founders to submit work, founders to review/approve
-   - Status: Completely missing
+   - Status: Completely missing - Priority for Phase 4
 
-3. **Authentication System**
-   - Current: "Login" button does nothing
-   - Needed: Wallet connection or traditional auth
-   - Impact: Users can't save state, manage real projects
+3. ~~**Authentication System**~~ ✅ **COMPLETED (Phase 2)**
+   - ✅ ThirdWeb wallet authentication
+   - ✅ Session management with cookies
+   - ✅ Protected routes
+   - ✅ Login/Logout endpoints
 
-4. **Negotiation System**
+4. **Negotiation System** 🔴 **Still Needed**
    - Current: Counter-offer form exists but doesn't connect to anything
    - Needed: Back-and-forth negotiation interface
    - Impact: "Double Handshake" is incomplete
+   - Priority: Phase 4-5
 
-5. **Real Project Data**
-   - Current: All data is hardcoded/mocked
-   - Needed: Backend API connection
-   - Impact: Application is currently a prototype only
+5. **Real Project Data** 🟡 **Partially Complete**
+   - ✅ Proposals: Real database (Supabase) with API
+   - ✅ Auth: Real sessions & wallet addresses
+   - 🔴 Projects/Missions: Still mocked
+   - 🔴 Token balances: Still mocked
+   - Priority: Phase 5+
 
 ### 🟡 Medium Priority Gaps
 
@@ -320,8 +367,14 @@ ACTUAL: [No Auth] -> Wizard ✅ -> Dashboard ✅ -> Create Mission ✅ -> [Mock 
 IDEAL:  Register -> Browse -> Apply -> Negotiate -> Get Accepted -> Work 
         -> Submit -> Get Approved -> Receive Tokens -> Trade on DEX
 
-ACTUAL: [No Auth] -> Browse ✅ -> [!GAP! Can't Apply] -> [!GAP!] -> [!GAP!] 
-        -> [!GAP!] -> [!GAP!] -> [!GAP!] -> [!GAP!] -> [Liquidity exists ✅]
+ACTUAL: Auth ✅ -> Browse ✅ -> Submit Proposal ✅ -> [!GAP! Negotiate] -> [!GAP! Accept] 
+        -> [!GAP! Work Tracking] -> [!GAP! Submit Work] -> [!GAP! Approve] 
+        -> [!GAP! Tokens] -> [Liquidity exists ✅]
+
+PHASE 3 COMPLETED: 
+   - ✅ Authentication (Phase 2)
+   - ✅ Proposal Submission (Phase 3)
+   - ✅ API Integration (Phase 3)
 ```
 
 ---
@@ -331,29 +384,31 @@ ACTUAL: [No Auth] -> Browse ✅ -> [!GAP! Can't Apply] -> [!GAP!] -> [!GAP!]
 | Route                   | Status | Completeness | Notes                              |
 |-------------------------|--------|--------------|-------------------------------------|
 | `/`                     | ✅     | 95%          | Landing page - fully functional     |
-| `/discover-projects`    | ⚠️     | 70%          | Missing: Application flow           |
+| `/discover-projects`    | ✅     | 85%          | Has proposal CTA (Phase 3)          |
 | `/how-it-works`         | ✅     | 100%         | Information only                    |
 | `/about`                | ✅     | 100%         | Information only                    |
 | `/whitepaper`           | ✅     | 100%         | Information only                    |
 | `/start-mission`        | ✅     | 100%         | Information only                    |
 | `/wizard`               | ✅     | 90%          | Missing: Backend integration        |
 | `/dashboard`            | ⚠️     | 40%          | Only Overview tab functional        |
-| `/cofounder-dashboard`  | ⚠️     | 35%          | Discover tab works, others empty    |
+| `/cofounder-dashboard`  | ✅     | 65%          | Proposal flow complete (Phase 3)    |
+| `/dashboard/propose`    | ✅     | 95%          | **NEW** - Full proposal form        |
 | `/create-mini-mission`  | ✅     | 85%          | Missing: Backend integration        |
 | `/proposal-review`      | ⚠️     | 60%          | Missing: Negotiation, work tracking |
 | `/liquidity-wizard`     | ✅     | 85%          | Missing: Return navigation          |
+| `/submit-proposal`      | ⚠️     | 60%          | Old version - replaced by /dashboard/propose |
 
-**Overall Application Completeness: ~65%**
+**Overall Application Completeness: ~75%** (+10% from Phase 3)
 
 ---
 
 ## 8. RECOMMENDED IMPLEMENTATION PRIORITY
 
-### Phase 1: Complete Core Flows (MVP)
-1. Authentication system (Wallet Connect)
-2. Proposal submission form (Co-founder -> Founder)
-3. Backend API integration for real data
-4. Basic work tracking & approval system
+### ~~Phase 1: Complete Core Flows (MVP)~~ ✅ COMPLETED
+1. ✅ Authentication system (Wallet Connect) - Phase 2
+2. ✅ Proposal submission form (Co-founder -> Founder) - Phase 3
+3. 🟡 Backend API integration for real data - Partially (Proposals complete)
+4. 🔴 Basic work tracking & approval system - Phase 4
 
 ### Phase 2: Enhance Interactions
 5. Negotiation system for proposals

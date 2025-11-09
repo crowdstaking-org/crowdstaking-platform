@@ -96,7 +96,7 @@ export function requireAuth(request: Request | NextRequest): string {
  */
 export function isAdmin(walletAddress: string): boolean {
   // MVP: Hardcoded admin wallets (lowercase)
-  const adminWallets = [
+  const adminWallets: string[] = [
     // Add admin wallet addresses here
     // Example: '0x1234567890123456789012345678901234567890'
   ]

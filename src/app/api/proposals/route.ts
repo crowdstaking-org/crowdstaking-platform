@@ -1,12 +1,14 @@
 /**
  * Proposals API Endpoint
  * Handles proposal creation and retrieval
+ * Phase 3: Enhanced with Zod validation
  */
 
 import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { successResponse, errorResponse } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
+import { proposalSchema } from '@/types/proposal'
 
 /**
  * POST /api/proposals
@@ -29,43 +31,30 @@ export async function POST(request: NextRequest) {
     
     // Parse request body
     const body = await request.json()
-    const { title, description, requested_cstake_amount } = body
     
-    // Validate required fields
-    if (!title || typeof title !== 'string') {
-      return errorResponse('Title is required and must be a string', 400)
+    // Validate with Zod schema
+    const validation = proposalSchema.safeParse(body)
+    
+    if (!validation.success) {
+      // Return first validation error for better UX
+      const firstError = validation.error.issues[0]
+      return errorResponse(
+        `${firstError.path.join('.')}: ${firstError.message}`,
+        400
+      )
     }
     
-    if (!description || typeof description !== 'string') {
-      return errorResponse('Description is required and must be a string', 400)
-    }
-    
-    if (!requested_cstake_amount || typeof requested_cstake_amount !== 'number') {
-      return errorResponse('Requested cSTAKE amount is required and must be a number', 400)
-    }
-    
-    // Validate field lengths
-    if (title.length < 1 || title.length > 200) {
-      return errorResponse('Title must be between 1 and 200 characters', 400)
-    }
-    
-    if (description.length < 10 || description.length > 5000) {
-      return errorResponse('Description must be between 10 and 5000 characters', 400)
-    }
-    
-    // Validate amount
-    if (requested_cstake_amount <= 0) {
-      return errorResponse('Requested cSTAKE amount must be greater than 0', 400)
-    }
+    const data = validation.data
     
     // Insert into database
-    const { data, error } = await supabase
+    const { data: proposal, error } = await supabase
       .from('proposals')
       .insert({
         creator_wallet_address: wallet,
-        title: title.trim(),
-        description: description.trim(),
-        requested_cstake_amount,
+        title: data.title.trim(),
+        description: data.description.trim(),
+        deliverable: data.deliverable.trim(),
+        requested_cstake_amount: data.requested_cstake_amount,
       })
       .select()
       .single()
@@ -77,7 +66,7 @@ export async function POST(request: NextRequest) {
     
     return successResponse({
       message: 'Proposal created successfully',
-      proposal: data
+      proposal
     }, 201)
     
   } catch (error) {
