@@ -1,0 +1,12 @@
+{
+  "contractName": "VestingContract",
+  "address": "0x417cba6236848dcaf3cfeb83146c74ae7768c812",
+  "chainId": 84532,
+  "network": "Base Sepolia",
+  "transactionId": "5b398a82-c058-41f8-8679-ebd0e2260fe7",
+  "constructorParams": {
+    "cstakeToken": "0xa746381E05aE069846726Eb053788D4879B458DA",
+    "foundationWallet": "0x252825B2DD9d4ea3489070C09Be63ea18879E5ab"
+  },
+  "deployedAt": "2025-11-09T22:19:32.724Z"
+}
