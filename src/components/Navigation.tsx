@@ -1,7 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { Rocket, LogIn, Sun, Moon } from 'lucide-react'
+import { Rocket, Sun, Moon } from 'lucide-react'
+import { ConnectButton } from "thirdweb/react"
+import { client } from "@/lib/thirdweb"
+import { useAuth } from "@/hooks/useAuth"
 
 interface NavigationProps {
   theme: 'light' | 'dark'
@@ -14,6 +17,8 @@ interface NavigationProps {
  * @param onToggleTheme Function to toggle between light/dark theme
  */
 export function Navigation({ theme, onToggleTheme }: NavigationProps) {
+  const { wallet, isAuthenticated, login } = useAuth()
+  
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -60,10 +65,36 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               </div>
             </button>
 
-            <button className="hidden sm:flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors group">
-              <LogIn className="w-4 h-4 icon-bounce" />
-              <span>Login</span>
-            </button>
+            <div className="hidden sm:flex items-center space-x-2">
+              <ConnectButton
+                client={client}
+                theme="dark"
+                connectButton={{
+                  label: "Connect Wallet",
+                }}
+                connectModal={{
+                  title: "Join CrowdStaking",
+                  showThirdwebBranding: false,
+                }}
+                onConnect={async () => {
+                  // Auto-trigger login after wallet connection
+                  if (!isAuthenticated) {
+                    try {
+                      await login()
+                    } catch (error) {
+                      console.error('Auto-login failed:', error)
+                    }
+                  }
+                }}
+              />
+              
+              {/* Show authentication status */}
+              {wallet && isAuthenticated && (
+                <span className="text-xs text-green-500 dark:text-green-400">
+                  ✓ Authenticated
+                </span>
+              )}
+            </div>
 
             <Link href="/wizard" className="group flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors btn-hover-lift btn-primary-glow ripple">
               <Rocket className="w-4 h-4 icon-slide" />

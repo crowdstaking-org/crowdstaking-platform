@@ -17,6 +17,7 @@ CrowdStaking transforms creative initiative into liquid ownership. Contributors 
 - **Framework:** Next.js 16 with App Router
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
+- **Web3:** ThirdWeb SDK (Wallets, Smart Contracts)
 - **Deployment:** DigitalOcean App Platform
 - **Region:** Frankfurt (EU)
 
@@ -37,11 +38,28 @@ cd crowdstaking-platform
 # Install dependencies
 npm install
 
+# Setup environment variables
+cp .env.example .env.local
+# Edit .env.local and add your ThirdWeb Client ID
+
 # Run development server
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+### Environment Setup
+
+1. **ThirdWeb Configuration**
+   - Visit [thirdweb.com/dashboard](https://thirdweb.com/dashboard)
+   - Create a new project (or use existing)
+   - Copy your Client ID
+   - Add it to `.env.local` as `NEXT_PUBLIC_THIRDWEB_CLIENT_ID`
+
+2. **Supabase Configuration** (optional - for database features)
+   - Will be added when implementing backend features
+
+See `.env.example` for all available environment variables.
 
 ### Available Scripts
 

@@ -1,661 +1,855 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 43bccdee-6f7c-4b55-9919-8049e48b8410 -->
-# ThirdWeb + User-Flow Integration - Komplett Plan
-
-## 🎯 Mission
-
-**Dual-Goal**:
-
-1. ✅ Web3-Integration via ThirdWeb MCP-API
-2. ✅ Schließung der Critical User-Flow-Gaps (USERFLOW.md)
-
-**Current State**: App ist 65% komplett mit major gaps in Core-Flows
-
-**Target State**: 100% funktionale MVP-App mit vollständiger Web3-Integration
-
----
-
-## 📊 Ticket-Struktur (3 Tracks)
-
-### 🟦 Track A: Web3 Foundation (TW-001 bis TW-007)
-
-Infrastructure für Wallets, Auth, Balance Display
-
-### 🟥 Track B: Core User Flows (TW-019 bis TW-023) **NEU**
-
-Schließung der 🔴 Critical Gaps aus USERFLOW.md
-
-### 🟩 Track C: Web3 Features (TW-008 bis TW-018)
-
-Backend, Contracts, Token-Deployment, Liquidity
-
----
-
-## 🎫 TRACK A: Web3 Foundation
-
-### **TW-001: Dependencies & Environment Setup**
-
-**Effort**: 30min | **Priority**: 🔴 Critical
-
-- Install `@thirdweb-dev/react`, `@thirdweb-dev/sdk`, `@thirdweb-dev/wallets`
-- Create `.env.local` + `.env.example`
-- Add ThirdWeb Client ID
-- Update README
-
-**DoD**: npm install funktioniert, app startet normal
-
----
-
-### **TW-002: ThirdWeb Provider Integration**
-
-**Effort**: 1h | **Priority**: 🔴 Critical | **Dep**: TW-001
-
-- Create `src/lib/thirdweb.ts`
-- Configure Embedded Wallets (Email/Google/Apple)
-- Configure Smart Wallets (Gasless)
-- Wrap app in `layout.tsx`
-
-**DoD**: Provider aktiv, keine Errors, ConnectWallet vorbereitet
-
----
-
-### **TW-003: ConnectWallet in Navigation**
-
-**Effort**: 1h | **Priority**: 🔴 Critical | **Dep**: TW-002
-
-- Replace dummy "Login" button
-- Add `ConnectWallet` component
-- Configure Email/Social als Primary
-- Dark mode support
-
-**DoD**:
-
-- Email-Login funktioniert
-- Google-Login funktioniert
-- MetaMask als Fallback
-- Disconnect funktioniert
-
-**✅ CLOSES GAP**: Authentication System (Gap #3)
-
----
-
-### **TW-004: useWalletAuth Hook (MCP)**
-
-**Effort**: 1.5h | **Priority**: 🟡 High | **Dep**: TW-003
-
-- Create `src/hooks/useWalletAuth.ts`
-- MCP `initiateAuthentication` + `completeAuthentication`
-- Auto-detection: Email vs Wallet login
-- Session management
-
-**DoD**: Hook funktioniert für Email/Social/Wallet
-
----
-
-### **TW-005: Protected Routes Middleware**
-
-**Effort**: 1.5h | **Priority**: 🟡 High | **Dep**: TW-004
-
-- Create `src/middleware.ts`
-- Protect `/dashboard`, `/wizard`, `/cofounder-dashboard`
-- Redirect zu `/` wenn nicht connected
-- Toast notifications
-
-**DoD**: Unauthenticated users werden redirected
-
----
-
-### **TW-006: Multi-Token Balance Display (MCP)**
-
-**Effort**: 1h | **Priority**: 🟡 High | **Dep**: TW-003
-
-- MCP `getWalletTokens` integration
-- Display ETH, USDC, $CSTAKE
-- USD values inkludiert
-- Loading/Error states
-
-**DoD**: Alle Token-Balances + USD-Werte angezeigt
-
----
-
-### **TW-007: Wallet Info Component**
-
-**Effort**: 1h | **Priority**: 🟢 Medium | **Dep**: TW-006
-
-- Create `WalletInfo.tsx`
-- Address (truncated + copy)
-- Network display
-- Native balance
-- Disconnect button
-
-**DoD**: Reusable Wallet-Info component funktional
-
----
-
-## 🎫 TRACK B: Core User Flows (Critical Gaps) **NEU**
-
-### **TW-019: Proposal Submission Frontend** 🔴 CRITICAL
-
-**Effort**: 3h | **Priority**: 🔴 Critical | **Dep**: TW-005, TW-010
-
-**Closes USERFLOW Gap #1**: Co-founders können keine Proposals einreichen
-
-#### Description
-
-Frontend-Interface für Co-Founders zum Einreichen von Proposals an Founders.
-
-#### Tasks
-
-- [ ] Create `src/app/submit-proposal/page.tsx`
-- [ ] Create `src/components/proposal/ProposalForm.tsx`
-- [ ] Form fields: Title, Description, Deliverable, Requested Tokens
-- [ ] Markdown preview für Description/Deliverable
-- [ ] Connect to `/api/proposals` (TW-010)
-- [ ] Success screen mit Proposal-ID
-- [ ] Add "Submit Proposal" CTA zu `/cofounder-dashboard` Discover tab
-- [ ] Add "Submit Proposal" CTA zu `/discover-projects`
-
-#### Definition of Done
-
-- [ ] Form ist accessible via clear CTAs
-- [ ] Validation funktioniert (client + server)
-- [ ] Submission erfolgt an Backend-API
-- [ ] Success/Error handling
-- [ ] Wallet-Auth required
-- [ ] Mobile responsive
-
-#### Acceptance Criteria
-
-```
-Co-founder Journey:
-1. Browse missions in /cofounder-dashboard Discover tab
-2. Click "Submit Proposal" on a mission
-3. Fill form (Title, Description, Deliverable, Tokens)
-4. Preview markdown
-5. Submit → Backend-API
-6. Success: "Proposal submitted! ID: #123"
-7. Redirect to My Contributions tab
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 331ea004-7171-4d98-b962-29e72fcd91bf -->
+# Phase 2 Refinement: Minimal-Invasive Authentication Upgrade
+
+## Context: What Phase 1 Built
+
+In Phase 1, we created **simplified auth** that trusts client-provided wallet addresses:
+
+```typescript
+// PHASE-1-TICKET-006 created this:
+export function getAuthenticatedWallet(request: Request): string | null {
+  const wallet = request.headers.get('x-wallet-address')
+  return wallet // Trust client (NOT SECURE)
+}
 ```
 
-#### Integration Points
+**This works for development but is NOT production-ready.** Anyone can impersonate any wallet.
 
-- Links von: `/cofounder-dashboard` (Discover Tab), `/discover-projects`
-- Backend: `POST /api/proposals` (TW-010)
-- Auth: Protected route (TW-005)
+## Phase 2 Goal
 
-#### Files Changed
+Upgrade to **secure wallet authentication** using cryptographic signatures:
 
-- `src/app/submit-proposal/page.tsx` (new)
-- `src/components/proposal/ProposalForm.tsx` (new)
-- `src/components/cofounder/DiscoverTab.tsx` (add CTA)
-- `src/components/discover-projects/ProjectCard.tsx` (add CTA)
+1. User signs a message with their wallet (SIWE - Sign-In with Ethereum)
+2. Backend verifies the signature cryptographically
+3. Backend issues a session token
+4. Subsequent requests use session token
 
----
+**Minimal-invasive approach:** Leverage ThirdWeb SDK v5 auth capabilities instead of building from scratch.
 
-### **TW-020: Proposal Review Integration** 🔴 CRITICAL
+## Analysis: ThirdWeb SDK v5 Auth
 
-**Effort**: 2.5h | **Priority**: 🔴 Critical | **Dep**: TW-010
+**Already Installed:** `thirdweb: ^5.111.8` ✅
 
-**Closes USERFLOW Gap #4**: Negotiation System fehlt
+**ThirdWeb v5 provides:**
 
-#### Description
+- `verifySignature()` - verify wallet signatures
+- `generatePayload()` - create messages to sign
+- Built-in session management utilities
+- No need for separate SIWE library
 
-Verbindung der existierenden `/proposal-review` Seite mit Backend-API für Accept/Reject/Counter-Offer.
+**Reference:** https://portal.thirdweb.com/typescript/v5/auth
 
-#### Tasks
+## What We're Upgrading
 
-- [ ] Update `src/app/proposal-review/page.tsx`
-- [ ] Connect zu `GET /api/proposals/:id`
-- [ ] Implement Accept action → `PUT /api/proposals/:id/respond`
-- [ ] Implement Reject action → `PUT /api/proposals/:id/respond`
-- [ ] Implement Counter-Offer → Modal + API call
-- [ ] Show AI recommendation (aus DB)
-- [ ] Real-time status updates
-- [ ] Navigation: Back to Dashboard nach Action
+### From Phase 1 (Simplified)
 
-#### Definition of Done
+```typescript
+// Client: Just sends wallet address
+headers: { 'x-wallet-address': '0x123...' }
 
-- [ ] Proposal-Daten werden von API geladen
-- [ ] Accept funktioniert → Status: `foundation_approved`
-- [ ] Reject funktioniert → Status: `rejected`
-- [ ] Counter-Offer funktioniert → Status: `counter_offer_pending`
-- [ ] Status-Updates reflektiert in DB
-- [ ] Error handling
-
-#### Acceptance Criteria
-
-```
-Founder Journey:
-1. Dashboard shows "1 New Proposal"
-2. Click Proposal → Navigate to /proposal-review?id=123
-3. View proposal details (from API)
-4. See AI recommendation
-5. Three actions available:
-   a) Accept → Trigger Double Handshake
-   b) Reject → Proposal closed
-   c) Counter-Offer → Modal opens, neue Amount eingeben, Submit
-6. Success: Status updated, redirect to Dashboard
+// Server: Trusts it blindly
+const wallet = request.headers.get('x-wallet-address')
 ```
 
-#### Integration Points
+### To Phase 2 (Secure)
 
-- Frontend: `/proposal-review` (existing)
-- Backend: `GET /api/proposals/:id`, `PUT /api/proposals/:id/respond` (TW-010)
-- Next step: After Accept → TW-021 (Work Tracking)
+```typescript
+// Client: Signs message with wallet
+const signature = await wallet.signMessage(message)
 
-#### Files Changed
-
-- `src/app/proposal-review/page.tsx` (update)
-- `src/components/proposal/Counter OfferModal.tsx` (new)
-
----
-
-### **TW-021: Work Tracking Interface** 🔴 CRITICAL
-
-**Effort**: 3h | **Priority**: 🔴 Critical | **Dep**: TW-012
-
-**Closes USERFLOW Gap #2**: Nach Double Handshake fehlt Work-Tracking
-
-#### Description
-
-Interface für Co-Founders zum Markieren von "Work Done" und Founders zum Approven.
-
-#### Tasks
-
-- [ ] Update `src/components/cofounder/MyContributionsTab.tsx`
-- [ ] Add "Mark Work Complete" button für `work_in_progress` proposals
-- [ ] Connect zu Vesting Contract `confirmWorkDone()` (TW-012)
-- [ ] Update Founder Dashboard `/dashboard` Proposals Tab
-- [ ] Add "Approve Work" button für Founder
-- [ ] Connect zu Vesting Contract `releaseAgreement()`
-- [ ] Show work status: Pending → In Progress → Submitted → Approved
-- [ ] Token transfer notification nach Approval
-
-#### Definition of Done
-
-- [ ] Co-founder kann "Work Complete" markieren
-- [ ] Smart Contract wird called (`confirmWorkDone`)
-- [ ] Founder sieht "Work submitted, awaiting approval"
-- [ ] Founder kann approven
-- [ ] Token werden released
-- [ ] Status updates in realtime
-
-#### Acceptance Criteria
-
-```
-Co-founder Journey:
-1. Proposal accepted → Status: work_in_progress
-2. Co-founder arbeitet
-3. Click "Mark Work Complete"
-4. Smart Contract: confirmWorkDone(proposalId)
-5. Status: completed, awaiting founder approval
-6. Founder sees notification
-7. Founder clicks "Approve & Release Tokens"
-8. Smart Contract: releaseAgreement(proposalId)
-9. Tokens transferred to Co-founder
-10. Success notification: "You received 1,000 $PROJECT-X tokens!"
+// Server: Verifies signature cryptographically
+const isValid = await verifySignature({ message, signature, address })
 ```
 
-#### Integration Points
+## Minimal-Invasive Strategy
 
-- Smart Contract: Vesting Contract (TW-012)
-- Frontend: `/cofounder-dashboard` My Contributions Tab
-- Frontend: `/dashboard` Proposals Tab (Founder)
+**What We'll Do:**
 
-#### Files Changed
+1. Add ThirdWeb auth utilities (small lib)
+2. Create login endpoint that verifies signatures
+3. Use httpOnly cookies for sessions (simple, secure)
+4. Update `getAuthenticatedWallet()` to check session cookie
+5. Add ConnectButton to Navigation (1 line change)
 
-- `src/components/cofounder/MyContributionsTab.tsx` (update)
-- `src/components/founder/ProposalsTab.tsx` (update)
-- `src/components/proposal/WorkStatus.tsx` (new)
+**What We'll Skip:**
+
+- ❌ Complex JWT token generation (use simple session ID)
+- ❌ Refresh tokens (session expires, re-login)
+- ❌ Database session storage (in-memory Map for MVP, upgrade later)
+- ❌ Multi-device session management
+- ❌ OAuth providers (just wallet for now)
+
+## Refined Actionable Tickets
+
+### PHASE-2-TICKET-001: ThirdWeb Auth Utilities Setup
+
+**Priority:** P0 | **Time:** 45 min
+
+**Goal:** Create auth utilities using ThirdWeb SDK for signature verification
+
+**What to Do:**
+
+1. Create `src/lib/auth/thirdweb-auth.ts`
+2. Import ThirdWeb v5 auth functions
+3. Create helper: `generateLoginPayload(address)`
+4. Create helper: `verifyLoginSignature(payload, signature)`
+5. Test with a sample wallet address
+
+**Files to Create:**
+
+- `src/lib/auth/thirdweb-auth.ts`
+
+**Definition of Done:**
+
+- [ ] Can generate a message for user to sign
+- [ ] Can verify a signature against message and address
+- [ ] Verification returns true for valid signatures
+- [ ] Verification returns false for invalid signatures
+- [ ] TypeScript types included
+- [ ] Unit test passes with test data
+
+**Code Pattern:**
+
+```typescript
+// src/lib/auth/thirdweb-auth.ts
+import { verifySignature } from 'thirdweb/auth'
+import { client } from '@/lib/thirdweb'
+
+export interface LoginPayload {
+  address: string
+  message: string
+  timestamp: number
+  nonce: string
+}
+
+export function generateLoginPayload(address: string): LoginPayload {
+  const timestamp = Date.now()
+  const nonce = Math.random().toString(36).substring(7)
+  const message = `Sign in to CrowdStaking\n\nAddress: ${address}\nNonce: ${nonce}\nTimestamp: ${timestamp}`
+  
+  return { address, message, timestamp, nonce }
+}
+
+export async function verifyLoginSignature(
+  payload: LoginPayload,
+  signature: string
+): Promise<boolean> {
+  try {
+    const result = await verifySignature({
+      client,
+      message: payload.message,
+      signature,
+      address: payload.address,
+    })
+    return result
+  } catch {
+    return false
+  }
+}
+```
 
 ---
 
-### **TW-022: Dashboard Tabs Implementation** 🟡 MEDIUM
+### PHASE-2-TICKET-002: Simple Session Management
 
-**Effort**: 4h | **Priority**: 🟡 High | **Dep**: TW-010
+**Priority:** P0 | **Time:** 1 hour
 
-**Closes USERFLOW Gap #8**: Dashboard tabs sind Placeholders
+**Goal:** Create in-memory session storage and cookie helpers
 
-#### Description
+**What to Do:**
 
-Implementations der fehlenden Dashboard Tabs mit echten Daten.
+1. Create `src/lib/auth/sessions.ts`
+2. In-memory Map to store sessions: `sessionId -> walletAddress`
+3. Helper to create session
+4. Helper to verify session
+5. Helper to delete session
 
-#### Tasks
+**Files to Create:**
 
-**Missions Tab** (Founder):
+- `src/lib/auth/sessions.ts`
 
-- [ ] List alle Mini-Missions
-- [ ] Connect zu `GET /api/missions`
-- [ ] Mission status (Active, Completed)
-- [ ] Proposal count per Mission
+**Definition of Done:**
 
-**Proposals Tab** (Founder):
+- [ ] Can create session and get session ID
+- [ ] Can verify session ID and get wallet address
+- [ ] Can delete/invalidate session
+- [ ] Sessions auto-expire after 7 days
+- [ ] Session ID is random and secure (crypto.randomUUID)
+- [ ] Works in-memory (no database yet)
 
-- [ ] List alle Proposals (all statuses)
-- [ ] Filter: Pending, Accepted, Rejected
-- [ ] Connect zu `GET /api/proposals/all`
-- [ ] Quick actions: View, Accept, Reject
+**Code Pattern:**
 
-**Team Tab** (Founder):
+```typescript
+// src/lib/auth/sessions.ts
+interface Session {
+  walletAddress: string
+  createdAt: number
+  expiresAt: number
+}
 
-- [ ] List all Co-founders (accepted proposals)
-- [ ] Show Token distribution per person
-- [ ] Total team size
+// In-memory storage (upgrade to Redis/DB later)
+const sessions = new Map<string, Session>()
 
-**Tokenomics Tab** (Founder):
+const SESSION_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 
-- [ ] Update Pie Chart mit echten Daten
-- [ ] Connect zu Token contract
-- [ ] Show: Founder %, Community %, Liquidity Pool %
-- [ ] Total distributed vs available
+export function createSession(walletAddress: string): string {
+  const sessionId = crypto.randomUUID()
+  const now = Date.now()
+  
+  sessions.set(sessionId, {
+    walletAddress,
+    createdAt: now,
+    expiresAt: now + SESSION_DURATION,
+  })
+  
+  return sessionId
+}
 
-**Settings Tab** (Founder):
+export function getSession(sessionId: string): string | null {
+  const session = sessions.get(sessionId)
+  if (!session) return null
+  
+  if (Date.now() > session.expiresAt) {
+    sessions.delete(sessionId)
+    return null
+  }
+  
+  return session.walletAddress
+}
 
-- [ ] Project name, description editing
-- [ ] Token settings display (read-only)
-- [ ] DAO fee info
+export function deleteSession(sessionId: string): void {
+  sessions.delete(sessionId)
+}
+```
 
-#### Definition of Done
+---
 
-- [ ] Alle 5 Tabs zeigen echte Daten (nicht Placeholders)
-- [ ] Data loading von API/Contracts
-- [ ] Loading/Error states
-- [ ] Mobile responsive
+### PHASE-2-TICKET-003: Login API Endpoint
 
-#### Acceptance Criteria
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Create `/api/auth/login` endpoint that verifies signature and creates session
+
+**What to Do:**
+
+1. Create `src/app/api/auth/login/route.ts`
+2. Accept POST with { address, message, signature }
+3. Verify signature using thirdweb-auth helper
+4. Create session if valid
+5. Set httpOnly cookie with session ID
+6. Return success/error
+
+**Files to Create:**
+
+- `src/app/api/auth/login/route.ts`
+
+**Definition of Done:**
+
+- [ ] POST `/api/auth/login` endpoint works
+- [ ] Accepts address, message, signature in body
+- [ ] Verifies signature cryptographically
+- [ ] Creates session on success
+- [ ] Sets httpOnly cookie `session_id`
+- [ ] Returns error if signature invalid
+- [ ] Cookie has secure flags (httpOnly, sameSite, secure)
+- [ ] Tested with Postman/curl
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/auth/login/route.ts
+import { NextRequest } from 'next/server'
+import { verifyLoginSignature } from '@/lib/auth/thirdweb-auth'
+import { createSession } from '@/lib/auth/sessions'
+import { jsonResponse, errorResponse } from '@/lib/api'
+
+export async function POST(request: NextRequest) {
+  try {
+    const { address, message, signature, timestamp, nonce } = await request.json()
+    
+    // Verify signature
+    const isValid = await verifyLoginSignature(
+      { address, message, timestamp, nonce },
+      signature
+    )
+    
+    if (!isValid) {
+      return errorResponse('Invalid signature', 401)
+    }
+    
+    // Create session
+    const sessionId = createSession(address)
+    
+    // Set cookie
+    const response = jsonResponse({ 
+      success: true, 
+      address 
+    })
+    
+    response.cookies.set('session_id', sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    })
+    
+    return response
+  } catch (error) {
+    return errorResponse('Login failed', 500)
+  }
+}
+```
+
+---
+
+### PHASE-2-TICKET-004: Logout API Endpoint
+
+**Priority:** P1 | **Time:** 20 min
+
+**Goal:** Create `/api/auth/logout` endpoint to invalidate sessions
+
+**What to Do:**
+
+1. Create `src/app/api/auth/logout/route.ts`
+2. Read session_id from cookie
+3. Delete session from storage
+4. Clear cookie
+5. Return success
+
+**Files to Create:**
+
+- `src/app/api/auth/logout/route.ts`
+
+**Definition of Done:**
+
+- [ ] POST `/api/auth/logout` endpoint works
+- [ ] Reads session_id from cookie
+- [ ] Deletes session from storage
+- [ ] Clears cookie
+- [ ] Returns success even if no session
+- [ ] Works when called from browser
+
+**Code Pattern:**
+
+```typescript
+// src/app/api/auth/logout/route.ts
+import { NextRequest } from 'next/server'
+import { deleteSession } from '@/lib/auth/sessions'
+import { jsonResponse } from '@/lib/api'
+
+export async function POST(request: NextRequest) {
+  const sessionId = request.cookies.get('session_id')?.value
+  
+  if (sessionId) {
+    deleteSession(sessionId)
+  }
+  
+  const response = jsonResponse({ success: true })
+  response.cookies.delete('session_id')
+  
+  return response
+}
+```
+
+---
+
+### PHASE-2-TICKET-005: Update Auth Helper to Use Sessions
+
+**Priority:** P0 | **Time:** 30 min
+
+**Goal:** Upgrade `src/lib/auth.ts` from Phase 1 to use real sessions instead of trusting headers
+
+**What to Do:**
+
+1. Update `getAuthenticatedWallet()` function
+2. Read session_id from cookies instead of header
+3. Verify session and return wallet address
+4. Keep same function signature (no breaking changes)
+
+**Files to Edit:**
+
+- `src/lib/auth.ts` (from Phase 1)
+
+**Definition of Done:**
+
+- [ ] `getAuthenticatedWallet(request)` now checks session cookie
+- [ ] Returns wallet address if valid session
+- [ ] Returns null if no session or expired
+- [ ] `requireAuth()` still throws if no auth
+- [ ] No breaking changes to existing API routes
+- [ ] PHASE-1-TICKET-007 endpoint still works
+
+**Code Pattern:**
+
+```typescript
+// src/lib/auth.ts (UPDATE from Phase 1)
+import { getSession } from '@/lib/auth/sessions'
+
+export function getAuthenticatedWallet(request: Request): string | null {
+  // Phase 2: Read from secure session cookie
+  const sessionId = request.cookies.get('session_id')?.value
+  if (!sessionId) return null
+  
+  return getSession(sessionId)
+}
+
+export function requireAuth(request: Request): string {
+  const wallet = getAuthenticatedWallet(request)
+  if (!wallet) {
+    throw new Error('Unauthorized - Please login')
+  }
+  return wallet
+}
+```
+
+---
+
+### PHASE-2-TICKET-006: Frontend Auth Hook
+
+**Priority:** P0 | **Time:** 1 hour
+
+**Goal:** Create React hook for wallet login with signature
+
+**What to Do:**
+
+1. Create `src/hooks/useAuth.ts`
+2. Use ThirdWeb's `useActiveAccount()` to get connected wallet
+3. Create `login()` function that:
+
+   - Generates payload
+   - Signs message with wallet
+   - Calls `/api/auth/login`
+
+4. Create `logout()` function
+5. Store auth state in React state
+
+**Files to Create:**
+
+- `src/hooks/useAuth.ts`
+
+**Definition of Done:**
+
+- [ ] `useAuth()` hook returns { wallet, isAuthenticated, login, logout }
+- [ ] `login()` signs message and calls API
+- [ ] `logout()` calls logout API and clears state
+- [ ] Hook works with ThirdWeb ConnectButton
+- [ ] Loading states included
+- [ ] Error handling included
+
+**Code Pattern:**
+
+```typescript
+// src/hooks/useAuth.ts
+'use client'
+import { useState } from 'react'
+import { useActiveAccount } from 'thirdweb/react'
+import { signMessage } from 'thirdweb/wallets'
+import { generateLoginPayload } from '@/lib/auth/thirdweb-auth'
+
+export function useAuth() {
+  const account = useActiveAccount()
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  
+  const login = async () => {
+    if (!account) return
+    
+    try {
+      setIsLoading(true)
+      
+      // Generate payload
+      const payload = generateLoginPayload(account.address)
+      
+      // Sign message
+      const signature = await signMessage({
+        account,
+        message: payload.message,
+      })
+      
+      // Call login API
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, signature }),
+      })
+      
+      if (response.ok) {
+        setIsAuthenticated(true)
+      }
+    } catch (error) {
+      console.error('Login failed:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  const logout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    setIsAuthenticated(false)
+  }
+  
+  return {
+    wallet: account?.address,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+  }
+}
+```
+
+---
+
+### PHASE-2-TICKET-007: Add ConnectButton to Navigation
+
+**Priority:** P1 | **Time:** 30 min
+
+**Goal:** Replace "Login" button with ThirdWeb ConnectButton
+
+**What to Do:**
+
+1. Update `src/components/Navigation.tsx`
+2. Import `ConnectButton` from thirdweb/react
+3. Replace existing "Login" button
+4. Add auth state display (wallet address when connected)
+5. Style to match design system
+
+**Files to Edit:**
+
+- `src/components/Navigation.tsx`
+
+**Definition of Done:**
+
+- [ ] ConnectButton appears in navigation
+- [ ] Wallet connection works in browser
+- [ ] Shows wallet address when connected
+- [ ] Shows "Connect Wallet" when not connected
+- [ ] Styled consistently with design
+- [ ] Works on mobile
+- [ ] Auto-triggers login after connection
+
+**Code Pattern:**
+
+```typescript
+// src/components/Navigation.tsx (UPDATE)
+import { ConnectButton } from 'thirdweb/react'
+import { client } from '@/lib/thirdweb'
+import { useAuth } from '@/hooks/useAuth'
+
+export function Navigation() {
+  const { isAuthenticated, login } = useAuth()
+  
+  return (
+    <nav>
+      {/* Other nav items */}
+      
+      <ConnectButton 
+        client={client}
+        onConnect={() => {
+          // Auto-login after connecting wallet
+          if (!isAuthenticated) {
+            login()
+          }
+        }}
+      />
+    </nav>
+  )
+}
+```
+
+---
+
+### PHASE-2-TICKET-008: Protected Route Wrapper Component
+
+**Priority:** P1 | **Time:** 45 min
+
+**Goal:** Create reusable component to protect pages requiring auth
+
+**What to Do:**
+
+1. Create `src/components/ProtectedRoute.tsx`
+2. Check if user is authenticated
+3. Show ConnectButton if not connected
+4. Show "Sign Message" prompt if connected but not authenticated
+5. Show children if fully authenticated
+
+**Files to Create:**
+
+- `src/components/ProtectedRoute.tsx`
+
+**Definition of Done:**
+
+- [ ] Component checks auth state
+- [ ] Blocks access if not authenticated
+- [ ] Shows clear message about what's needed
+- [ ] Includes ConnectButton for wallet connection
+- [ ] Includes login button for signature
+- [ ] Renders children when authenticated
+- [ ] Can be wrapped around any page
+
+**Code Pattern:**
+
+```typescript
+// src/components/ProtectedRoute.tsx
+'use client'
+import { useAuth } from '@/hooks/useAuth'
+import { ConnectButton } from 'thirdweb/react'
+import { client } from '@/lib/thirdweb'
+
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { wallet, isAuthenticated, login, isLoading } = useAuth()
+  
+  if (!wallet) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <h2 className="text-2xl font-bold">Connect Your Wallet</h2>
+        <p className="text-gray-600">You need to connect a wallet to access this page</p>
+        <ConnectButton client={client} />
+      </div>
+    )
+  }
+  
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <h2 className="text-2xl font-bold">Sign In</h2>
+        <p className="text-gray-600">Please sign a message to verify your wallet</p>
+        <button 
+          onClick={login} 
+          disabled={isLoading}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg"
+        >
+          {isLoading ? 'Signing...' : 'Sign Message'}
+        </button>
+      </div>
+    )
+  }
+  
+  return <>{children}</>
+}
+```
+
+---
+
+### PHASE-2-TICKET-009: Update Proposal Submit Page with Auth
+
+**Priority:** P0 | **Time:** 20 min
+
+**Goal:** Wrap proposal submission page in ProtectedRoute
+
+**What to Do:**
+
+1. Update proposal form page (from Phase 1 if exists, or create placeholder)
+2. Wrap content with `<ProtectedRoute>`
+3. Test auth flow: Connect -> Sign -> Submit Proposal
+4. Verify API receives authenticated wallet address
+
+**Files to Edit:**
+
+- `src/app/dashboard/propose/page.tsx` (create if doesn't exist)
+
+**Definition of Done:**
+
+- [ ] Page wrapped in ProtectedRoute
+- [ ] Cannot access without wallet connection
+- [ ] Cannot submit without signing message
+- [ ] Wallet address sent to API automatically
+- [ ] API route (PHASE-1-TICKET-007) works with new auth
+- [ ] Full flow tested in browser
+
+**Code Pattern:**
+
+```typescript
+// src/app/dashboard/propose/page.tsx
+'use client'
+import { ProtectedRoute } from '@/components/ProtectedRoute'
+
+export default function ProposePage() {
+  return (
+    <ProtectedRoute>
+      <div>
+        <h1>Submit Proposal</h1>
+        {/* Form content here */}
+      </div>
+    </ProtectedRoute>
+  )
+}
+```
+
+---
+
+### PHASE-2-TICKET-010: End-to-End Auth Flow Test
+
+**Priority:** P0 | **Time:** 30 min
+
+**Goal:** Test complete authentication flow in browser
+
+**What to Do:**
+
+1. Open app in browser
+2. Click Connect Wallet
+3. Connect MetaMask/wallet
+4. Sign message
+5. Navigate to protected page
+6. Submit proposal
+7. Logout
+8. Verify cannot access protected page
+9. Login again
+
+**Definition of Done:**
+
+- [ ] Can connect wallet via ConnectButton
+- [ ] Signing message works (MetaMask popup)
+- [ ] Session cookie set after login
+- [ ] Can access protected pages
+- [ ] Proposal submission includes correct wallet address
+- [ ] Logout clears session
+- [ ] Cannot access protected pages after logout
+- [ ] Can login again successfully
+- [ ] All flows work on mobile (responsive)
+
+**Test Checklist:**
 
 ```
-Founder clicks each tab:
-- Missions: Shows actual missions from DB
-- Proposals: Shows actual proposals with filters
-- Team: Shows actual co-founders
-- Tokenomics: Shows actual token distribution
-- Settings: Shows actual project settings
+✓ Connect wallet with MetaMask
+✓ Sign login message
+✓ Session cookie appears in DevTools
+✓ Navigate to /dashboard/propose
+✓ Page loads (not redirected)
+✓ Submit proposal
+✓ Check API receives correct wallet address
+✓ Check proposal in Supabase has correct creator_wallet_address
+✓ Click Logout
+✓ Session cookie deleted
+✓ Try accessing /dashboard/propose
+✓ Redirected to connect wallet
 ```
 
-#### Files Changed
-
-- `src/components/founder/MissionsTab.tsx` (complete)
-- `src/components/founder/ProposalsTab.tsx` (complete)
-- `src/components/founder/TeamTab.tsx` (complete)
-- `src/components/founder/TokenomicsTab.tsx` (update)
-- `src/components/founder/SettingsTab.tsx` (complete)
-
 ---
 
-### **TW-023: Liquidity Success Navigation** 🟢 LOW
+## Implementation Order
 
-**Effort**: 15min | **Priority**: 🟢 Low | **Dep**: None
+**Do these tickets in exact order:**
 
-**Closes USERFLOW Gap #9**: Success screen hat keinen Back-Link
+1. **PHASE-2-TICKET-001** - ThirdWeb auth utilities (45 min)
+2. **PHASE-2-TICKET-002** - Session management (1 hour)
+3. **PHASE-2-TICKET-003** - Login API endpoint (1 hour)
+4. **PHASE-2-TICKET-004** - Logout API endpoint (20 min)
+5. **PHASE-2-TICKET-005** - Update auth helper (30 min)
+6. **PHASE-2-TICKET-006** - Frontend auth hook (1 hour)
+7. **PHASE-2-TICKET-007** - ConnectButton in nav (30 min)
+8. **PHASE-2-TICKET-008** - ProtectedRoute component (45 min)
+9. **PHASE-2-TICKET-009** - Update propose page (20 min)
+10. **PHASE-2-TICKET-010** - E2E test (30 min)
 
-#### Tasks
+**Total Estimated Time: 6.5 hours**
 
-- [ ] Update `src/components/liquidity/LiquiditySuccess.tsx`
-- [ ] Add "Back to Dashboard" button
-- [ ] Add "View Pool on Uniswap" link
+## What Changed from Phase 1
 
-#### DoD
+### Phase 1 Auth (Simplified)
 
-- [ ] Button links zu `/dashboard`
-- [ ] External link zu Uniswap funktioniert
+```typescript
+// Client: Just sends wallet in header
+headers: { 'x-wallet-address': '0x...' }
 
----
+// Server: Trusts it
+const wallet = request.headers.get('x-wallet-address')
+```
 
-## 🎫 TRACK C: Web3 Features
+### Phase 2 Auth (Secure)
 
-### **TW-008: Supabase Setup**
+```typescript
+// Client: Signs message, sends signature
+const signature = await signMessage(message)
+POST /api/auth/login { address, message, signature }
 
-**Effort**: 2h | **Priority**: 🔴 Critical
+// Server: Verifies cryptographically, creates session
+const isValid = await verifySignature(...)
+if (isValid) setSessionCookie(sessionId)
 
-- Create Supabase project
-- Tables: `users`, `proposals`, `missions`
-- RLS policies
-- Connection test
+// Subsequent requests: Send session cookie
+cookies: { session_id: 'abc-123' }
 
-**DoD**: Database schema deployed, client funktioniert
+// Server: Verify session
+const wallet = getSession(sessionId)
+```
 
----
+## Security Improvements
 
-### **TW-009: API Auth Middleware**
+✅ **Cryptographic Verification:** Signatures verified on-chain
 
-**Effort**: 2h | **Priority**: 🔴 Critical | **Dep**: TW-004, TW-008
+✅ **Session Management:** httpOnly cookies prevent XSS
 
-- `POST /api/auth/login` - SIWE verification
-- JWT generation
-- `src/lib/apiAuth.ts` middleware
-- Validate JWT in protected routes
+✅ **Cannot Impersonate:** Must control private key to sign
 
-**DoD**: Auth middleware funktioniert, invalid tokens rejected
+✅ **Session Expiration:** Auto-logout after 7 days
 
----
+✅ **Secure Cookies:** HttpOnly, SameSite, Secure flags
 
-### **TW-010: Proposals API Endpoints**
+## What We're Still Skipping (For Now)
 
-**Effort**: 2h | **Priority**: 🔴 Critical | **Dep**: TW-009
+These can be added later when needed:
 
-- `POST /api/proposals` - Create
-- `GET /api/proposals/me` - User's proposals
-- `GET /api/proposals/:id` - Single proposal
-- `PUT /api/proposals/:id/respond` - Accept/Reject/Counter
-- Validation (Zod)
-- Rate limiting
+- ❌ Database session storage (using in-memory Map)
+- ❌ Refresh tokens (just re-login)
+- ❌ Multi-device session management
+- ❌ Session activity tracking
+- ❌ IP-based session validation
+- ❌ CSRF protection (same-origin + httpOnly cookies sufficient for MVP)
 
-**DoD**: Alle Endpoints funktionieren, validation aktiv
+## Success Criteria
 
----
+After Phase 2 is complete:
 
-### **TW-011: Vesting Contract Deployment**
+✅ Secure cryptographic authentication
 
-**Effort**: 3h | **Priority**: 🔴 Critical
+✅ Users can login with wallet signature
 
-- Deploy `VestingContract.sol` (aus MVP-004)
-- Base Sepolia
-- Verify on Basescan
-- Export ABI
+✅ Sessions managed with httpOnly cookies
 
-**DoD**: Contract deployed + verified, address in `.env`
+✅ Protected pages require authentication
 
----
+✅ Cannot impersonate other users
 
-### **TW-012: Vesting Contract Frontend**
+✅ Proposal submissions include verified wallet address
 
-**Effort**: 2h | **Priority**: 🔴 Critical | **Dep**: TW-011, TW-003
+✅ Ready for Phase 3 (Admin features)
 
-- `src/hooks/useVesting.ts`
-- `confirmWorkDone()` function
-- Update `ProposalCard.tsx`
-- Transaction loading/success states
+## Next Steps After Phase 2
 
-**DoD**: "Confirm Work" button funktioniert, TX submitted
+Once authenticated:
 
----
+- Build proposal submission form UI (EPIC-002)
+- Add status field to proposals
+- Build admin review panel (EPIC-003)
+- Start smart contract development (EPIC-004)
 
-### **TW-014-MCP: Token Deployment via MCP**
-
-**Effort**: 2h | **Priority**: 🟡 High | **Dep**: TW-003
-
-- MCP `createToken` API call
-- `/api/tokens/deploy` endpoint
-- Update `SetupStep.tsx` (Wizard)
-- Transfer 2% zu DAO-Wallet
-
-**DoD**: Token-Deployment via MCP funktioniert, DAO-Fee transferiert
-
----
-
-### **TW-015: Gas Sponsorship**
-
-**Effort**: 4h | **Priority**: 🟢 Medium | **Dep**: TW-002, TW-009
-
-- Paymaster setup (ThirdWeb Dashboard)
-- Budget tracking in DB (`gas_budget_used`)
-- Update Smart Wallet config
-- UI indicator "Gasless transaction"
-
-**DoD**: Erste 3 proposals sind gasless, 4. zeigt "Gas required"
-
----
-
-### **TW-016-MCP: Price Service via MCP**
-
-**Effort**: 30min | **Priority**: 🟢 Medium | **Dep**: TW-008
-
-- MCP `listTokens` API call
-- `/api/tokens/price` endpoint
-- Multi-currency prices
-
-**DoD**: Price API returns USD/EUR/GBP prices
-
----
-
-### **TW-017: Liquidity Pool Integration**
-
-**Effort**: 3h | **Priority**: 🟢 Medium | **Dep**: TW-014-MCP, TW-003
-
-- Uniswap V2 Router integration
-- `addLiquidity()` call
-- Batch: Approve + AddLiquidity
-- Show LP tokens received
-
-**DoD**: Pool creation funktioniert, LP tokens geminted
-
----
-
-### **TW-018: ThirdWeb Pay Onramp**
-
-**Effort**: 2h | **Priority**: 🔵 Low | **Dep**: TW-003
-
-- Install `@thirdweb-dev/pay`
-- Create `OnrampWidget.tsx`
-- Add zu Dashboard
-
-**DoD**: Pay widget funktioniert (Test-Mode), tokens landen in wallet
-
----
-
-## 📋 Implementation Order
-
-### Sprint 1 (Week 1): Foundation
-
-**TW-001, TW-002, TW-003** - Web3 basics
-
-**TW-008** - Database setup
-
-### Sprint 2 (Week 2): Auth + Backend
-
-**TW-004, TW-005** - Auth system
-
-**TW-009, TW-010** - Backend APIs
-
-### Sprint 3 (Week 3): Critical User Flows
-
-**TW-019** - Proposal Submission Frontend
-
-**TW-020** - Proposal Review Integration
-
-**TW-011, TW-012** - Vesting Contract
-
-### Sprint 4 (Week 4): Work Tracking + Features
-
-**TW-021** - Work Tracking Interface
-
-**TW-022** - Dashboard Tabs
-
-**TW-006, TW-007** - Balance Display
-
-### Sprint 5 (Week 5): Token + Liquidity
-
-**TW-014-MCP** - Token Deployment
-
-**TW-016-MCP** - Price Service
-
-**TW-017** - Liquidity Pool
-
-**TW-023** - Liquidity Navigation Fix
-
-### Sprint 6 (Optional): Polish
-
-**TW-015** - Gas Sponsorship
-
-**TW-018** - Pay Onramp
-
----
-
-## 🎯 Success Metrics
-
-### Application Completeness
-
-- **Current**: 65%
-- **After Track A+C**: 80% (Web3 works)
-- **After Track B**: **100%** (All user flows complete)
-
-### Critical Gaps Closed
-
-- ✅ Gap #1: Proposal Submission (TW-019)
-- ✅ Gap #2: Work Tracking (TW-021)
-- ✅ Gap #3: Authentication (TW-003)
-- ✅ Gap #4: Negotiation System (TW-020)
-- ✅ Gap #5: Real Project Data (TW-008, TW-009, TW-010)
-- ✅ Gap #8: Dashboard Tabs (TW-022)
-- ✅ Gap #9: Liquidity Navigation (TW-023)
-
-### User Journey Completeness
-
-**Founder**: 100% (Register → Wizard → Dashboard → Create → Review → Track → Approve → Done)
-
-**Co-founder**: 100% (Register → Browse → Apply → Negotiate → Accept → Work → Submit → Receive Tokens)
-
----
-
-## 📊 Total Effort
-
-| Track | Tickets | Hours |
-
-|-------|---------|-------|
-
-| Track A (Web3 Foundation) | 7 | 7.5h |
-
-| Track B (User Flows) | 5 | 13h |
-
-| Track C (Web3 Features) | 9 | 19.5h |
-
-| **TOTAL** | **21** | **40h** |
-
-**Time to Market**: 5 weeks @ 8h/week oder 2 weeks @ 20h/week
-
----
-
-## ✅ Definition of "MVP Complete"
-
-MVP ist complete wenn:
-
-1. ✅ Alle User Flows aus USERFLOW.md funktional
-2. ✅ Web3-Integration vollständig (Wallet, Tokens, Contracts)
-3. ✅ Zero Critical Gaps verbleibend
-4. ✅ Real data (kein Mocking)
-5. ✅ Deployable auf Production
+Authentication is now production-ready and won't block any features.
 
 ### To-dos
 
-- [ ] TW-001: Install ThirdWeb dependencies & setup env
-- [ ] TW-002: ThirdWeb Provider with Embedded Wallets
-- [ ] TW-003: ConnectWallet in Navigation (closes Auth Gap)
-- [ ] TW-004: useWalletAuth Hook with MCP
-- [ ] TW-005: Protected Routes Middleware
-- [ ] TW-006: Multi-Token Balance Display via MCP
-- [ ] TW-007: Wallet Info Component
-- [ ] TW-008: Supabase Setup & Schema
-- [ ] TW-009: API Auth Middleware
-- [ ] TW-010: Proposals API Endpoints (closes Data Gap)
-- [ ] TW-019: Proposal Submission Frontend (closes Gap #1)
-- [ ] TW-020: Proposal Review Integration (closes Gap #4)
-- [ ] TW-011: Vesting Contract Deployment
-- [ ] TW-012: Vesting Contract Frontend
-- [ ] TW-021: Work Tracking Interface (closes Gap #2)
-- [ ] TW-022: Dashboard Tabs Implementation (closes Gap #8)
-- [ ] TW-023: Liquidity Success Navigation (closes Gap #9)
-- [ ] TW-014-MCP: Token Deployment via MCP API
-- [ ] TW-015: Gas Sponsorship Setup
-- [ ] TW-016-MCP: Price Service via MCP API
-- [ ] TW-017: Liquidity Pool Integration
-- [ ] TW-018: ThirdWeb Pay Onramp
+- [ ] CS-001: Install ThirdWeb packages
+- [ ] CS-002: Setup .env files
+- [ ] CS-003: Create ThirdWeb config file
+- [ ] CS-004: Wrap app in ThirdWebProvider
+- [ ] CS-005: Add ConnectWallet button to Navigation
+- [ ] CS-006: Create useWalletAuth hook (client-only)
+- [ ] CS-007: Create Supabase project
+- [ ] CS-008: Setup Supabase client
+- [ ] CS-009: Create users table schema
+- [ ] CS-010: Create proposals table schema
+- [ ] CS-011: POST /api/proposals endpoint
+- [ ] CS-012: GET /api/proposals/me endpoint
+- [ ] CS-013: GET /api/proposals/:id endpoint
+- [ ] CS-014: PUT /api/proposals/:id/respond endpoint
+- [ ] CS-015: Create ProposalForm component
+- [ ] CS-016: Create submit-proposal page
+- [ ] CS-017: Add Submit Proposal CTAs (closes Gap #1)
+- [ ] CS-018: Connect proposal-review page to API (closes Gap #4)
+- [ ] CS-019: Connect MyContributionsTab to API
+- [ ] CS-020: Create MCP client wrapper
+- [ ] CS-021: Create /api/wallet/tokens endpoint
+- [ ] CS-022: Create TokenBalance component
+- [ ] CS-023: Add balance to cofounder dashboard
+- [ ] CS-024: Integrate real data in Proposals tab (closes Gap #8)
+- [ ] CS-025: Add back link to liquidity success (closes Gap #9)
