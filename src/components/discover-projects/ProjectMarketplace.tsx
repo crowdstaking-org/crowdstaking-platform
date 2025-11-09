@@ -1,0 +1,165 @@
+'use client'
+
+import { Search, Filter } from 'lucide-react'
+import { ScrollReveal } from '../ScrollReveal'
+import { ProjectCard } from './ProjectCard'
+import { useEffect, useRef } from 'react'
+
+/**
+ * Project marketplace with search and filter functionality
+ * Client Component - has form inputs and state management
+ */
+export function ProjectMarketplace() {
+  const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Focus search input when user navigates via anchor link
+  useEffect(() => {
+    const focusSearchInput = () => {
+      const hash = window.location.hash
+      if (hash === '#missionen' && searchInputRef.current) {
+        // Small delay to ensure smooth scroll completes first
+        setTimeout(() => {
+          searchInputRef.current?.focus()
+        }, 500)
+      }
+    }
+
+    // Check on initial load
+    focusSearchInput()
+
+    // Listen for hash changes (when clicking link from same page)
+    window.addEventListener('hashchange', focusSearchInput)
+
+    return () => {
+      window.removeEventListener('hashchange', focusSearchInput)
+    }
+  }, [])
+  const projects = [
+    {
+      title: 'CrowdStaking: The Factory',
+      mission: 'Building the infrastructure for decentralized founding.',
+      tags: ['Rust', 'AI', 'Solidity', 'Infrastructure'],
+      coFounders: 12,
+      proposals: 45,
+      tokenStatus: 'live' as const,
+      tokenSymbol: '$CSTAKE',
+      featured: true,
+    },
+    {
+      title: 'Project Flight-AI',
+      mission: 'The smartest B2B SaaS tool for the travel industry.',
+      tags: ['Python', 'AI/ML', 'SaaS'],
+      coFounders: 3,
+      proposals: 8,
+      tokenStatus: 'pending' as const,
+    },
+    {
+      title: 'Decentralized Protocol X',
+      mission: 'A censorship-resistant, global open-source protocol.',
+      tags: ['Solidity', 'DeFi', 'Tokenomics'],
+      coFounders: 25,
+      proposals: 102,
+      tokenStatus: 'live' as const,
+      tokenSymbol: '$PROJ-X',
+    },
+  ]
+
+  return (
+    <section id="missionen" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
+      <div className="max-w-7xl mx-auto">
+        <ScrollReveal direction="up" duration={700}>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              Active Missions
+            </h2>
+          </div>
+        </ScrollReveal>
+
+        {/* Search & Filter Bar */}
+        <ScrollReveal direction="up" delay={100} duration={700}>
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-6 mb-12 border border-gray-200 dark:border-gray-700">
+            {/* Search */}
+            <div className="relative mb-4">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search missions, tech stack..."
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400"
+              />
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Tech Stack Filter */}
+              <div className="relative">
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer">
+                  <option>Tech Stack</option>
+                  <option>Rust</option>
+                  <option>Solidity</option>
+                  <option>Go</option>
+                  <option>AI/ML</option>
+                  <option>Python</option>
+                </select>
+                <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Category Filter */}
+              <div className="relative">
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer">
+                  <option>Category</option>
+                  <option>DeFi</option>
+                  <option>SaaS</option>
+                  <option>Infrastructure</option>
+                </select>
+                <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Status Filter */}
+              <div className="relative">
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer">
+                  <option>Status</option>
+                  <option>New</option>
+                  <option>Trending</option>
+                  <option>Seeking Co-Founders</option>
+                </select>
+                <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+
+              {/* Liquidity Checkbox */}
+              <div className="flex items-center space-x-3 px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+                <input
+                  type="checkbox"
+                  id="liquid-tokens"
+                  className="w-5 h-5 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 dark:focus:ring-purple-400 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer"
+                />
+                <label
+                  htmlFor="liquid-tokens"
+                  className="text-sm font-medium text-gray-900 dark:text-white cursor-pointer"
+                >
+                  Only Liquid Tokens
+                </label>
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* Project Cards */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {projects.map((project, index) => (
+            <ScrollReveal
+              key={index}
+              direction="up"
+              delay={index * 150}
+              scale={true}
+              duration={800}
+            >
+              <ProjectCard {...project} />
+            </ScrollReveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
