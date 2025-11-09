@@ -13,14 +13,33 @@ import {
   Droplets,
 } from 'lucide-react'
 import { ProposalCard } from '@/components/dashboard/ProposalCard'
+import { MissionsTab } from '@/components/founder/MissionsTab'
+import { ProposalsTab } from '@/components/founder/ProposalsTab'
+import { TeamTab } from '@/components/founder/TeamTab'
+import { TokenomicsTab } from '@/components/founder/TokenomicsTab'
+import { SettingsTab } from '@/components/founder/SettingsTab'
+import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 /**
  * Founder Dashboard page - Manage missions, review proposals, and track team
  * Client Component - has tab state management
  */
 export default function FounderDashboardPage() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState('overview')
+  const [currentContext, setCurrentContext] = useState('project-flight-ai')
+
+  const handleContextChange = (context: string) => {
+    setCurrentContext(context)
+    if (context === 'cofounder') {
+      router.push('/cofounder-dashboard')
+    } else if (context === 'new-project') {
+      router.push('/wizard')
+    }
+    // Stay on current page for project switches
+  }
 
   const tabs = [
     {
@@ -59,6 +78,14 @@ export default function FounderDashboardPage() {
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Context Switcher */}
+          <div className="mb-6">
+            <ContextSwitcher
+              currentContext={currentContext}
+              onContextChange={handleContextChange}
+            />
+          </div>
+
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
@@ -195,15 +222,12 @@ export default function FounderDashboardPage() {
             </div>
           )}
 
-          {/* Other tabs placeholder */}
-          {activeTab !== 'overview' && (
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center">
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                {tabs.find((t) => t.id === activeTab)?.label} content coming
-                soon...
-              </p>
-            </div>
-          )}
+          {/* Other tabs */}
+          {activeTab === 'missions' && <MissionsTab />}
+          {activeTab === 'proposals' && <ProposalsTab />}
+          {activeTab === 'team' && <TeamTab />}
+          {activeTab === 'tokenomics' && <TokenomicsTab />}
+          {activeTab === 'settings' && <SettingsTab />}
         </div>
       </div>
     </Layout>

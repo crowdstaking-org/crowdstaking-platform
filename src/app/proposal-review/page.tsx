@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Layout } from '@/components/Layout'
-import { ArrowLeft, CheckCircle, X } from 'lucide-react'
+import { ArrowLeft, CheckCircle, X, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
@@ -13,6 +13,9 @@ import { useRouter } from 'next/navigation'
 export default function ProposalReviewPage() {
   const router = useRouter()
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showCounterOfferModal, setShowCounterOfferModal] = useState(false)
+  const [counterOfferPercent, setCounterOfferPercent] = useState('0.12')
+  const [counterOfferReason, setCounterOfferReason] = useState('')
 
   const handleAccept = () => {
     setShowConfirmation(true)
@@ -22,6 +25,12 @@ export default function ProposalReviewPage() {
   }
 
   const handleReject = () => {
+    router.push('/dashboard')
+  }
+
+  const handleSendCounterOffer = () => {
+    setShowCounterOfferModal(false)
+    // TODO: Send counter-offer to backend
     router.push('/dashboard')
   }
 
@@ -127,6 +136,14 @@ export default function ProposalReviewPage() {
                 </button>
 
                 <button
+                  onClick={() => setShowCounterOfferModal(true)}
+                  className="inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-8 py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-lg font-semibold btn-hover-lift"
+                >
+                  <MessageSquare className="w-6 h-6" />
+                  <span>💬 Make Counter-Offer</span>
+                </button>
+
+                <button
                   onClick={handleReject}
                   className="inline-flex items-center justify-center space-x-2 bg-gray-600 dark:bg-gray-700 text-white px-8 py-4 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors text-lg font-semibold"
                 >
@@ -137,6 +154,65 @@ export default function ProposalReviewPage() {
             </div>
           </div>
         </div>
+
+        {/* Counter-Offer Modal */}
+        {showCounterOfferModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full p-8">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                Counter-Offer for Ben
+              </h2>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    New Percentage Proposal
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={counterOfferPercent}
+                      onChange={(e) => setCounterOfferPercent(e.target.value)}
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                      %
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                    Reason (Optional)
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={counterOfferReason}
+                    onChange={(e) => setCounterOfferReason(e.target.value)}
+                    placeholder="e.g., Hey Ben, great portfolio! 0.15% is a bit high for us. Would you be okay with 0.12%?"
+                    className="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleSendCounterOffer}
+                  className="flex-1 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                >
+                  Send Counter-Offer
+                </button>
+                <button
+                  onClick={() => setShowCounterOfferModal(false)}
+                  className="flex-1 bg-gray-600 dark:bg-gray-700 text-white px-6 py-3 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   )
