@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Rocket, Sun, Moon, Menu, X } from 'lucide-react'
-import { ConnectButton } from "thirdweb/react"
+import { ConnectButton, useActiveAccount } from "thirdweb/react"
 import { client, wallets, defaultChain } from "@/lib/thirdweb"
 import { base } from "thirdweb/chains"
 import { useAuth } from "@/hooks/useAuth"
+import { UserAccountButton } from "./UserAccountButton"
 
 interface NavigationProps {
   theme: 'light' | 'dark'
@@ -20,6 +21,7 @@ interface NavigationProps {
  */
 export function Navigation({ theme, onToggleTheme }: NavigationProps) {
   const { wallet, isAuthenticated, login } = useAuth()
+  const account = useActiveAccount()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
@@ -83,47 +85,36 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               </div>
             </button>
 
-            {/* Connect Wallet - Now visible on all screen sizes */}
+            {/* Connect Wallet or User Account */}
             <div className="flex items-center space-x-2">
-              <ConnectButton
-                client={client}
-                wallets={wallets}
-                theme="dark"
-                connectButton={{
-                  label: "Connect",
-                }}
-                connectModal={{
-                  title: "Login to CrowdStaking",
-                  size: "wide",
-                  showThirdwebBranding: false,
-                }}
-                detailsButton={{
-                  displayBalanceToken: {
-                    // Don't show ETH balance - confusing for social login users
-                    [base.id]: "none"
-                  },
-                  style: {
-                    // Better styling for the connected state
-                    maxHeight: "40px",
-                  }
-                }}
-                onConnect={async () => {
-                  // Auto-trigger login after wallet connection
-                  if (!isAuthenticated) {
-                    try {
-                      await login()
-                    } catch (error) {
-                      console.error('Auto-login failed:', error)
+              {account ? (
+                // Show custom user account button when connected
+                <UserAccountButton />
+              ) : (
+                // Show connect button when not connected
+                <ConnectButton
+                  client={client}
+                  wallets={wallets}
+                  theme="dark"
+                  connectButton={{
+                    label: "Connect",
+                  }}
+                  connectModal={{
+                    title: "Login to CrowdStaking",
+                    size: "wide",
+                    showThirdwebBranding: false,
+                  }}
+                  onConnect={async () => {
+                    // Auto-trigger login after wallet connection
+                    if (!isAuthenticated) {
+                      try {
+                        await login()
+                      } catch (error) {
+                        console.error('Auto-login failed:', error)
+                      }
                     }
-                  }
-                }}
-              />
-              
-              {/* Show authentication status - hidden on very small screens */}
-              {wallet && isAuthenticated && (
-                <span className="hidden sm:inline-block text-xs text-green-500 dark:text-green-400">
-                  ✓
-                </span>
+                  }}
+                />
               )}
             </div>
 
