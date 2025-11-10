@@ -43,9 +43,9 @@ export function LegalStructureSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 items-stretch">
           <ScrollReveal direction="right" distance={60} duration={800}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border-2 border-indigo-200 dark:border-indigo-700">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border-2 border-indigo-200 dark:border-indigo-700 h-full">
               <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-4">
                 <Scale className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
@@ -60,7 +60,7 @@ export function LegalStructureSection() {
           </ScrollReveal>
 
           <ScrollReveal direction="left" distance={60} duration={800}>
-            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border-2 border-indigo-200 dark:border-indigo-700">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-8 shadow-lg border-2 border-indigo-200 dark:border-indigo-700 h-full">
               <div className="flex items-center justify-center w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-4">
                 <Lock className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
               </div>
