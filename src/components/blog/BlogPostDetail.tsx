@@ -25,7 +25,7 @@ interface BlogPostDetailProps {
 
 export function BlogPostDetail({ post }: BlogPostDetailProps) {
   const publishedDate = post.published_at 
-    ? new Date(post.published_at).toLocaleDateString('de-DE', {
+    ? new Date(post.published_at).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'

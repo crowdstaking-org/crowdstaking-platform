@@ -28,7 +28,7 @@ export default function BlogPage() {
             CrowdStaking Blog
           </h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto">
-            Insights, Updates und Neuigkeiten aus der Welt des dezentralen Crowdfundings
+            Insights, Updates and News from the World of Decentralized Crowdfunding
           </p>
         </div>
       </section>
@@ -39,12 +39,12 @@ export default function BlogPage() {
         {isLoading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">Lade Posts...</p>
+            <p className="text-gray-600 dark:text-gray-400">Loading posts...</p>
           </div>
         ) : error ? (
           /* Error State */
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-2">Fehler</h2>
+            <h2 className="text-xl font-bold text-red-800 dark:text-red-400 mb-2">Error</h2>
             <p className="text-red-600 dark:text-red-400">{error.message}</p>
           </div>
         ) : posts.length === 0 ? (
@@ -52,10 +52,10 @@ export default function BlogPage() {
           <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="text-6xl mb-4">📝</div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-              Noch keine Blog-Posts
+              No Blog Posts Yet
             </h2>
             <p className="text-gray-600 dark:text-gray-400">
-              Schau bald wieder vorbei für neue Inhalte!
+              Check back soon for new content!
             </p>
           </div>
         ) : (
@@ -75,11 +75,11 @@ export default function BlogPage() {
                   disabled={page === 1}
                   className="px-6 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
-                  ← Zurück
+                  ← Previous
                 </button>
                 
                 <div className="text-gray-600 dark:text-gray-400 font-medium">
-                  Seite {pagination.page} von {pagination.totalPages}
+                  Page {pagination.page} of {pagination.totalPages}
                 </div>
                 
                 <button
@@ -87,7 +87,7 @@ export default function BlogPage() {
                   disabled={page >= pagination.totalPages}
                   className="px-6 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                 >
-                  Weiter →
+                  Next →
                 </button>
               </div>
             )}
