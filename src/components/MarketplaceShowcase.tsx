@@ -1,38 +1,33 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import type { Project } from '@/types/project'
 
 /**
  * Marketplace Showcase Section - displays live projects
- * Shows real example missions to demonstrate the platform
+ * Client Component - fetches real project data from API
  */
 export function MarketplaceShowcase() {
-  // Using real project IDs from the database
-  const projects = [
-    {
-      id: 'd2d988f8-fbf0-473c-b154-e8ac1c7a4481',
-      name: 'awesome',
-      mission:
-        'Curating awesome lists about all kinds of interesting topics - from AI/ML to Web3, from programming to design.',
-      seeking: ['Content Curator', 'Community Manager'],
-      offering: 'Up to 8% of $AWE tokens',
-    },
-    {
-      id: '909dba43-09fc-4d54-857a-d4f904461a38',
-      name: 'freeCodeCamp',
-      mission:
-        'Building an open-source platform to help millions learn programming, math, and computer science for free.',
-      seeking: ['Full-Stack Developer', 'Curriculum Designer'],
-      offering: 'Up to 12% of $FRE tokens',
-    },
-    {
-      id: '98cb9454-aa0f-424c-a32c-2fd15b87cdd4',
-      name: 'build-your-own-x',
-      mission:
-        'Teaching developers to master programming by recreating their favorite technologies from scratch.',
-      seeking: ['Technical Writer', 'Developer Advocate'],
-      offering: 'Up to 10% of $BUIL tokens',
-    },
-  ]
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Fetch real projects from API
+  useEffect(() => {
+    fetch('/api/projects')
+      .then(res => res.json())
+      .then(data => {
+        const allProjects = data.data?.projects || []
+        // Show first 3 projects
+        setProjects(allProjects.slice(0, 3))
+        setLoading(false)
+      })
+      .catch(error => {
+        console.error('Failed to fetch showcase projects:', error)
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <section className="py-24 bg-white dark:bg-gray-900">
@@ -47,8 +42,19 @@ export function MarketplaceShowcase() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
+        {loading ? (
+          <div className="grid md:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-gray-100 dark:bg-gray-800 rounded-xl p-8 animate-pulse h-96" />
+            ))}
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600 dark:text-gray-400">No projects available yet.</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8">
+            {projects.map((project, index) => (
             <div
               key={index}
               className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all card-hover flex flex-col"
@@ -62,32 +68,34 @@ export function MarketplaceShowcase() {
                   MISSION:
                 </p>
                 <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  &quot;{project.mission}&quot;
+                  &quot;{project.description || 'No description available'}&quot;
                 </p>
               </div>
 
               <div className="mb-6">
                 <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                  SEEKING:
+                  TOKEN:
                 </p>
-                <div className="flex flex-wrap gap-2">
-                  {project.seeking.map((role, i) => (
-                    <span
-                      key={i}
-                      className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold"
-                    >
-                      {role}
-                    </span>
-                  ))}
+                <div className="flex items-center space-x-2">
+                  <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full text-sm font-semibold">
+                    ${project.token_symbol}
+                  </span>
+                  <span className={`text-xs font-semibold ${
+                    project.token_status === 'live' 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-yellow-600 dark:text-yellow-400'
+                  }`}>
+                    {project.token_status === 'live' ? '🟢 Live' : '🟡 Launching Soon'}
+                  </span>
                 </div>
               </div>
 
               <div className="mb-6 flex-grow">
                 <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                  OFFERING:
+                  TOTAL SUPPLY:
                 </p>
                 <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                  {project.offering}
+                  {(project.total_supply / 1_000_000_000).toFixed(1)}B tokens
                 </p>
               </div>
 
@@ -99,8 +107,9 @@ export function MarketplaceShowcase() {
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Browse All Projects Link */}
         <div className="text-center mt-12">
