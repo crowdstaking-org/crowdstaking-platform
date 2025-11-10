@@ -5,6 +5,7 @@
 
 import { createThirdwebClient } from "thirdweb";
 import { base, ethereum } from "thirdweb/chains";
+import { inAppWallet } from "thirdweb/wallets";
 
 // Get Client ID from environment or use development fallback
 const clientId = process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID;
@@ -31,4 +32,13 @@ export const supportedChains = [
 
 // Default chain for connections
 export const defaultChain = base;
+
+// Multi-Auth Configuration: Email + Wallet + Social Login
+export const wallets = [
+  inAppWallet({
+    auth: {
+      options: ["email", "google", "wallet"],
+    },
+  }),
+];
 

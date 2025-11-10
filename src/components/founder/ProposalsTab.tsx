@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react'
 import { ProposalCard } from '../dashboard/ProposalCard'
-import { ProtectedButton } from '@/components/auth/ProtectedButton'
 import type { Proposal } from '@/types/proposal'
 
 interface ProposalsTabProps {
@@ -153,16 +152,15 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
                     Deliverable: {proposal.deliverable.substring(0, 50)}...
                   </span>
                 </div>
-                <ProtectedButton
+                <button
                   onClick={() => {
                     // TODO: Implement proposal review logic
                     console.log('Review proposal:', proposal.id)
                   }}
-                  actionName="Review Proposal"
                   className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
                 >
                   Review
-                </ProtectedButton>
+                </button>
               </div>
 
               {proposal.foundation_notes && (

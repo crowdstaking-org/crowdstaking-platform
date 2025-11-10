@@ -33,8 +33,8 @@ export function ProjectCard({
   const router = useRouter()
 
   const handleViewProject = () => {
-    // Navigate to dashboard with the selected project
-    router.push(`/dashboard?project=${projectId}`)
+    // Navigate to public project detail page
+    router.push(`/projects/${projectId}`)
   }
 
   return (

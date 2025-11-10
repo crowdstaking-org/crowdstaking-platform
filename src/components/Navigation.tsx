@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Rocket, Sun, Moon, Menu, X } from 'lucide-react'
 import { ConnectButton } from "thirdweb/react"
-import { client } from "@/lib/thirdweb"
+import { client, wallets } from "@/lib/thirdweb"
 import { useAuth } from "@/hooks/useAuth"
 
 interface NavigationProps {
@@ -86,12 +86,14 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
             <div className="flex items-center space-x-2">
               <ConnectButton
                 client={client}
+                wallets={wallets}
                 theme="dark"
                 connectButton={{
                   label: "Connect",
                 }}
                 connectModal={{
-                  title: "Join CrowdStaking",
+                  title: "Login to CrowdStaking",
+                  size: "wide",
                   showThirdwebBranding: false,
                 }}
                 onConnect={async () => {

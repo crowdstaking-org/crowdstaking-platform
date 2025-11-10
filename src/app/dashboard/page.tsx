@@ -24,8 +24,8 @@ import { SettingsTab } from '@/components/founder/SettingsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useProjects } from '@/hooks/useProject'
-import { ProtectedButton } from '@/components/auth/ProtectedButton'
+import { useFounderProjects } from '@/hooks/useProject'
+import { useAuth } from '@/hooks/useAuth'
 import type { Project, ProjectStats } from '@/types/project'
 
 /**
@@ -35,7 +35,8 @@ function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project') || undefined
-  const { projects, project: loadedProject, loading: projectsLoading } = useProjects(projectId)
+  const { wallet, isAuthenticated, login } = useAuth()
+  const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
   
   const [activeTab, setActiveTab] = useState('overview')
   const [currentContext, setCurrentContext] = useState('project-flight-ai')
@@ -43,12 +44,21 @@ function DashboardInner() {
   const [stats, setStats] = useState<ProjectStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
 
-  // Use the project loaded by useProjects hook
+  // Select project from founder's projects
   useEffect(() => {
-    if (loadedProject) {
-      setProject(loadedProject)
+    if (projects.length > 0) {
+      // If projectId is provided, find that specific project
+      if (projectId) {
+        const foundProject = projects.find(p => p.id === projectId)
+        setProject(foundProject || projects[0])
+      } else {
+        // Otherwise, use the first project
+        setProject(projects[0])
+      }
+    } else {
+      setProject(null)
     }
-  }, [loadedProject])
+  }, [projects, projectId])
 
   // Load stats when project changes
   useEffect(() => {
@@ -110,7 +120,61 @@ function DashboardInner() {
     },
   ]
 
-  // Dashboard is now public - no auth check required
+  // Show "Connect Wallet" screen if not authenticated
+  if (!isAuthenticated || !wallet) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="max-w-md w-full mx-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 text-center">
+              {/* Icon */}
+              <div className="flex justify-center mb-6">
+                <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <svg 
+                    className="w-10 h-10 text-blue-600 dark:text-blue-400" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" 
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+                Founder Dashboard
+              </h1>
+
+              {/* Description */}
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
+                Please connect your wallet to access your founder dashboard and manage your projects.
+              </p>
+
+              {/* Connect Button */}
+              <button
+                onClick={login}
+                className="w-full bg-blue-600 dark:bg-blue-500 text-white py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold text-lg"
+              >
+                Connect Wallet
+              </button>
+
+              {/* Info Text */}
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
+                We'll never access your private keys or funds without your explicit permission.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -228,14 +292,13 @@ function DashboardInner() {
                     </div>
                   </div>
 
-                  <ProtectedButton
+                  <button
                     onClick={() => router.push('/create-mini-mission')}
-                    actionName="Create Mission"
                     className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
                   >
                     <Plus className="w-5 h-5" />
                     <span>New Mini-Mission</span>
-                  </ProtectedButton>
+                  </button>
                 </div>
 
                 {/* Project Statistics */}
@@ -294,14 +357,13 @@ function DashboardInner() {
                     </div>
                   )}
 
-                  <ProtectedButton
+                  <button
                     onClick={() => router.push('/liquidity-wizard')}
-                    actionName="Make Tokens Liquid"
                     className="w-full inline-flex items-center justify-center space-x-2 bg-purple-600 dark:bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold"
                   >
                     <Droplets className="w-5 h-5" />
                     <span>Make Your Tokens Liquid Now</span>
-                  </ProtectedButton>
+                  </button>
                 </div>
               </div>
             </div>

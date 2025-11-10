@@ -1,9 +1,15 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-09 (Phase 4 Complete - Double Handshake)
+**Last Updated:** 2025-11-10 (Dashboard Architecture Fix - Public vs Private Routes)
 **Status:** Current state of codebase - marks gaps and dead ends
 
 **Recent Updates:**
+- ✅ Dashboard privatisiert - nur für authentifizierte Founder
+- ✅ Öffentliche Projekt-Detail-Seiten (/projects/[projectId])
+- ✅ Öffentliche Mission-Detail-Seiten (/projects/[projectId]/missions/[missionId])
+- ✅ Thirdweb Multi-Auth (Email + Wallet + Google)
+- ✅ Navigation-Links korrigiert (ProjectCard → öffentliche Seiten)
+- ✅ ProtectedButton/ConnectWalletModal entfernt
 - ✅ Phase 4: Complete Double Handshake implementation
 - ✅ Admin panel for proposal review (/admin/proposals)
 - ✅ Admin actions: Accept, Reject, Counter-Offer
@@ -496,24 +502,26 @@ PHASE 3 COMPLETED:
 
 ## 7. PAGE INVENTORY & COMPLETENESS STATUS
 
-| Route                   | Status | Completeness | Notes                              |
-|-------------------------|--------|--------------|-------------------------------------|
-| `/`                     | ✅     | 95%          | Landing page - fully functional     |
-| `/discover-projects`    | ✅     | 85%          | Has proposal CTA (Phase 3)          |
-| `/how-it-works`         | ✅     | 100%         | Information only                    |
-| `/about`                | ✅     | 100%         | Information only                    |
-| `/whitepaper`           | ✅     | 100%         | Information only                    |
-| `/start-mission`        | ✅     | 100%         | Information only                    |
-| `/wizard`               | ✅     | 90%          | Missing: Backend integration        |
-| `/dashboard`            | ⚠️     | 40%          | Only Overview tab functional        |
-| `/cofounder-dashboard`  | ✅     | 65%          | Proposal flow complete (Phase 3)    |
-| `/dashboard/propose`    | ✅     | 95%          | **NEW** - Full proposal form        |
-| `/create-mini-mission`  | ✅     | 85%          | Missing: Backend integration        |
-| `/proposal-review`      | ⚠️     | 60%          | Missing: Negotiation, work tracking |
-| `/liquidity-wizard`     | ✅     | 85%          | Missing: Return navigation          |
-| `/submit-proposal`      | ⚠️     | 60%          | Old version - replaced by /dashboard/propose |
+| Route                                | Status | Completeness | Notes                              |
+|--------------------------------------|--------|--------------|-------------------------------------|
+| `/`                                  | ✅     | 95%          | Landing page - fully functional     |
+| `/discover-projects`                 | ✅     | 85%          | Has proposal CTA (Phase 3)          |
+| `/projects/[projectId]`              | ✅     | 90%          | **NEW** - Public project details    |
+| `/projects/[projectId]/missions/[id]`| ✅     | 90%          | **NEW** - Public mission details    |
+| `/how-it-works`                      | ✅     | 100%         | Information only                    |
+| `/about`                             | ✅     | 100%         | Information only                    |
+| `/whitepaper`                        | ✅     | 100%         | Information only                    |
+| `/start-mission`                     | ✅     | 100%         | Information only                    |
+| `/wizard`                            | ✅     | 90%          | Missing: Backend integration        |
+| `/dashboard`                         | ✅     | 75%          | **UPDATED** - Now private, Auth required |
+| `/cofounder-dashboard`               | ✅     | 65%          | Proposal flow complete (Phase 3)    |
+| `/dashboard/propose`                 | ✅     | 95%          | Full proposal form                  |
+| `/create-mini-mission`               | ✅     | 85%          | Missing: Backend integration        |
+| `/proposal-review`                   | ⚠️     | 60%          | Missing: Negotiation, work tracking |
+| `/liquidity-wizard`                  | ✅     | 85%          | Missing: Return navigation          |
+| `/submit-proposal`                   | ⚠️     | 60%          | Old version - replaced by /dashboard/propose |
 
-**Overall Application Completeness: ~75%** (+10% from Phase 3)
+**Overall Application Completeness: ~80%** (+5% from Dashboard Architecture Fix)
 
 ---
 
@@ -547,6 +555,6 @@ PHASE 3 COMPLETED:
 - User flow modifications
 - Feature additions/removals
 
-**Last Review:** 2025-11-09  
+**Last Review:** 2025-11-10 (Dashboard Architecture Fix)
 **Next Review:** After next feature implementation
 

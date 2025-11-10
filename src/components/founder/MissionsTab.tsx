@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ProtectedButton } from '@/components/auth/ProtectedButton'
 import type { MissionWithStats } from '@/types/mission'
 
 interface MissionsTabProps {
@@ -52,14 +51,13 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
           Mini-Missions
         </h2>
-        <ProtectedButton
+        <button
           onClick={() => router.push('/create-mini-mission')}
-          actionName="Create Mission"
           className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
         >
           <Plus className="w-5 h-5" />
           <span>Create New Mini-Mission</span>
-        </ProtectedButton>
+        </button>
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
@@ -73,14 +71,13 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               No missions yet. Create your first mini-mission to get started!
             </p>
-            <ProtectedButton
+            <button
               onClick={() => router.push('/create-mini-mission')}
-              actionName="Create Mission"
               className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold"
             >
               <Plus className="w-4 h-4" />
               <span>Create First Mission</span>
-            </ProtectedButton>
+            </button>
           </div>
         ) : (
           <table className="w-full">
@@ -145,9 +142,12 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
                     {mission.description || '-'}
                   </td>
                   <td className="px-6 py-4">
-                    <button className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
+                    <Link
+                      href={`/projects/${projectId}/missions/${mission.id}`}
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
+                    >
                       View Details
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
