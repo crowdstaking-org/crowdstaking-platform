@@ -97,10 +97,10 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
                   wallets={wallets}
                   theme="dark"
                   connectButton={{
-                    label: "Login",
+                    label: "Login / Register",
                   }}
                   connectModal={{
-                    title: "Login to CrowdStaking",
+                    title: "Login / Register",
                     size: "wide",
                     showThirdwebBranding: false,
                   }}
