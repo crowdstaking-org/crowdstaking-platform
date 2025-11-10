@@ -16,6 +16,7 @@ export default function SubmitProposalPage() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    deliverable: '',
     requested_cstake_amount: 1000,
   })
   const [loading, setLoading] = useState(false)
@@ -44,6 +45,7 @@ export default function SubmitProposalPage() {
         setFormData({
           title: '',
           description: '',
+          deliverable: '',
           requested_cstake_amount: 1000,
         })
       } else {
@@ -108,13 +110,31 @@ export default function SubmitProposalPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   required
-                  minLength={10}
+                  minLength={50}
                   rows={6}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
                   placeholder="Describe your project vision, goals, and why you need funding..."
                 />
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Min 10 characters - be detailed
+                  Min 50 characters - be detailed
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                  Deliverable
+                </label>
+                <textarea
+                  value={formData.deliverable}
+                  onChange={(e) => setFormData({ ...formData, deliverable: e.target.value })}
+                  required
+                  minLength={20}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+                  placeholder="What will you deliver? Be specific about timelines and outcomes..."
+                />
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Min 20 characters - describe what you will deliver
                 </p>
               </div>
 
