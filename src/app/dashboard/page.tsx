@@ -20,7 +20,7 @@ import { TokenomicsTab } from '@/components/founder/TokenomicsTab'
 import { SettingsTab } from '@/components/founder/SettingsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { useFounderProjects } from '@/hooks/useProject'
 import type { Project, ProjectStats } from '@/types/project'
@@ -31,6 +31,7 @@ import type { Project, ProjectStats } from '@/types/project'
  */
 export default function FounderDashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { wallet, isAuthenticated, login } = useAuth()
   const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
   
@@ -40,12 +41,24 @@ export default function FounderDashboardPage() {
   const [stats, setStats] = useState<ProjectStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
 
-  // Load first project when projects are available
+  // Load project from URL parameter or first available project
   useEffect(() => {
+    const projectId = searchParams.get('project')
+    
+    if (projectId && projects && projects.length > 0) {
+      // Find the project with the matching ID
+      const selectedProject = projects.find(p => p.id === projectId)
+      if (selectedProject) {
+        setProject(selectedProject)
+        return
+      }
+    }
+    
+    // Fallback: Load first project when projects are available
     if (projects && projects.length > 0 && !project) {
       setProject(projects[0])
     }
-  }, [projects, project])
+  }, [projects, project, searchParams])
 
   // Load stats when project changes
   useEffect(() => {

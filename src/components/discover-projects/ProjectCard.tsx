@@ -1,6 +1,10 @@
+'use client'
+
 import { Users, FileCheck, ArrowRight, CheckCircle, Clock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface ProjectCardProps {
+  projectId: string
   title: string
   mission: string
   tags: string[]
@@ -13,9 +17,10 @@ interface ProjectCardProps {
 
 /**
  * Project card component for marketplace
- * Server Component - displays project information
+ * Client Component - displays project information and handles navigation
  */
 export function ProjectCard({
+  projectId,
   title,
   mission,
   tags,
@@ -25,9 +30,17 @@ export function ProjectCard({
   tokenSymbol,
   featured = false,
 }: ProjectCardProps) {
+  const router = useRouter()
+
+  const handleViewProject = () => {
+    // Navigate to dashboard with the selected project
+    router.push(`/dashboard?project=${projectId}`)
+  }
+
   return (
     <div
-      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer`}
+      onClick={handleViewProject}
+      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer transition-transform hover:scale-[1.02]`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
@@ -109,7 +122,13 @@ export function ProjectCard({
       </div>
 
       {/* CTA */}
-      <button className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group">
+      <button 
+        onClick={(e) => {
+          e.stopPropagation()
+          handleViewProject()
+        }}
+        className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group cursor-pointer"
+      >
         <span>View Mission</span>
         <ArrowRight className="w-4 h-4 icon-slide" />
       </button>

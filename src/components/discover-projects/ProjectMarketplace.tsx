@@ -172,6 +172,7 @@ export function ProjectMarketplace() {
                 duration={800}
               >
                 <ProjectCard
+                  projectId={project.id}
                   title={project.name}
                   mission={project.description || 'No description available'}
                   tags={['Active']} // TODO: Add proper tags from project metadata
