@@ -4,7 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Rocket, Sun, Moon, Menu, X } from 'lucide-react'
 import { ConnectButton } from "thirdweb/react"
-import { client, wallets } from "@/lib/thirdweb"
+import { client, wallets, defaultChain } from "@/lib/thirdweb"
+import { base } from "thirdweb/chains"
 import { useAuth } from "@/hooks/useAuth"
 
 interface NavigationProps {
@@ -95,6 +96,16 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
                   title: "Login to CrowdStaking",
                   size: "wide",
                   showThirdwebBranding: false,
+                }}
+                detailsButton={{
+                  displayBalanceToken: {
+                    // Don't show ETH balance - confusing for social login users
+                    [base.id]: "none"
+                  },
+                  style: {
+                    // Better styling for the connected state
+                    maxHeight: "40px",
+                  }
                 }}
                 onConnect={async () => {
                   // Auto-trigger login after wallet connection
