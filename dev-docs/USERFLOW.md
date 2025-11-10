@@ -1,24 +1,28 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-10 (Dashboard Architecture Fix - Public vs Private Routes)
+**Last Updated:** 2025-11-10 (Gamification System - Profiles, Badges, Trust Score, Social Features)
 **Status:** Current state of codebase - marks gaps and dead ends
 
 **Recent Updates:**
+- ✅ **GAMIFICATION SYSTEM** (Phase 1-6 Complete)
+  - ✅ Database Schema: profiles extended, stats, badges, social features, privacy, activity
+  - ✅ Trust Score Algorithm: Multi-factor reputation system (0-100)
+  - ✅ Badge System: 8 initial badges with auto-awarding
+  - ✅ Social Features: Follow, Bookmark, Endorse
+  - ✅ Profile Pages: /profiles/[address] with tabs (Overview, Portfolio, Activity)
+  - ✅ Settings Page: /settings/profile (Basic Info, Privacy)
+  - ✅ API Integration: Event hooks in proposals & projects
+  - ✅ Cron Job: Daily trust score updates
+  - ✅ Leaderboards: Contributors, Founders, Rising Stars
+  - ✅ Discovery: Find contributors by skill & trust score
 - ✅ Dashboard privatisiert - nur für authentifizierte Founder
 - ✅ Öffentliche Projekt-Detail-Seiten (/projects/[projectId])
 - ✅ Öffentliche Mission-Detail-Seiten (/projects/[projectId]/missions/[missionId])
 - ✅ Thirdweb Multi-Auth (Email + Wallet + Google)
-- ✅ Navigation-Links korrigiert (ProjectCard → öffentliche Seiten)
-- ✅ ProtectedButton/ConnectWalletModal entfernt
 - ✅ Phase 4: Complete Double Handshake implementation
 - ✅ Admin panel for proposal review (/admin/proposals)
-- ✅ Admin actions: Accept, Reject, Counter-Offer
 - ✅ Pioneer response UI in Cofounder Dashboard
 - ✅ Full status state machine (5 states)
-- ✅ Phase 3: Complete proposal submission flow
-- ✅ Added /dashboard/propose with full-featured form
-- ✅ Real-time validation & Markdown support
-- ✅ API endpoints for proposal CRUD operations
 
 ---
 
@@ -506,14 +510,17 @@ PHASE 3 COMPLETED:
 |--------------------------------------|--------|--------------|-------------------------------------|
 | `/`                                  | ✅     | 95%          | Landing page - fully functional     |
 | `/discover-projects`                 | ✅     | 85%          | Has proposal CTA (Phase 3)          |
-| `/projects/[projectId]`              | ✅     | 90%          | **NEW** - Public project details    |
-| `/projects/[projectId]/missions/[id]`| ✅     | 90%          | **NEW** - Public mission details    |
+| `/projects/[projectId]`              | ✅     | 90%          | Public project details              |
+| `/projects/[projectId]/missions/[id]`| ✅     | 90%          | Public mission details              |
+| `/profiles/[address]`                | ✅     | 95%          | **NEW** - Profile with stats, badges, portfolio |
+| `/settings/profile`                  | ✅     | 95%          | **NEW** - Profile & Privacy settings |
+| `/leaderboards`                      | 🟡     | 80%          | **NEW** - API ready, UI needed      |
 | `/how-it-works`                      | ✅     | 100%         | Information only                    |
 | `/about`                             | ✅     | 100%         | Information only                    |
 | `/whitepaper`                        | ✅     | 100%         | Information only                    |
 | `/start-mission`                     | ✅     | 100%         | Information only                    |
 | `/wizard`                            | ✅     | 90%          | Missing: Backend integration        |
-| `/dashboard`                         | ✅     | 75%          | **UPDATED** - Now private, Auth required |
+| `/dashboard`                         | ✅     | 75%          | Private, Auth required              |
 | `/cofounder-dashboard`               | ✅     | 65%          | Proposal flow complete (Phase 3)    |
 | `/dashboard/propose`                 | ✅     | 95%          | Full proposal form                  |
 | `/create-mini-mission`               | ✅     | 85%          | Missing: Backend integration        |
@@ -521,7 +528,7 @@ PHASE 3 COMPLETED:
 | `/liquidity-wizard`                  | ✅     | 85%          | Missing: Return navigation          |
 | `/submit-proposal`                   | ⚠️     | 60%          | Old version - replaced by /dashboard/propose |
 
-**Overall Application Completeness: ~80%** (+5% from Dashboard Architecture Fix)
+**Overall Application Completeness: ~85%** (+10% from Gamification System)
 
 ---
 
@@ -555,6 +562,6 @@ PHASE 3 COMPLETED:
 - User flow modifications
 - Feature additions/removals
 
-**Last Review:** 2025-11-10 (Dashboard Architecture Fix)
+**Last Review:** 2025-11-10 (Gamification System Complete)
 **Next Review:** After next feature implementation
 

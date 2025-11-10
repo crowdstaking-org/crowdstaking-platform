@@ -13,6 +13,9 @@ import { requireAuth } from '@/lib/auth'
 import { getVestingService, isVestingServiceAvailable } from '@/lib/contracts/vestingService'
 import { tokenAmountToWei } from '@/lib/contracts/utils'
 import type { Proposal, ProposalStatus } from '@/types/proposal'
+import { updateContributorStats, updateActivityStats } from '@/lib/gamification/statsUpdater'
+import { checkAndAwardBadges } from '@/lib/gamification/badgeAwarder'
+import { createActivityEvent } from '@/lib/gamification/activityLogger'
 
 /**
  * Pioneer response action types
@@ -169,6 +172,24 @@ export async function PUT(
         console.error('Error updating proposal:', updateError)
         throw updateError
       }
+      
+      // GAMIFICATION: Update stats and check badges (fire and forget)
+      Promise.all([
+        updateContributorStats(proposal.creator_wallet_address),
+        updateActivityStats(proposal.creator_wallet_address),
+        checkAndAwardBadges(proposal.creator_wallet_address),
+        createActivityEvent(
+          proposal.creator_wallet_address,
+          'proposal_accepted',
+          {
+            proposal_id: id,
+            proposal_title: proposal.title,
+            amount: agreedAmount,
+          }
+        ),
+      ]).catch((error) => {
+        console.error('Failed to update gamification stats:', error)
+      })
       
       return jsonResponse({ 
         success: true, 
