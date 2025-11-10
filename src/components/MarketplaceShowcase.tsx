@@ -6,27 +6,31 @@ import Link from 'next/link'
  * Shows real example missions to demonstrate the platform
  */
 export function MarketplaceShowcase() {
+  // Using real project IDs from the database
   const projects = [
     {
-      name: 'QueryAI',
+      id: 'd2d988f8-fbf0-473c-b154-e8ac1c7a4481',
+      name: 'awesome',
       mission:
-        'Building an AI-powered B2B SaaS tool to automate 80% of all customer support inquiries via email.',
-      seeking: ['Senior Frontend (React)', 'AI/LLM Specialist'],
-      offering: 'Up to 8% of $QUERY tokens',
+        'Curating awesome lists about all kinds of interesting topics - from AI/ML to Web3, from programming to design.',
+      seeking: ['Content Curator', 'Community Manager'],
+      offering: 'Up to 8% of $AWE tokens',
     },
     {
-      name: 'Aura Protocol',
+      id: '909dba43-09fc-4d54-857a-d4f904461a38',
+      name: 'freeCodeCamp',
       mission:
-        'A decentralized, censorship-resistant identity protocol on L2 that enables "Human Proof" without KYC.',
-      seeking: ['Solidity Developer', 'Cryptography Expert'],
-      offering: 'Up to 12% of $AURA tokens',
+        'Building an open-source platform to help millions learn programming, math, and computer science for free.',
+      seeking: ['Full-Stack Developer', 'Curriculum Designer'],
+      offering: 'Up to 12% of $FRE tokens',
     },
     {
-      name: 'VectorShift',
+      id: '98cb9454-aa0f-424c-a32c-2fd15b87cdd4',
+      name: 'build-your-own-x',
       mission:
-        'Developing a new Rust-based vector database that is 10x faster than existing solutions for real-time AI applications.',
-      seeking: ['Rust Developer', 'Database Architect'],
-      offering: 'Up to 10% of $VEC tokens',
+        'Teaching developers to master programming by recreating their favorite technologies from scratch.',
+      seeking: ['Technical Writer', 'Developer Advocate'],
+      offering: 'Up to 10% of $BUIL tokens',
     },
   ]
 
@@ -47,7 +51,7 @@ export function MarketplaceShowcase() {
           {projects.map((project, index) => (
             <div
               key={index}
-              className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all card-hover"
+              className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-800 rounded-xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all card-hover flex flex-col"
             >
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 PROJECT: {project.name}
@@ -78,7 +82,7 @@ export function MarketplaceShowcase() {
                 </div>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-6 flex-grow">
                 <p className="text-sm font-semibold text-gray-600 dark:text-gray-400 mb-2">
                   OFFERING:
                 </p>
@@ -88,8 +92,8 @@ export function MarketplaceShowcase() {
               </div>
 
               <Link
-                href="/discover-projects"
-                className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                href={project.id ? `/projects/${project.id}` : "/discover-projects"}
+                className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold mt-auto"
               >
                 <span>View Details</span>
                 <ArrowRight className="w-5 h-5" />
