@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       .from('blog_posts')
       .select(`
         *,
-        author:profiles!blog_posts_author_wallet_address_fkey (
+        author:profiles!fk_blog_posts_author (
           wallet_address,
           display_name,
           avatar_url,
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       .insert([postData])
       .select(`
         *,
-        author:profiles!blog_posts_author_wallet_address_fkey (
+        author:profiles!fk_blog_posts_author (
           wallet_address,
           display_name,
           avatar_url,

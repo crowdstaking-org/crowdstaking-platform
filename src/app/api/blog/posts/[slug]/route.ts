@@ -32,7 +32,7 @@ export async function GET(
       .from('blog_posts')
       .select(`
         *,
-        author:profiles!blog_posts_author_wallet_address_fkey (
+        author:profiles!fk_blog_posts_author (
           wallet_address,
           display_name,
           avatar_url,
