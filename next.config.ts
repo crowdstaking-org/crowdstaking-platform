@@ -2,6 +2,27 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /**
+   * Image Configuration
+   * Allow external images from trusted sources
+   */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
+  
+  /**
    * Security Headers
    * PHASE 7: Production-ready security configuration
    */
