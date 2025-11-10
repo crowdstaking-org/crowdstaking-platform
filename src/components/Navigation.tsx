@@ -56,6 +56,12 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               >
                 About
               </Link>
+              <Link
+                href="/blog"
+                className="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Blog
+              </Link>
               
               {/* Dashboard Link - nur wenn authenticated */}
               {wallet && isAuthenticated && (
@@ -164,6 +170,13 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 About
+              </Link>
+              <Link
+                href="/blog"
+                onClick={closeMobileMenu}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Blog
               </Link>
               
               {/* Dashboard Link - nur wenn authenticated */}

@@ -7,6 +7,7 @@
 
 import { NextRequest } from 'next/server'
 import { verifySession } from '@/lib/auth/sessions'
+import { supabase } from '@/lib/supabase'
 
 /**
  * Extracts authenticated wallet address from request
@@ -122,6 +123,67 @@ export function requireAdmin(request: Request | NextRequest): string {
   
   if (!isAdmin(wallet)) {
     throw new Error('Forbidden: Admin access required')
+  }
+  
+  return wallet
+}
+
+/**
+ * Checks if a wallet address belongs to a super-admin
+ * 
+ * Super-admins are identified by their email address in the profiles table.
+ * Emails are configured via SUPER_ADMIN_EMAILS environment variable (comma-separated).
+ * 
+ * @param walletAddress - Wallet address to check
+ * @returns true if wallet is a super-admin
+ */
+export async function isSuperAdmin(walletAddress: string): Promise<boolean> {
+  try {
+    // Get super-admin emails from environment
+    const superAdminEmailsEnv = process.env.SUPER_ADMIN_EMAILS
+    
+    if (!superAdminEmailsEnv) {
+      console.warn('⚠️ SUPER_ADMIN_EMAILS not set in environment')
+      return false
+    }
+    
+    const superAdminEmails = superAdminEmailsEnv
+      .split(',')
+      .map(email => email.trim().toLowerCase())
+      .filter(email => email.length > 0)
+    
+    // Fetch profile from database
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('wallet_address', walletAddress.toLowerCase())
+      .single()
+    
+    if (error || !profile || !profile.email) {
+      return false
+    }
+    
+    return superAdminEmails.includes(profile.email.toLowerCase())
+  } catch (error) {
+    console.error('Error checking super-admin status:', error)
+    return false
+  }
+}
+
+/**
+ * Requires super-admin authentication
+ * 
+ * @param request - Request object (supports both Request and NextRequest)
+ * @returns Super-admin wallet address
+ * @throws Error if not authenticated or not super-admin
+ */
+export async function requireSuperAdmin(request: Request | NextRequest): Promise<string> {
+  const wallet = requireAuth(request)
+  
+  const isSuperAdminUser = await isSuperAdmin(wallet)
+  
+  if (!isSuperAdminUser) {
+    throw new Error('Forbidden: Super-admin access required')
   }
   
   return wallet
