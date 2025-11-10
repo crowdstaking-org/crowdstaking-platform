@@ -101,6 +101,20 @@ export function MarketplaceShowcase() {
             </div>
           ))}
         </div>
+
+        {/* Browse All Projects Link */}
+        <div className="text-center mt-12">
+          <Link
+            href="/discover-projects#missionen"
+            className="inline-flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-semibold text-lg transition-colors group"
+          >
+            <span>Browse All Projects</span>
+            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+            Discover more missions and find your perfect match
+          </p>
+        </div>
       </div>
     </section>
   )
