@@ -27,8 +27,14 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
     setLoading(true)
     fetch(`/api/projects/${projectId}/missions?include_stats=true`)
       .then((res) => res.json())
-      .then((data) => {
-        setMissions(data.missions || [])
+      .then((response) => {
+        // API returns { success: true, data: { missions: [...], count: N } }
+        if (response.success && response.data) {
+          setMissions(response.data.missions || [])
+        } else {
+          console.error('Unexpected API response:', response)
+          setMissions([])
+        }
         setLoading(false)
       })
       .catch((err) => {

@@ -20,8 +20,9 @@ export async function fetchProjects(founderAddress?: string): Promise<Project[]>
     throw new Error(`Failed to fetch projects: ${response.statusText}`)
   }
   
-  const data = await response.json()
-  return data.projects || []
+  const result = await response.json()
+  // API returns { success: true, data: { projects: [...], count: N } }
+  return result.data?.projects || []
 }
 
 /**
@@ -37,8 +38,9 @@ export async function fetchProject(projectId: string): Promise<Project | null> {
     throw new Error(`Failed to fetch project: ${response.statusText}`)
   }
   
-  const data = await response.json()
-  return data.project
+  const result = await response.json()
+  // API returns { success: true, data: { project: {...} } }
+  return result.data?.project || null
 }
 
 /**
@@ -54,8 +56,9 @@ export async function fetchProjectStats(projectId: string): Promise<ProjectStats
     throw new Error(`Failed to fetch project stats: ${response.statusText}`)
   }
   
-  const data = await response.json()
-  return data.stats
+  const result = await response.json()
+  // API returns { success: true, data: { stats: {...} } }
+  return result.data?.stats || null
 }
 
 /**

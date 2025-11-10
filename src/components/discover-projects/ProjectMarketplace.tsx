@@ -40,15 +40,28 @@ export function ProjectMarketplace() {
 
   // Load projects from API
   useEffect(() => {
+    console.log('[ProjectMarketplace] Starting to load projects...')
     setLoading(true)
     fetch('/api/projects')
-      .then((res) => res.json())
-      .then((data) => {
-        setProjects(data.projects || [])
+      .then((res) => {
+        console.log('[ProjectMarketplace] Fetch response status:', res.status)
+        return res.json()
+      })
+      .then((response) => {
+        console.log('[ProjectMarketplace] API response:', response)
+        // API returns { success: true, data: { projects: [...], count: N } }
+        if (response.success && response.data) {
+          console.log('[ProjectMarketplace] Setting projects:', response.data.projects)
+          setProjects(response.data.projects || [])
+        } else {
+          console.error('[ProjectMarketplace] Unexpected API response:', response)
+          setProjects([])
+        }
         setLoading(false)
+        console.log('[ProjectMarketplace] Loading complete, projects count:', response.data?.projects?.length || 0)
       })
       .catch((err) => {
-        console.error('Failed to load projects:', err)
+        console.error('[ProjectMarketplace] Failed to load projects:', err)
         setLoading(false)
       })
   }, [])

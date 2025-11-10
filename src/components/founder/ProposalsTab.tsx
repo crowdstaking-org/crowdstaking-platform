@@ -27,8 +27,14 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
     setLoading(true)
     fetch(`/api/proposals?project_id=${projectId}`)
       .then((res) => res.json())
-      .then((data) => {
-        setProposals(data.proposals || [])
+      .then((response) => {
+        // API returns { success: true, data: { proposals: [...], count: N } }
+        if (response.success && response.data) {
+          setProposals(response.data.proposals || [])
+        } else {
+          console.error('Unexpected API response:', response)
+          setProposals([])
+        }
         setLoading(false)
       })
       .catch((err) => {
