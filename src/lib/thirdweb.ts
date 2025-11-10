@@ -4,7 +4,7 @@
  */
 
 import { createThirdwebClient } from "thirdweb";
-import { base, ethereum } from "thirdweb/chains";
+import { base, baseSepolia, ethereum } from "thirdweb/chains";
 import { inAppWallet } from "thirdweb/wallets";
 
 // Get Client ID from environment or use development fallback
@@ -26,12 +26,16 @@ export const client = createThirdwebClient({
 
 // Supported blockchain networks (using thirdweb/chains)
 export const supportedChains = [
-  base,      // Base (lower gas fees)
-  ethereum,  // Ethereum Mainnet
+  baseSepolia, // Base Sepolia Testnet (for testing)
+  base,        // Base Mainnet (lower gas fees)
+  ethereum,    // Ethereum Mainnet
 ];
 
 // Default chain for connections
 export const defaultChain = base;
+
+// Chain for token deployment (testnet for MVP, mainnet for production)
+export const deploymentChain = baseSepolia; // TODO: Change to 'base' for mainnet
 
 // Multi-Auth Configuration: Email + Wallet + Social Login
 export const wallets = [

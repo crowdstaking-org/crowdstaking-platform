@@ -81,7 +81,7 @@ export function PortfolioGrid({ walletAddress }: PortfolioGridProps) {
       {portfolio.foundedProjects && portfolio.foundedProjects.length > 0 && (
         <div>
           <h2 className="text-2xl font-bold text-white mb-4">
-            Founded Projects ({portfolio.foundedProjects.length})
+            Gegründete Projekte ({portfolio.foundedProjects.length})
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {portfolio.foundedProjects.map((project: any) => (
@@ -118,7 +118,7 @@ export function PortfolioGrid({ walletAddress }: PortfolioGridProps) {
       {(!portfolio.completedMissions || portfolio.completedMissions.length === 0) &&
         (!portfolio.foundedProjects || portfolio.foundedProjects.length === 0) && (
           <div className="text-center py-12">
-            <p className="text-gray-400">No completed projects or missions yet</p>
+            <p className="text-gray-400">Noch keine abgeschlossenen Projekte oder Missions</p>
           </div>
         )}
     </div>

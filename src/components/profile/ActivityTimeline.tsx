@@ -65,7 +65,7 @@ export function ActivityTimeline({ walletAddress, showPrivate = false }: Activit
       <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
         {activities.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400">No public activities yet</p>
+            <p className="text-gray-400">Noch keine öffentlichen Aktivitäten</p>
           </div>
         ) : (
           <div className="space-y-4">

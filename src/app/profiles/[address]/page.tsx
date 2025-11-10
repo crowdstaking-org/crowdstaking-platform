@@ -64,7 +64,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Loading profile...</p>
+          <p className="text-gray-400">Profil wird geladen...</p>
         </div>
       </div>
     )
@@ -74,7 +74,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Profile Not Found</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Profil nicht gefunden</h2>
           <p className="text-gray-400">{error}</p>
         </div>
       </div>
