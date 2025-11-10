@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { useAuth } from '@/hooks/useAuth'
 import { isAdmin } from '@/lib/auth'
 import { Layout } from '@/components/Layout'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Proposal } from '@/types/proposal'
 
 export default function AdminProposalsPage() {
@@ -159,12 +160,17 @@ export default function AdminProposalsPage() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <h3 className="text-xl font-bold mb-2">{proposal.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">
-                      Von: <code className="bg-gray-100 px-2 py-1 rounded">
-                        {proposal.creator_wallet_address.slice(0, 6)}...
-                        {proposal.creator_wallet_address.slice(-4)}
-                      </code>
-                    </p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-gray-600">Von:</span>
+                      <UserProfileLink
+                        walletAddress={proposal.creator_wallet_address}
+                        displayName={proposal.creator?.display_name}
+                        avatarUrl={proposal.creator?.avatar_url}
+                        trustScore={proposal.creator?.trust_score}
+                        showTrustScore={true}
+                        size="sm"
+                      />
+                    </div>
                     <p className="text-sm text-gray-500">
                       Erstellt: {new Date(proposal.created_at).toLocaleDateString('de-DE', {
                         year: 'numeric',

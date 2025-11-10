@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
 import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Mission } from '@/types/mission'
 import type { Proposal } from '@/types/proposal'
 
@@ -255,10 +256,17 @@ export default async function MissionDetailPage({ params }: PageProps) {
                           {proposal.title}
                         </h3>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mb-3">
-                          <span>
-                            From: {proposal.creator_wallet_address.substring(0, 6)}...
-                            {proposal.creator_wallet_address.substring(38)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span>From:</span>
+                            <UserProfileLink
+                              walletAddress={proposal.creator_wallet_address}
+                              displayName={proposal.creator?.display_name}
+                              avatarUrl={proposal.creator?.avatar_url}
+                              trustScore={proposal.creator?.trust_score}
+                              showTrustScore={true}
+                              size="sm"
+                            />
+                          </div>
                           <span>•</span>
                           <span>
                             {new Date(proposal.created_at).toLocaleDateString()}

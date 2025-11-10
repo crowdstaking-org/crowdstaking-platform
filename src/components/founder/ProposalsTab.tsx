@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { ProposalCard } from '../dashboard/ProposalCard'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Proposal } from '@/types/proposal'
 
 interface ProposalsTabProps {
@@ -132,10 +133,17 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
                     {proposal.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    From: {proposal.creator_wallet_address.substring(0, 6)}...
-                    {proposal.creator_wallet_address.substring(38)}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">From:</span>
+                    <UserProfileLink
+                      walletAddress={proposal.creator_wallet_address}
+                      displayName={proposal.creator?.display_name}
+                      avatarUrl={proposal.creator?.avatar_url}
+                      trustScore={proposal.creator?.trust_score}
+                      showTrustScore={true}
+                      size="sm"
+                    />
+                  </div>
                 </div>
                 <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-semibold">
                   {(proposal.requested_cstake_amount / 10000000).toFixed(2)}%

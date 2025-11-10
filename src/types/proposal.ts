@@ -57,6 +57,16 @@ export type ProposalStatus =
   | 'rejected'
 
 /**
+ * Creator profile data (optional, loaded via join)
+ */
+export interface ProposalCreator {
+  wallet_address: string
+  display_name: string
+  avatar_url?: string
+  trust_score?: number
+}
+
+/**
  * Complete proposal interface including database fields
  * Used when fetching proposals from the API
  */
@@ -75,6 +85,8 @@ export interface Proposal {
   contract_agreement_tx?: string | null
   contract_release_tx?: string | null
   pioneer_confirmed_at?: string | null
+  // Profile data (loaded via API join)
+  creator?: ProposalCreator
 }
 
 /**

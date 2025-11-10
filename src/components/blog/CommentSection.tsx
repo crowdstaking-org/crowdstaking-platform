@@ -15,6 +15,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import { useAuth } from '@/hooks/useAuth'
 import { useBlogComments, useCreateComment, useDeleteComment } from '@/hooks/useBlog'
 import { commentSchema } from '@/types/blog'
@@ -151,27 +152,16 @@ export function CommentSection({ slug }: CommentSectionProps) {
               >
                 {/* Comment Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    {comment.author?.avatar_url ? (
-                      <Image
-                        src={comment.author.avatar_url}
-                        alt={comment.author.display_name}
-                        width={40}
-                        height={40}
-                        className="rounded-full"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white font-bold">
-                        {comment.author?.display_name?.[0]?.toUpperCase() || '?'}
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">
-                        {comment.author?.display_name || 'Anonymous'}
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {commentDate}
-                      </div>
+                  <div className="flex items-center gap-3 flex-1">
+                    <UserProfileLink
+                      walletAddress={comment.author_wallet_address}
+                      displayName={comment.author?.display_name}
+                      avatarUrl={comment.author?.avatar_url}
+                      size="sm"
+                      showAvatar={true}
+                    />
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {commentDate}
                     </div>
                   </div>
 

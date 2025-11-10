@@ -31,10 +31,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status')
     
-    // Build query
+    // Build query with profile join
     let query = supabase
       .from('proposals')
-      .select('*')
+      .select(`
+        *,
+        creator:profiles!proposals_creator_wallet_address_fkey (
+          wallet_address,
+          display_name,
+          avatar_url,
+          trust_score
+        )
+      `)
       .order('created_at', { ascending: false })
     
     // Apply status filter if provided
@@ -45,9 +53,49 @@ export async function GET(request: NextRequest) {
     // Execute query
     const { data, error } = await query
     
+    // If join failed, fall back to manual profile loading
     if (error) {
-      console.error('Error fetching proposals:', error)
-      throw error
+      console.warn('Foreign key join failed, falling back to manual profile loading:', error)
+      
+      let fallbackQuery = supabase
+        .from('proposals')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (statusFilter) {
+        fallbackQuery = fallbackQuery.eq('status', statusFilter)
+      }
+      
+      const { data: proposals, error: proposalsError } = await fallbackQuery
+      
+      if (proposalsError) {
+        console.error('Error fetching proposals:', proposalsError)
+        throw proposalsError
+      }
+      
+      // Get unique creator addresses
+      const creatorAddresses = [...new Set(proposals?.map(p => p.creator_wallet_address) || [])]
+      
+      // Fetch all creator profiles in one query
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('wallet_address, display_name, avatar_url, trust_score')
+        .in('wallet_address', creatorAddresses)
+      
+      // Create a map for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.wallet_address, p]))
+      
+      // Attach profiles to proposals
+      const proposalsWithProfiles = proposals?.map(p => ({
+        ...p,
+        creator: profileMap.get(p.creator_wallet_address) || undefined
+      }))
+      
+      return jsonResponse({ 
+        success: true, 
+        proposals: proposalsWithProfiles as Proposal[],
+        count: proposalsWithProfiles?.length || 0
+      })
     }
     
     return jsonResponse({ 

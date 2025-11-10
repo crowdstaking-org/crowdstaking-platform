@@ -17,6 +17,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { BlogPost } from '@/types/blog'
 
 interface BlogPostDetailProps {
@@ -55,31 +56,19 @@ export function BlogPostDetail({ post }: BlogPostDetailProps) {
         {/* Meta Info */}
         <div className="flex flex-wrap items-center gap-4 mb-6">
           {/* Author */}
-          <div className="flex items-center gap-3">
-            {post.author?.avatar_url ? (
-              <Image
-                src={post.author.avatar_url}
-                alt={post.author.display_name}
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center text-white text-lg font-bold">
-                {post.author?.display_name?.[0]?.toUpperCase() || '?'}
-              </div>
-            )}
-            <div>
-              <div className="font-medium text-gray-900 dark:text-white">
-                {post.author?.display_name || 'Anonymous'}
-              </div>
-              {publishedDate && (
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  {publishedDate}
-                </div>
-              )}
+          <UserProfileLink
+            walletAddress={post.author_wallet_address}
+            displayName={post.author?.display_name}
+            avatarUrl={post.author?.avatar_url}
+            size="md"
+            showAvatar={true}
+          />
+          
+          {publishedDate && (
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {publishedDate}
             </div>
-          </div>
+          )}
 
           {/* View Count */}
           <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">

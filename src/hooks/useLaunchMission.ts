@@ -58,7 +58,10 @@ export function useLaunchMission() {
       
       const projectResponse = await fetch('/api/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': account.address, // Send wallet address for auth
+        },
         body: JSON.stringify({
           name: data.projectName,
           description: data.vision,
@@ -158,7 +161,10 @@ export function useLaunchMission() {
       setCurrentPhase('Finalizing project setup...')
       await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': account.address,
+        },
         body: JSON.stringify({
           token_address: tokenAddress,
           token_symbol: tokenSymbol,
@@ -174,7 +180,10 @@ export function useLaunchMission() {
       setCurrentPhase('Creating initial mission...')
       await fetch('/api/missions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': account.address,
+        },
         body: JSON.stringify({
           project_id: projectId,
           title: data.mission,

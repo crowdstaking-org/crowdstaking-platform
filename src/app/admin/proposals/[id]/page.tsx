@@ -13,6 +13,7 @@ import ReactMarkdown from 'react-markdown'
 import { useAuth } from '@/hooks/useAuth'
 import { isAdmin } from '@/lib/auth'
 import { Layout } from '@/components/Layout'
+import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Proposal } from '@/types/proposal'
 
 export default function AdminProposalDetailPage() {
@@ -204,15 +205,20 @@ export default function AdminProposalDetailPage() {
           <div className="mb-6 pb-6 border-b border-gray-200">
             <h1 className="text-3xl font-bold mb-4">{proposal.title}</h1>
             
-            <div className="flex flex-wrap gap-4 items-center text-sm text-gray-600">
-              <div>
-                <span className="font-semibold">Von:</span>{' '}
-                <code className="bg-gray-100 px-2 py-1 rounded">
-                  {proposal.creator_wallet_address}
-                </code>
+            <div className="flex flex-wrap gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-gray-600">Von:</span>
+                <UserProfileLink
+                  walletAddress={proposal.creator_wallet_address}
+                  displayName={proposal.creator?.display_name}
+                  avatarUrl={proposal.creator?.avatar_url}
+                  trustScore={proposal.creator?.trust_score}
+                  showTrustScore={true}
+                  size="md"
+                />
               </div>
               
-              <div>
+              <div className="text-sm text-gray-600">
                 <span className="font-semibold">Erstellt:</span>{' '}
                 {new Date(proposal.created_at).toLocaleDateString('de-DE', {
                   year: 'numeric',
