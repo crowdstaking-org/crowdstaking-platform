@@ -9,6 +9,7 @@
 
 import { useState } from 'react'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { Layout } from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 
 export default function SubmitProposalPage() {
@@ -60,9 +61,10 @@ export default function SubmitProposalPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+      <Layout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Submit Your Proposal
@@ -176,9 +178,10 @@ export default function SubmitProposalPage() {
                 <li>• Approved proposals get published for co-founder matching</li>
               </ul>
             </div>
+            </div>
           </div>
         </div>
-      </div>
+      </Layout>
     </ProtectedRoute>
   )
 }
