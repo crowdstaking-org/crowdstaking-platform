@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
 import { Users, Lightbulb, TrendingUp, CheckCircle, Clock, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
@@ -18,11 +19,41 @@ interface PageProps {
 }
 
 /**
+ * Get base URL for server-side API calls
+ */
+async function getBaseUrl(): Promise<string> {
+  // Check for explicit environment variable
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  
+  // On Vercel, use the deployment URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // Try to get from headers (works in server components)
+  try {
+    const headersList = await headers()
+    const host = headersList.get('host')
+    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  } catch (e) {
+    // headers() might fail in some contexts
+  }
+  
+  // Fallback to localhost for development
+  return 'http://localhost:3000'
+}
+
+/**
  * Fetch project data (server-side)
  */
 async function fetchProject(projectId: string): Promise<Project | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = await getBaseUrl()
     const response = await fetch(`${baseUrl}/api/projects/${projectId}`, {
       cache: 'no-store'
     })
@@ -47,7 +78,7 @@ async function fetchProject(projectId: string): Promise<Project | null> {
  */
 async function fetchProjectStats(projectId: string): Promise<ProjectStats | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = await getBaseUrl()
     const response = await fetch(`${baseUrl}/api/projects/${projectId}/stats`, {
       cache: 'no-store'
     })
@@ -72,8 +103,7 @@ async function fetchProjectStats(projectId: string): Promise<ProjectStats | null
  */
 async function fetchProjectMissions(projectId: string): Promise<MissionWithStats[]> {
   try {
-    // Use absolute URL for server-side fetch
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = await getBaseUrl()
     const response = await fetch(`${baseUrl}/api/projects/${projectId}/missions?include_stats=true`, {
       cache: 'no-store' // Always fetch fresh data
     })
@@ -91,8 +121,11 @@ async function fetchProjectMissions(projectId: string): Promise<MissionWithStats
 }
 
 export default async function ProjectDetailPage({ params }: PageProps) {
+  // In Next.js 15+, params is a Promise and must be awaited
+  const { projectId } = await params
+  
   // Fetch project data server-side
-  const project = await fetchProject(params.projectId)
+  const project = await fetchProject(projectId)
   
   // If project doesn't exist, show 404
   if (!project) {
@@ -101,8 +134,8 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   
   // Fetch project stats and missions in parallel
   const [stats, missions] = await Promise.all([
-    fetchProjectStats(params.projectId),
-    fetchProjectMissions(params.projectId)
+    fetchProjectStats(projectId),
+    fetchProjectMissions(projectId)
   ])
 
   return (

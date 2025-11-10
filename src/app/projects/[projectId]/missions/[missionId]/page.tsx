@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
 import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -19,11 +20,41 @@ interface PageProps {
 }
 
 /**
+ * Get base URL for server-side API calls
+ */
+async function getBaseUrl(): Promise<string> {
+  // Check for explicit environment variable
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL
+  }
+  
+  // On Vercel, use the deployment URL
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`
+  }
+  
+  // Try to get from headers (works in server components)
+  try {
+    const headersList = await headers()
+    const host = headersList.get('host')
+    const protocol = headersList.get('x-forwarded-proto') || 'https'
+    if (host) {
+      return `${protocol}://${host}`
+    }
+  } catch (e) {
+    // headers() might fail in some contexts
+  }
+  
+  // Fallback to localhost for development
+  return 'http://localhost:3000'
+}
+
+/**
  * Fetch single mission data (server-side)
  */
 async function fetchMission(projectId: string, missionId: string): Promise<Mission | null> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = await getBaseUrl()
     const response = await fetch(`${baseUrl}/api/projects/${projectId}/missions?include_stats=true`, {
       cache: 'no-store'
     })
@@ -48,7 +79,7 @@ async function fetchMission(projectId: string, missionId: string): Promise<Missi
  */
 async function fetchMissionProposals(missionId: string): Promise<Proposal[]> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = await getBaseUrl()
     const response = await fetch(`${baseUrl}/api/proposals?mission_id=${missionId}`, {
       cache: 'no-store'
     })
@@ -96,10 +127,13 @@ function formatStatus(status: string): string {
 }
 
 export default async function MissionDetailPage({ params }: PageProps) {
+  // In Next.js 15+, params is a Promise and must be awaited
+  const { projectId, missionId } = await params
+  
   // Fetch mission and proposals server-side
   const [mission, proposals] = await Promise.all([
-    fetchMission(params.projectId, params.missionId),
-    fetchMissionProposals(params.missionId)
+    fetchMission(projectId, missionId),
+    fetchMissionProposals(missionId)
   ])
   
   // If mission doesn't exist, show 404
@@ -113,7 +147,7 @@ export default async function MissionDetailPage({ params }: PageProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Back Navigation */}
           <Link
-            href={`/projects/${params.projectId}`}
+            href={`/projects/${projectId}`}
             className="inline-flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-8 font-semibold"
           >
             <ArrowLeft className="w-5 h-5" />
