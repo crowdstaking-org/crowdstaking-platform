@@ -23,6 +23,8 @@ import { MarkdownEditor } from '@/components/forms/MarkdownEditor'
 import { useAuth } from '@/hooks/useAuth'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { LoadingButton } from '@/components/ui/LoadingButton'
+import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast'
 
 export default function ProposePage() {
   const router = useRouter()
@@ -51,6 +53,8 @@ export default function ProposePage() {
   const formValues = watch()
 
   const onSubmit = async (data: ProposalFormData) => {
+    const loadingToast = showLoading('Proposal wird eingereicht...')
+    
     try {
       setSubmitError(null)
 
@@ -66,11 +70,16 @@ export default function ProposePage() {
         throw new Error(error.error || 'Submission failed')
       }
 
+      dismissToast(loadingToast)
+      showSuccess('Proposal erfolgreich eingereicht!')
       setSubmitSuccess(true)
       // Redirect after 2 seconds
       setTimeout(() => router.push('/cofounder-dashboard'), 2000)
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : 'Failed to submit proposal')
+      dismissToast(loadingToast)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit proposal'
+      setSubmitError(errorMessage)
+      showError('Fehler beim Einreichen', error)
     }
   }
 
@@ -222,22 +231,26 @@ export default function ProposePage() {
 
               {/* Action Buttons */}
               <div className="pt-4 space-y-3">
-                <button
+                <LoadingButton
                   type="button"
                   onClick={() => setShowPreview(true)}
                   disabled={!isValid}
-                  className="w-full bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  variant="secondary"
+                  className="w-full"
                 >
                   👁️ Preview Proposal
-                </button>
+                </LoadingButton>
                 
-                <button
+                <LoadingButton
                   type="submit"
-                  disabled={!isValid || isSubmitting}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!isValid}
+                  isLoading={isSubmitting}
+                  loadingText="Wird eingereicht..."
+                  variant="primary"
+                  className="w-full py-4"
                 >
-                  {isSubmitting ? 'Submitting...' : '🚀 Submit Proposal'}
-                </button>
+                  🚀 Submit Proposal
+                </LoadingButton>
               </div>
             </form>
 

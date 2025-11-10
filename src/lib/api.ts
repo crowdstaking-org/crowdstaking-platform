@@ -21,18 +21,39 @@ export function jsonResponse<T>(
 
 /**
  * Creates a standardized error response
+ * PHASE 7: Enhanced with production-safe error messages
  * 
  * @param message - Error message to display
  * @param status - HTTP status code (default: 400)
+ * @param details - Optional error details (only included in development)
  * @returns NextResponse with error object
  */
 export function errorResponse(
   message: string, 
-  status: number = 400
+  status: number = 400,
+  details?: any
 ) {
+  // Log full error server-side for debugging
+  if (details) {
+    console.error('[API Error]', { 
+      message, 
+      status, 
+      details,
+      timestamp: new Date().toISOString()
+    })
+  }
+  
+  // Sanitize error message for production
+  const isProduction = process.env.NODE_ENV === 'production'
+  const sanitizedMessage = isProduction && status === 500 
+    ? 'An internal error occurred' 
+    : message
+  
   return jsonResponse({ 
-    error: message,
-    success: false
+    error: sanitizedMessage,
+    success: false,
+    // Only include details in development
+    ...(process.env.NODE_ENV === 'development' && details ? { details } : {})
   }, status)
 }
 

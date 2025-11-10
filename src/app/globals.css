@@ -346,6 +346,105 @@ html {
   100% { background-position: 200% 0; }
 }
 
+/* Custom Scrollbar Styling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(209, 213, 219) transparent;
+}
+
+.dark .scrollbar-thin {
+  scrollbar-color: rgb(75, 85, 99) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(209, 213, 219);
+  border-radius: 3px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgb(75, 85, 99);
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(156, 163, 175);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgb(107, 114, 128);
+}
+
+/* Phase 7: Additional UX Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Smooth focus states */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: rgb(59, 130, 246);
+  ring-offset: 2px;
+}
+
+/* Better button transitions */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
 /* Ensure animations respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   *,

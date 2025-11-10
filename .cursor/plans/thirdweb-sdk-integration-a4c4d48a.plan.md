@@ -1,1182 +1,679 @@
-<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 40339191-0551-41d8-9d7b-34cd0af3bb0c -->
-# Phase 6 Refinement: Minimal-Invasive Co-Owner Dashboard & Token Economics
+<!-- a4c4d48a-bc94-4db7-b095-2a2161e95221 867abf05-6b23-456c-bf81-1120f5d1a3c1 -->
+# Phase 8: Post-Launch Roadmap & Iterative Improvement Framework
 
-## Context: What We've Built
+## Context: The Platform is Live! 🚀
 
-### Phase 1-5 Complete ✅
+### Phase 1-7 Complete ✅
 
-- **Auth:** Secure wallet authentication
-- **Proposals:** Submit, review, accept
-- **Smart Contracts:** Token escrow and release
-- **Full Lifecycle:** Proposal → Agreement → Work → Release
-- **Tokens:** $CSTAKE tokens can be earned and held
+The CrowdStaking platform is **launched and operational**:
 
-### Current Dashboard State
+- Co-founders can submit proposals
+- Admins can review and negotiate
+- Smart contracts handle token escrow
+- Tokens are released after work completion
+- Dashboard shows ownership and value
 
-Looking at existing code:
+### Phase 8 is Different
 
-- `src/app/cofounder-dashboard/page.tsx` exists
-- Shows proposals list (from Phase 4)
-- Basic tabs structure
-- NO wallet balance display yet
-- NO token price display yet
-- NO USD value calculation yet
+**Phases 1-7:** We built what we *thought* users needed (MVP hypothesis)
 
-## Phase 6 Goal: Make Co-Ownership Tangible
+**Phase 8:** We improve based on what users *actually* need (validated learning)
 
-**The "Reward Loop"** - Show pioneers their actual ownership:
+**This is NOT a prescriptive implementation plan.**
 
-1. Display $CSTAKE token balance in wallet
-2. Fetch real-time token price from DEX
-3. Calculate and show USD value
-4. Show portfolio of completed work
-5. Real-time updates
+**This IS a framework for adaptive development.**
 
-**This is the "aha moment"** - seeing liquid, tradeable value from contributions.
+## Phase 8 Philosophy: Lean & Data-Driven
 
-## Minimal-Invasive Strategy
+### Core Principles
 
-**What we'll leverage:**
+1. **User Feedback First**
 
-- ThirdWeb SDK already integrated (read token balance)
-- Existing dashboard structure
-- Existing API patterns
-- Simple caching for price data
+   - Real user pain points > Our assumptions
+   - Observe behavior, not just surveys
+   - Fix blockers before adding features
 
-**What we'll build:**
+2. **Measure Everything**
 
-- Token balance reading hook
-- DEX price fetching service (Uniswap pool)
-- Price API endpoint with caching
-- WalletModule component
-- Enhanced proposals list
-- Simple portfolio view
+   - Track key metrics weekly
+   - Funnel analysis for dropoffs
+   - Cohort analysis for retention
 
-**What we'll skip:**
+3. **Ship Fast, Iterate Faster**
 
-- ❌ Complex price oracle (use simple DEX query)
-- ❌ Historical price charts (post-MVP)
-- ❌ Portfolio analytics (post-MVP)
-- ❌ Token staking (post-MVP)
-- ❌ Governance voting (post-MVP)
+   - 2-week sprint cycles
+   - Ship small improvements continuously
+   - A/B test major changes
 
-## Critical Decision: Price Data Source
+4. **Prioritize Ruthlessly**
 
-**Options:**
+   - Use RICE scoring framework
+   - Focus on high-impact, low-effort first
+   - Say no to feature creep
 
-1. **Uniswap Pool Query** (Recommended for MVP)
+## Key Metrics to Track
 
-   - Direct on-chain query
-   - No API dependencies
-   - Free
-   - Simple math (reserves)
+### North Star Metric
 
-2. CoinGecko API
+**Active Co-Founders Earning Tokens** (weekly)
 
-   - Requires API key
-   - Rate limits
-   - External dependency
+### Supporting Metrics
 
-**Choice:** Uniswap pool query for MVP (upgrade later if needed).
+**Acquisition:**
 
-## Architecture Overview
+- Unique visitors
+- Wallet connections
+- Signups (authenticated users)
 
-```
-Frontend (Dashboard)
-    ↓
-useTokenBalance() hook → ThirdWeb SDK → Read $CSTAKE balance
-    ↓
-useTokenPrice() hook → API /api/token-price
-    ↓
-Price Service → Uniswap Pool Contract → Calculate price
-    ↓
-Cache (60 seconds) → Return price
-    ↓
-Frontend calculates: balance * price = USD value
-```
+**Activation:**
 
-## Refined Actionable Tickets
+- Proposals submitted
+- Proposals accepted
+- First token earned
 
-### PHASE-6-TICKET-001: Create Token Balance Reading Hook
+**Retention:**
 
-**Priority:** P0 | **Time:** 45 min
+- Weekly active users
+- Repeat proposals (2+)
+- Proposal completion rate
 
-**Goal:** Create React hook to read $CSTAKE token balance from user's wallet
+**Revenue (Future):**
 
-**What to Do:**
+- Platform fees collected
+- Token trading volume
+- Premium features usage
 
-1. Create `src/hooks/useTokenBalance.ts`
-2. Use ThirdWeb's useReadContract for ERC20 balanceOf
-3. Format balance with decimals
-4. Auto-update on wallet change
-5. Handle loading and error states
+**Efficiency:**
 
-**Files to Create:**
+- Time to first proposal
+- Avg negotiation rounds
+- Time to token release
 
-- `src/hooks/useTokenBalance.ts`
+## Prioritization Framework: RICE Score
 
-**Definition of Done:**
+For each feature, calculate:
 
-- [ ] Hook reads balance from $CSTAKE token contract
-- [ ] Returns formatted balance (e.g., "1,234.56")
-- [ ] Returns raw balance for calculations
-- [ ] Auto-updates when wallet changes
-- [ ] Loading state while fetching
-- [ ] Error state if fetch fails
-- [ ] Works with testnet token address
+**RICE = (Reach × Impact × Confidence) / Effort**
 
-**Code Pattern:**
+- **Reach:** How many users affected? (per month)
+- **Impact:** How much improvement? (3=high, 2=medium, 1=low)
+- **Confidence:** How sure are we? (100%=certain, 50%=guess)
+- **Effort:** How long to build? (person-weeks)
 
-```typescript
-// src/hooks/useTokenBalance.ts
-'use client'
-import { useReadContract } from 'thirdweb/react'
-import { getContract } from 'thirdweb'
-import { client } from '@/lib/thirdweb'
-import { baseSepolia } from 'thirdweb/chains'
-import { formatUnits } from 'ethers'
+**Example:**
 
-const CSTAKE_TOKEN_ADDRESS = process.env.NEXT_PUBLIC_CSTAKE_TOKEN_ADDRESS!
+- Notification system: (500 × 3 × 80%) / 2 = 600
+- Dark mode: (1000 × 1 × 90%) / 1 = 900
+- → Ship dark mode first!
 
-export function useTokenBalance(walletAddress?: string) {
-  const contract = getContract({
-    client,
-    chain: baseSepolia,
-    address: CSTAKE_TOKEN_ADDRESS,
-  })
-  
-  const { data, isLoading, error } = useReadContract({
-    contract,
-    method: 'function balanceOf(address) returns (uint256)',
-    params: walletAddress ? [walletAddress] : undefined,
-  })
-  
-  const balance = data ? formatUnits(data, 18) : '0'
-  const balanceFormatted = Number(balance).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-  
-  return {
-    balance,
-    balanceFormatted,
-    balanceRaw: data,
-    isLoading,
-    error,
-  }
-}
+## Post-Launch Feature Categories
+
+### Category 1: Critical Fixes & Blockers
+
+**When to Prioritize:**
+
+- Users cannot complete core flows
+- Data loss or security risk
+- Major bugs affecting multiple users
+
+**Examples:**
+
+- Smart contract bugs
+- Authentication failures
+- Payment processing errors
+- Data corruption
+
+**Response Time:** Immediate (hours)
+
+---
+
+### Category 2: User Experience Improvements
+
+**High Priority UX Issues:**
+
+**ISSUE-001: Proposal Status Confusion**
+
+- Problem: Users don't understand counter-offer flow
+- Solution: Add visual stepper showing current stage
+- Effort: 1 week | Impact: High | RICE: ~800
+
+**ISSUE-002: No Notifications**
+
+- Problem: Users don't know when to take action
+- Solution: Email/push notifications for status changes
+- Effort: 2 weeks | Impact: High | RICE: ~750
+
+**ISSUE-003: Mobile Navigation**
+
+- Problem: Hamburger menu unclear
+- Solution: Bottom navigation bar on mobile
+- Effort: 3 days | Impact: Medium | RICE: ~600
+
+**ISSUE-004: Onboarding Friction**
+
+- Problem: New users confused about first steps
+- Solution: Interactive tutorial on first visit
+- Effort: 1 week | Impact: Medium | RICE: ~500
+
+**ISSUE-005: Proposal Templates**
+
+- Problem: Empty form is intimidating
+- Solution: Pre-filled templates for common roles
+- Effort: 2 days | Impact: Medium | RICE: ~700
+
+---
+
+### Category 3: Feature Additions
+
+**High-Value Features:**
+
+**FEATURE-001: Proposal Comments/Discussion**
+
+- What: Allow back-and-forth discussion on proposals
+- Why: Multiple negotiation rounds common
+- Effort: 2 weeks | RICE: ~650
+
+**FEATURE-002: Multi-Mission Projects**
+
+- What: Support multiple missions per project
+- Why: Founders want to hire multiple roles
+- Effort: 3 weeks | RICE: ~550
+
+**FEATURE-003: Portfolio Showcase**
+
+- What: Public profile showing completed work
+- Why: Reputation system for co-founders
+- Effort: 2 weeks | RICE: ~500
+
+**FEATURE-004: Advanced Search & Filters**
+
+- What: Filter proposals by skill, amount, status
+- Why: Scale when 100+ proposals
+- Effort: 1 week | RICE: ~600
+
+**FEATURE-005: Milestone-Based Payments**
+
+- What: Split work into milestones with partial releases
+- Why: Larger projects need incremental payments
+- Effort: 4 weeks | RICE: ~450
+
+**FEATURE-006: Dispute Resolution**
+
+- What: Process when work disagreement occurs
+- Why: Handle edge cases professionally
+- Effort: 3 weeks | RICE: ~400
+
+**FEATURE-007: Token Staking**
+
+- What: Stake tokens for governance power
+- Why: Align long-term incentives
+- Effort: 3 weeks | RICE: ~350
+
+**FEATURE-008: Referral Program**
+
+- What: Earn tokens for referring new co-founders
+- Why: Viral growth loop
+- Effort: 2 weeks | RICE: ~600
+
+---
+
+### Category 4: Performance & Scale
+
+**When to Prioritize:**
+
+- App slowing down (> 3s load time)
+- Database queries > 1s
+- High error rates in monitoring
+
+**Optimizations:**
+
+**SCALE-001: Database Indexing**
+
+- Add indexes on frequently queried fields
+- Effort: 1 day | Impact: High if slow
+
+**SCALE-002: CDN for Assets**
+
+- Move static assets to CDN
+- Effort: 2 days | Impact: Medium
+
+**SCALE-003: Caching Strategy**
+
+- Redis cache for token prices, proposals
+- Effort: 1 week | Impact: High at scale
+
+**SCALE-004: Backend Pagination**
+
+- Paginate large lists (100+ items)
+- Effort: 3 days | Impact: Medium
+
+**SCALE-005: Image Optimization**
+
+- Compress and lazy-load images
+- Effort: 2 days | Impact: Low (already using Next.js Image)
+
+---
+
+### Category 5: Security Enhancements
+
+**When to Prioritize:**
+
+- After security audit
+- New vulnerabilities discovered
+- Handling sensitive data
+
+**Security Improvements:**
+
+**SECURITY-001: Rate Limiting**
+
+- Prevent abuse of API endpoints
+- Effort: 2 days | Impact: Medium
+
+**SECURITY-002: 2FA for Admins**
+
+- Two-factor auth for admin accounts
+- Effort: 1 week | Impact: High
+
+**SECURITY-003: Smart Contract Audit**
+
+- Professional third-party audit
+- Effort: External | Cost: $5-10k
+
+**SECURITY-004: Bug Bounty Program**
+
+- Reward security researchers
+- Effort: Setup | Ongoing cost
+
+**SECURITY-005: Wallet Multi-Sig**
+
+- Foundation wallet requires multiple signatures
+- Effort: 2 weeks | Impact: High
+
+---
+
+### Category 6: Analytics & Insights
+
+**When to Prioritize:**
+
+- Need better decision-making data
+- Investors/stakeholders want metrics
+- Optimizing conversion funnels
+
+**Analytics Features:**
+
+**ANALYTICS-001: Admin Dashboard**
+
+- Charts showing platform health
+- Metrics: proposals/day, acceptance rate, etc.
+- Effort: 1 week
+
+**ANALYTICS-002: Co-Founder Insights**
+
+- Show personal stats (success rate, avg time)
+- Effort: 3 days
+
+**ANALYTICS-003: Funnel Analysis**
+
+- Track dropoff at each step
+- Effort: 2 days (using existing analytics)
+
+**ANALYTICS-004: Cohort Analysis**
+
+- Retention by signup date
+- Effort: 3 days
+
+---
+
+### Category 7: Community & Governance
+
+**Long-Term Features:**
+
+**COMMUNITY-001: Governance Voting**
+
+- Token holders vote on platform changes
+- Effort: 4 weeks | Post-MVP
+
+**COMMUNITY-002: Discussion Forum**
+
+- Community space for ideas
+- Effort: 2 weeks (or use Discord)
+
+**COMMUNITY-003: Ambassador Program**
+
+- Power users help onboard new users
+- Effort: Operational, not technical
+
+**COMMUNITY-004: DAO Structure**
+
+- Decentralize decision-making
+- Effort: 8 weeks | Long-term
+
+---
+
+## Weekly Sprint Process
+
+### Sprint Cycle (2 weeks)
+
+**Week 1: Planning & Build**
+
+**Monday:**
+
+- Review metrics from last sprint
+- Review user feedback (support tickets, surveys)
+- Calculate RICE scores for top issues
+- Choose 2-3 high-impact items
+- Break into tasks
+
+**Tuesday-Thursday:**
+
+- Build features
+- Daily standup (async)
+- Ship small improvements daily
+
+**Friday:**
+
+- Deploy to staging
+- Internal testing
+- Gather feedback
+
+**Week 2: Polish & Ship**
+
+**Monday:**
+
+- Final polish based on staging feedback
+- Write release notes
+- Prepare announcement
+
+**Tuesday:**
+
+- Deploy to production
+- Monitor for issues
+- Announce to community
+
+**Wednesday-Friday:**
+
+- Bug fixes if needed
+- Gather user feedback on new features
+- Update metrics dashboard
+
+---
+
+## User Feedback Collection
+
+### Methods
+
+**1. In-App Feedback Widget**
+
+- Floating button on all pages
+- Quick form: "What's confusing?" or "Feature request"
+- Effort: 1 day to implement
+
+**2. User Interviews (Monthly)**
+
+- 5-10 power users
+- 30-minute video calls
+- Ask: "What's frustrating?" and "What would make you use this 10x more?"
+
+**3. Support Tickets**
+
+- Track common issues
+- Patterns reveal priorities
+
+**4. Behavior Analytics**
+
+- Where do users drop off?
+- What features are never used?
+- Which pages have high bounce rates?
+
+**5. NPS Survey (Quarterly)**
+
+- "How likely to recommend?" (0-10)
+- Track trend over time
+- Ask detractors why
+
+---
+
+## Example: First 3 Months Post-Launch
+
+### Month 1: Stabilize & Learn
+
+**Week 1-2:**
+
+- Monitor for critical bugs
+- Fix any blockers immediately
+- Gather initial feedback
+
+**Week 3-4:**
+
+- Implement top 3 UX issues from feedback
+- Example: Notification system, proposal templates
+- Improve onboarding based on observed confusion
+
+**Metrics Goal:**
+
+- 0 critical bugs
+- < 5% proposal failure rate
+- Track baseline metrics
+
+---
+
+### Month 2: Optimize Core Flows
+
+**Week 5-6:**
+
+- Implement proposal comments (FEATURE-001)
+- Add mobile navigation improvements
+- Email notifications
+
+**Week 7-8:**
+
+- Portfolio showcase (FEATURE-003)
+- Advanced search if > 50 proposals
+- Performance optimizations
+
+**Metrics Goal:**
+
+- 20% increase in proposal completion rate
+- 50% reduction in support tickets
+- 30% increase in repeat users
+
+---
+
+### Month 3: Scale & Grow
+
+**Week 9-10:**
+
+- Referral program (FEATURE-008)
+- Admin analytics dashboard
+- Security hardening (rate limiting)
+
+**Week 11-12:**
+
+- Multi-mission projects (FEATURE-002) if demand exists
+- Community features (forum or Discord)
+- Marketing push
+
+**Metrics Goal:**
+
+- 100 active co-founders
+- 50 proposals completed
+- 10k+ $CSTAKE distributed
+
+---
+
+## Decision-Making Framework
+
+### When to Build a Feature
+
+**YES, build it if:**
+
+- ✅ Solves a pain point mentioned by 3+ users
+- ✅ RICE score > 500
+- ✅ Aligns with platform vision
+- ✅ Technically feasible in < 2 weeks
+
+**NO, defer it if:**
+
+- ❌ Only 1 user requested it
+- ❌ RICE score < 300
+- ❌ Scope creep / feature bloat
+- ❌ Would take > 1 month
+
+**MAYBE, consider if:**
+
+- ⚠️ High effort but high impact
+- ⚠️ Strategic (competitive advantage)
+- ⚠️ Requested by key stakeholder
+
+---
+
+## Adaptive Roadmap Template
+
+Use this template to plan each sprint:
+
+```markdown
+## Sprint X: [Date Range]
+
+### Top Metrics This Sprint
+- Metric 1: [Current] → [Goal]
+- Metric 2: [Current] → [Goal]
+
+### User Feedback Highlights
+- Issue 1: [Description] (5 reports)
+- Issue 2: [Description] (3 reports)
+- Request 1: [Description] (8 requests)
+
+### Prioritized Items (RICE Scored)
+1. [ITEM-001]: [Name] - RICE: 850 - Effort: 3d
+2. [ITEM-002]: [Name] - RICE: 720 - Effort: 1w
+3. [ITEM-003]: [Name] - RICE: 600 - Effort: 2d
+
+### Tasks
+- [ ] Task 1
+- [ ] Task 2
+- [ ] Task 3
+
+### Success Criteria
+- [ ] Metric 1 improved by X%
+- [ ] Issue 1 reports reduced
+- [ ] Feature 1 used by X% of users
+
+### Retrospective
+[After sprint: What went well? What didn't? What to change?]
 ```
 
 ---
 
-### PHASE-6-TICKET-002: Create Uniswap Price Fetching Service
+## Long-Term Vision (6-12 Months)
 
-**Priority:** P0 | **Time:** 2 hours
+### Vision Milestones
 
-**Goal:** Build backend service to fetch $CSTAKE price from Uniswap pool
+**Q1 (Months 1-3): Stabilize**
 
-**What to Do:**
+- 100 active co-founders
+- 50 completed proposals
+- Core flows optimized
 
-1. Create `src/lib/price/uniswapService.ts`
-2. Query Uniswap V2/V3 pool for reserves
-3. Calculate price ratio
-4. Handle token decimals
-5. Return price in USD (if paired with USDC)
+**Q2 (Months 4-6): Scale**
 
-**Files to Create:**
+- 500 active co-founders
+- 200 completed proposals
+- Multi-mission support
+- Advanced features (milestones, dispute resolution)
 
-- `src/lib/price/uniswapService.ts`
-- `src/lib/price/cache.ts` (in-memory cache)
+**Q3 (Months 7-9): Community**
 
-**Definition of Done:**
+- 1,000 active co-founders
+- Governance voting live
+- Ambassador program
+- Multiple chains supported
 
-- [ ] Can query Uniswap pool contract
-- [ ] Calculates price from reserves
-- [ ] Handles 18-decimal tokens
-- [ ] Returns price as number (e.g., 1.23)
-- [ ] Error handling for missing pool
-- [ ] Falls back to 0 if pool doesn't exist yet
-- [ ] Works on testnet
+**Q4 (Months 10-12): Decentralize**
 
-**Code Pattern:**
-
-```typescript
-// src/lib/price/uniswapService.ts
-import { ethers } from 'ethers'
-
-const RPC_URL = process.env.BASE_SEPOLIA_RPC_URL!
-const UNISWAP_POOL_ADDRESS = process.env.CSTAKE_UNISWAP_POOL_ADDRESS
-
-// Uniswap V2 Pool ABI (minimal)
-const POOL_ABI = [
-  'function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)',
-  'function token0() external view returns (address)',
-  'function token1() external view returns (address)',
-]
-
-export class UniswapPriceService {
-  private provider: ethers.JsonRpcProvider
-  
-  constructor() {
-    this.provider = new ethers.JsonRpcProvider(RPC_URL)
-  }
-  
-  async getPrice(): Promise<number> {
-    try {
-      if (!UNISWAP_POOL_ADDRESS) {
-        console.warn('No Uniswap pool configured, returning 0')
-        return 0
-      }
-      
-      const poolContract = new ethers.Contract(
-        UNISWAP_POOL_ADDRESS,
-        POOL_ABI,
-        this.provider
-      )
-      
-      // Get reserves
-      const reserves = await poolContract.getReserves()
-      const reserve0 = reserves.reserve0
-      const reserve1 = reserves.reserve1
-      
-      // Get token addresses to determine order
-      const token0 = await poolContract.token0()
-      const token1 = await poolContract.token1()
-      
-      // Assume token0 is $CSTAKE, token1 is USDC
-      // If reversed, adjust calculation
-      const cstakeTokenAddress = process.env.CSTAKE_TOKEN_ADDRESS_TESTNET!
-      
-      let price: number
-      if (token0.toLowerCase() === cstakeTokenAddress.toLowerCase()) {
-        // $CSTAKE is token0, USDC is token1
-        // Price = reserve1 / reserve0
-        price = Number(reserve1) / Number(reserve0)
-      } else {
-        // $CSTAKE is token1, USDC is token0
-        // Price = reserve0 / reserve1
-        price = Number(reserve0) / Number(reserve1)
-      }
-      
-      // Adjust for decimals (both 18 decimals, so ratio is correct)
-      // If USDC is 6 decimals, divide by 1e12
-      
-      return price
-    } catch (error) {
-      console.error('Failed to fetch price from Uniswap:', error)
-      return 0
-    }
-  }
-}
-
-export const uniswapPriceService = new UniswapPriceService()
-```
-```typescript
-// src/lib/price/cache.ts
-interface CachedPrice {
-  price: number
-  timestamp: number
-}
-
-let cache: CachedPrice | null = null
-const CACHE_DURATION = 60000 // 60 seconds
-
-export function getCachedPrice(): number | null {
-  if (!cache) return null
-  
-  const now = Date.now()
-  if (now - cache.timestamp > CACHE_DURATION) {
-    cache = null
-    return null
-  }
-  
-  return cache.price
-}
-
-export function setCachedPrice(price: number): void {
-  cache = {
-    price,
-    timestamp: Date.now(),
-  }
-}
-```
+- 5,000 active co-founders
+- DAO structure implemented
+- Platform governance by token holders
+- AI mediator (replace manual admin)
 
 ---
 
-### PHASE-6-TICKET-003: API Endpoint - GET /api/token-price
+## Success Criteria: Phase 8
 
-**Priority:** P0 | **Time:** 30 min
+Phase 8 is ongoing, but success looks like:
 
-**Goal:** Create public API endpoint to serve cached token price
+✅ **Responsive to User Needs**
 
-**What to Do:**
+- Shipping improvements every 2 weeks
+- User satisfaction increasing (NPS > 50)
+- Support tickets decreasing
 
-1. Create `src/app/api/token-price/route.ts`
-2. Check cache first
-3. Fetch from Uniswap if cache miss
-4. Return price with timestamp
-5. Set cache for next request
+✅ **Data-Driven Decisions**
 
-**Files to Create:**
+- All features have RICE scores
+- Metrics tracked and improving
+- A/B testing major changes
 
-- `src/app/api/token-price/route.ts`
+✅ **Sustainable Growth**
 
-**Definition of Done:**
+- User count growing 20% month-over-month
+- Token distribution increasing
+- Platform generating value for all stakeholders
 
-- [ ] GET `/api/token-price` endpoint works
-- [ ] No authentication required (public)
-- [ ] Returns cached price if available
-- [ ] Fetches new price if cache expired
-- [ ] Response includes price, currency, timestamp
-- [ ] Error handling returns 0 price
-- [ ] Response time < 500ms (due to cache)
+✅ **Technical Excellence**
 
-**Code Pattern:**
+- No critical bugs
+- Performance stays fast (< 3s)
+- Security maintained
 
-```typescript
-// src/app/api/token-price/route.ts
-import { NextResponse } from 'next/server'
-import { uniswapPriceService } from '@/lib/price/uniswapService'
-import { getCachedPrice, setCachedPrice } from '@/lib/price/cache'
+✅ **Community Engaged**
 
-export async function GET() {
-  try {
-    // Check cache first
-    let price = getCachedPrice()
-    
-    if (price === null) {
-      // Cache miss, fetch from Uniswap
-      price = await uniswapPriceService.getPrice()
-      setCachedPrice(price)
-    }
-    
-    return NextResponse.json({
-      success: true,
-      price,
-      currency: 'USD',
-      timestamp: new Date().toISOString(),
-    })
-  } catch (error) {
-    console.error('Token price fetch failed:', error)
-    return NextResponse.json({
-      success: false,
-      price: 0,
-      currency: 'USD',
-      error: 'Failed to fetch price',
-    }, { status: 500 })
-  }
-}
-
-// Optional: Add revalidate for Next.js caching
-export const revalidate = 60 // Revalidate every 60 seconds
-```
+- Active Discord/forum
+- User-generated content (proposals, discussions)
+- Organic growth through referrals
 
 ---
 
-### PHASE-6-TICKET-004: Create Token Price Hook
+## The Infinite Game
 
-**Priority:** P0 | **Time:** 30 min
+Phase 8 never ends. The platform evolves continuously.
 
-**Goal:** Create React hook to fetch and cache token price on frontend
+**Key Mindset:**
 
-**What to Do:**
+- Build → Measure → Learn → Repeat
+- User feedback > Roadmap rigidity
+- Iterate > Perfect
+- Ship > Plan
 
-1. Create `src/hooks/useTokenPrice.ts`
-2. Fetch from /api/token-price
-3. Use React Query for caching and auto-refresh
-4. Handle loading and error states
+**Remember:**
 
-**Files to Create:**
+- Twitter started as a podcast app
+- Instagram started as a check-in app
+- Slack started as a gaming company
 
-- `src/hooks/useTokenPrice.ts`
+**The platform will evolve beyond the original vision.**
 
-**Definition of Done:**
-
-- [ ] Hook fetches price from API
-- [ ] Returns price as number
-- [ ] Caches for 60 seconds
-- [ ] Auto-refetches on window focus
-- [ ] Loading state
-- [ ] Error state
-- [ ] Can manually refetch
-
-**Code Pattern:**
-
-```typescript
-// src/hooks/useTokenPrice.ts
-'use client'
-import { useQuery } from '@tanstack/react-query'
-
-interface TokenPriceResponse {
-  success: boolean
-  price: number
-  currency: string
-  timestamp: string
-}
-
-export function useTokenPrice() {
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['tokenPrice'],
-    queryFn: async () => {
-      const response = await fetch('/api/token-price')
-      const data: TokenPriceResponse = await response.json()
-      return data
-    },
-    staleTime: 60000, // Consider data fresh for 60 seconds
-    refetchInterval: 60000, // Auto-refetch every 60 seconds
-    refetchOnWindowFocus: true,
-  })
-  
-  return {
-    price: data?.price ?? 0,
-    currency: data?.currency ?? 'USD',
-    isLoading,
-    error,
-    refetch,
-  }
-}
-```
+**That's not a bug, it's a feature.** ✨
 
 ---
 
-### PHASE-6-TICKET-005: Install React Query
+## Final Note: Stay Lean
 
-**Priority:** P0 | **Time:** 15 min
+Avoid these traps:
 
-**Goal:** Install and configure React Query for data fetching
+- ❌ Building features nobody asked for
+- ❌ Over-engineering solutions
+- ❌ Ignoring user feedback
+- ❌ Analysis paralysis
+- ❌ Premature scaling
 
-**What to Do:**
+Stay focused on:
 
-1. Install @tanstack/react-query
-2. Add QueryClientProvider to app providers
-3. Configure default options
-4. Add devtools (optional)
+- ✅ Solving real user problems
+- ✅ Shipping fast and often
+- ✅ Measuring what matters
+- ✅ Listening to users
+- ✅ Iterating relentlessly
 
-**Commands:**
+**The best product is built WITH users, not FOR them.**
 
-```bash
-npm install @tanstack/react-query
-npm install --save-dev @tanstack/react-query-devtools
-```
-
-**Files to Edit:**
-
-- `src/app/providers.tsx`
-- `package.json`
-
-**Definition of Done:**
-
-- [ ] React Query installed
-- [ ] QueryClientProvider wraps app
-- [ ] Default options configured
-- [ ] Devtools available in dev mode
-- [ ] No TypeScript errors
-
-**Code Pattern:**
-
-```typescript
-// src/app/providers.tsx (UPDATE)
-'use client'
-import { ThirdwebProvider } from 'thirdweb/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { useState } from 'react'
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  const [queryClient] = useState(() => new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60000, // 60 seconds
-        refetchOnWindowFocus: true,
-      },
-    },
-  }))
-  
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThirdwebProvider>
-        {children}
-        {process.env.NODE_ENV === 'development' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
-      </ThirdwebProvider>
-    </QueryClientProvider>
-  )
-}
-```
-
----
-
-### PHASE-6-TICKET-006: Create WalletModule Component
-
-**Priority:** P0 | **Time:** 1 hour
-
-**Goal:** Build component showing balance, price, and USD value
-
-**What to Do:**
-
-1. Create `src/components/dashboard/WalletModule.tsx`
-2. Use useTokenBalance hook
-3. Use useTokenPrice hook
-4. Calculate USD value (balance * price)
-5. Display all three values beautifully
-6. Add loading states
-
-**Files to Create:**
-
-- `src/components/dashboard/WalletModule.tsx`
-
-**Definition of Done:**
-
-- [ ] Component displays $CSTAKE balance
-- [ ] Component displays current price
-- [ ] Component displays USD value
-- [ ] Formatted numbers with commas and decimals
-- [ ] Loading skeletons while fetching
-- [ ] Error states if fetch fails
-- [ ] Styled with design system
-- [ ] Mobile responsive
-
-**Code Pattern:**
-
-```typescript
-// src/components/dashboard/WalletModule.tsx
-'use client'
-import { useActiveAccount } from 'thirdweb/react'
-import { useTokenBalance } from '@/hooks/useTokenBalance'
-import { useTokenPrice } from '@/hooks/useTokenPrice'
-
-export function WalletModule() {
-  const account = useActiveAccount()
-  const { balanceFormatted, balance, isLoading: balanceLoading } = useTokenBalance(account?.address)
-  const { price, isLoading: priceLoading } = useTokenPrice()
-  
-  const usdValue = Number(balance) * price
-  const usdValueFormatted = usdValue.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
-  
-  if (!account) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-        <p className="text-gray-600">Connect wallet to view balance</p>
-      </div>
-    )
-  }
-  
-  return (
-    <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
-      <h3 className="text-sm font-semibold opacity-90 mb-4">Your Wallet</h3>
-      
-      <div className="space-y-4">
-        {/* Balance */}
-        <div>
-          <p className="text-sm opacity-75 mb-1">$CSTAKE Balance</p>
-          {balanceLoading ? (
-            <div className="h-8 bg-white/20 rounded animate-pulse" />
-          ) : (
-            <p className="text-3xl font-bold">{balanceFormatted}</p>
-          )}
-        </div>
-        
-        {/* Price */}
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm opacity-75 mb-1">Current Price</p>
-            {priceLoading ? (
-              <div className="h-6 w-20 bg-white/20 rounded animate-pulse" />
-            ) : (
-              <p className="text-lg font-semibold">
-                ${price.toFixed(4)}
-              </p>
-            )}
-          </div>
-          
-          <div className="text-right">
-            <p className="text-sm opacity-75 mb-1">Total Value</p>
-            {balanceLoading || priceLoading ? (
-              <div className="h-6 w-24 bg-white/20 rounded animate-pulse ml-auto" />
-            ) : (
-              <p className="text-lg font-semibold">{usdValueFormatted}</p>
-            )}
-          </div>
-        </div>
-      </div>
-      
-      {/* Additional Info */}
-      <div className="mt-4 pt-4 border-t border-white/20">
-        <p className="text-xs opacity-75">
-          Price updates every 60 seconds from Uniswap
-        </p>
-      </div>
-    </div>
-  )
-}
-```
-
----
-
-### PHASE-6-TICKET-007: Enhanced Proposals List Component
-
-**Priority:** P1 | **Time:** 45 min
-
-**Goal:** Enhance proposals list to show earned amounts and status
-
-**What to Do:**
-
-1. Update `src/components/dashboard/ProposalsModule.tsx` (or create)
-2. Show all user proposals with status
-3. Highlight completed proposals with earned amount
-4. Show pending, in-progress, rejected states
-5. Add filters (optional)
-
-**Files to Create/Edit:**
-
-- `src/components/dashboard/ProposalsModule.tsx`
-
-**Definition of Done:**
-
-- [ ] Component displays all user proposals
-- [ ] Shows title, status, amount
-- [ ] Completed proposals highlighted in green
-- [ ] Shows earned amount for completed
-- [ ] Shows requested amount for pending
-- [ ] Color-coded status badges
-- [ ] Click to view details
-- [ ] Empty state if no proposals
-
-**Code Pattern:**
-
-```typescript
-// src/components/dashboard/ProposalsModule.tsx
-'use client'
-import { useEffect, useState } from 'react'
-import type { Proposal } from '@/types/proposal'
-import Link from 'next/link'
-
-export function ProposalsModule() {
-  const [proposals, setProposals] = useState<Proposal[]>([])
-  const [loading, setLoading] = useState(true)
-  
-  useEffect(() => {
-    fetchProposals()
-  }, [])
-  
-  const fetchProposals = async () => {
-    try {
-      const response = await fetch('/api/proposals/me')
-      const { proposals } = await response.json()
-      setProposals(proposals)
-    } catch (error) {
-      console.error('Failed to fetch proposals:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-  
-  const completedProposals = proposals.filter(p => p.status === 'completed')
-  const totalEarned = completedProposals.reduce((sum, p) => 
-    sum + (p.foundation_offer_cstake_amount || p.requested_cstake_amount), 
-    0
-  )
-  
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold">My Contributions</h3>
-        {completedProposals.length > 0 && (
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Total Earned</p>
-            <p className="text-lg font-bold text-green-600">
-              {totalEarned.toLocaleString()} $CSTAKE
-            </p>
-          </div>
-        )}
-      </div>
-      
-      {loading ? (
-        <p>Loading proposals...</p>
-      ) : proposals.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">No proposals yet</p>
-          <Link
-            href="/dashboard/propose"
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-          >
-            Submit Your First Proposal
-          </Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {proposals.map(proposal => (
-            <ProposalCard key={proposal.id} proposal={proposal} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ProposalCard({ proposal }: { proposal: Proposal }) {
-  const statusColors = {
-    pending_review: 'bg-yellow-100 text-yellow-800',
-    counter_offer_pending: 'bg-blue-100 text-blue-800',
-    approved: 'bg-green-100 text-green-800',
-    accepted: 'bg-green-100 text-green-800',
-    work_in_progress: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    rejected: 'bg-red-100 text-red-800',
-  }
-  
-  const amount = proposal.status === 'completed' 
-    ? (proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount)
-    : proposal.requested_cstake_amount
-  
-  return (
-    <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <h4 className="font-semibold">{proposal.title}</h4>
-          <p className="text-sm text-gray-600 mt-1">
-            {amount.toLocaleString()} $CSTAKE
-          </p>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[proposal.status]}`}>
-          {proposal.status.replace('_', ' ')}
-        </span>
-      </div>
-      
-      {proposal.status === 'completed' && proposal.contract_release_tx && (
-        <a
-          href={`https://sepolia.basescan.org/tx/${proposal.contract_release_tx}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
-        >
-          View transaction →
-        </a>
-      )}
-    </div>
-  )
-}
-```
-
----
-
-### PHASE-6-TICKET-008: Integrate Components into Dashboard
-
-**Priority:** P0 | **Time:** 30 min
-
-**Goal:** Add WalletModule and ProposalsModule to cofounder dashboard
-
-**What to Do:**
-
-1. Update `src/app/cofounder-dashboard/page.tsx`
-2. Add WalletModule at top
-3. Add ProposalsModule below
-4. Adjust layout for better presentation
-5. Ensure responsive
-
-**Files to Edit:**
-
-- `src/app/cofounder-dashboard/page.tsx`
-
-**Definition of Done:**
-
-- [ ] WalletModule visible at top of dashboard
-- [ ] ProposalsModule visible below wallet
-- [ ] Both components load data correctly
-- [ ] Layout is clean and organized
-- [ ] Mobile responsive
-- [ ] Loading states work
-- [ ] Auth protection still active
-
-**Code Pattern:**
-
-```typescript
-// src/app/cofounder-dashboard/page.tsx (UPDATE)
-import { WalletModule } from '@/components/dashboard/WalletModule'
-import { ProposalsModule } from '@/components/dashboard/ProposalsModule'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Layout } from '@/components/Layout'
-
-export default function CofounderDashboardPage() {
-  return (
-    <Layout>
-      <ProtectedRoute>
-        <div className="max-w-7xl mx-auto py-8 px-4">
-          <h1 className="text-4xl font-bold mb-8">Co-Founder Dashboard</h1>
-          
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Wallet Module - Takes 1 column */}
-            <div className="lg:col-span-1">
-              <WalletModule />
-            </div>
-            
-            {/* Proposals Module - Takes 2 columns */}
-            <div className="lg:col-span-2">
-              <ProposalsModule />
-            </div>
-          </div>
-          
-          {/* Additional sections can go here */}
-        </div>
-      </ProtectedRoute>
-    </Layout>
-  )
-}
-```
-
----
-
-### PHASE-6-TICKET-009: Add Environment Variables Documentation
-
-**Priority:** P2 | **Time:** 15 min
-
-**Goal:** Document all new environment variables needed for Phase 6
-
-**What to Do:**
-
-1. Update `.env.example`
-2. Document each variable
-3. Add to README if needed
-
-**Files to Edit:**
-
-- `.env.example`
-- `README.md` (optional)
-
-**Definition of Done:**
-
-- [ ] All Phase 6 variables in .env.example
-- [ ] Clear descriptions for each
-- [ ] Example values provided
-- [ ] Links to where to get values
-
-**Environment Variables:**
-
-```bash
-# Token Configuration
-NEXT_PUBLIC_CSTAKE_TOKEN_ADDRESS=0x... # $CSTAKE token contract address
-CSTAKE_UNISWAP_POOL_ADDRESS=0x... # Uniswap V2 pool address (optional)
-
-# Already from Phase 5
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-```
-
----
-
-### PHASE-6-TICKET-010: Create Simple Portfolio View
-
-**Priority:** P2 | **Time:** 1 hour
-
-**Goal:** Add basic portfolio statistics and completed work showcase
-
-**What to Do:**
-
-1. Create `src/components/dashboard/PortfolioStats.tsx`
-2. Show stats: Total earned, completed projects, success rate
-3. Show list of completed work with links
-4. Simple charts (optional - use recharts if already installed)
-
-**Files to Create:**
-
-- `src/components/dashboard/PortfolioStats.tsx`
-
-**Definition of Done:**
-
-- [ ] Component shows key statistics
-- [ ] Total $CSTAKE earned
-- [ ] Number of completed proposals
-- [ ] Success rate (accepted/total)
-- [ ] List of completed work
-- [ ] Links to transaction receipts
-- [ ] Styled consistently
-- [ ] Mobile responsive
-
-**Code Pattern:**
-
-```typescript
-// src/components/dashboard/PortfolioStats.tsx
-'use client'
-import { useEffect, useState } from 'react'
-import type { Proposal } from '@/types/proposal'
-
-export function PortfolioStats() {
-  const [proposals, setProposals] = useState<Proposal[]>([])
-  
-  useEffect(() => {
-    fetchProposals()
-  }, [])
-  
-  const fetchProposals = async () => {
-    const response = await fetch('/api/proposals/me')
-    const { proposals } = await response.json()
-    setProposals(proposals)
-  }
-  
-  const completed = proposals.filter(p => p.status === 'completed')
-  const rejected = proposals.filter(p => p.status === 'rejected')
-  const total = proposals.length
-  
-  const successRate = total > 0 ? (completed.length / total * 100).toFixed(1) : 0
-  
-  const totalEarned = completed.reduce((sum, p) => 
-    sum + (p.foundation_offer_cstake_amount || p.requested_cstake_amount), 
-    0
-  )
-  
-  return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
-      <h3 className="text-xl font-bold mb-6">Portfolio Overview</h3>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <StatCard label="Total Earned" value={`${totalEarned.toLocaleString()} $CSTAKE`} />
-        <StatCard label="Completed" value={completed.length.toString()} />
-        <StatCard label="Success Rate" value={`${successRate}%`} />
-        <StatCard label="Total Proposals" value={total.toString()} />
-      </div>
-      
-      {completed.length > 0 && (
-        <div>
-          <h4 className="font-semibold mb-3">Completed Work</h4>
-          <div className="space-y-2">
-            {completed.map(proposal => (
-              <div key={proposal.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
-                <span className="font-medium">{proposal.title}</span>
-                <span className="text-green-600 font-semibold">
-                  +{(proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount).toLocaleString()} $CSTAKE
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="text-center">
-      <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{label}</p>
-    </div>
-  )
-}
-```
-
----
-
-### PHASE-6-TICKET-011: Add Real-Time Balance Updates
-
-**Priority:** P2 | **Time:** 30 min
-
-**Goal:** Ensure balance updates immediately after token release
-
-**What to Do:**
-
-1. Add refetch triggers in proposal response handlers
-2. Use React Query invalidation
-3. Show toast notification when tokens received
-4. Celebrate completed work with animation
-
-**Files to Edit:**
-
-- `src/app/cofounder-dashboard/page.tsx`
-- `src/hooks/useTokenBalance.ts`
-
-**Definition of Done:**
-
-- [ ] Balance refetches after work completion
-- [ ] Toast notification on token receipt
-- [ ] Smooth number animation (optional)
-- [ ] No page refresh needed
-- [ ] Works reliably
-
-**Code Pattern:**
-
-```typescript
-// In dashboard, after admin releases tokens
-import { useQueryClient } from '@tanstack/react-query'
-
-const queryClient = useQueryClient()
-
-const handleRefresh = () => {
-  // Invalidate balance and proposals queries
-  queryClient.invalidateQueries({ queryKey: ['tokenBalance'] })
-  queryClient.invalidateQueries({ queryKey: ['proposals'] })
-}
-
-// Call handleRefresh when detecting status change to 'completed'
-// Or setup polling for proposals with work_in_progress status
-```
-
----
-
-### PHASE-6-TICKET-012: E2E Test - Complete User Journey
-
-**Priority:** P0 | **Time:** 45 min
-
-**Goal:** Test complete co-founder experience from onboarding to earning
-
-**What to Do:**
-
-1. Test full user journey as co-founder
-2. Verify all dashboard features work
-3. Check balance updates correctly
-4. Verify price fetching works
-5. Test on mobile
-
-**Definition of Done:**
-
-- [ ] Can view empty dashboard (0 balance)
-- [ ] Can submit proposal
-- [ ] Can accept admin offer
-- [ ] Work status shows correctly
-- [ ] Can confirm work complete
-- [ ] Balance increases after admin releases
-- [ ] USD value calculates correctly
-- [ ] Portfolio stats update
-- [ ] All numbers format correctly
-- [ ] Mobile responsive
-
-**Test Checklist:**
-
-```
-Initial State:
-✓ Dashboard shows 0 $CSTAKE balance
-✓ Price displays correctly
-✓ USD value is $0.00
-
-Submit & Accept Proposal:
-✓ Submit proposal for 1000 $CSTAKE
-✓ Admin accepts
-✓ Pioneer accepts (triggers contract)
-✓ Status shows "work_in_progress"
-
-Complete Work:
-✓ Click "Mark Work Complete"
-✓ Confirmation saved
-✓ Admin sees confirmation
-✓ Admin releases tokens
-✓ Balance updates to 1000 $CSTAKE
-✓ USD value updates (1000 * price)
-✓ Portfolio shows 1 completed project
-✓ Total earned shows 1000 $CSTAKE
-
-Multiple Proposals:
-✓ Submit second proposal
-✓ Complete cycle again
-✓ Balance shows cumulative total
-✓ Portfolio stats accurate
-
-Edge Cases:
-✓ Price fetch fails - shows 0 gracefully
-✓ Balance fetch fails - shows error state
-✓ Wallet disconnects - shows connect prompt
-✓ Network errors handled gracefully
-```
-
----
-
-## Implementation Order
-
-**Do these tickets in exact order:**
-
-1. **PHASE-6-TICKET-005** - Install React Query (15 min) ← **Do this first!**
-2. **PHASE-6-TICKET-001** - Token balance hook (45 min)
-3. **PHASE-6-TICKET-002** - Uniswap price service (2 hours)
-4. **PHASE-6-TICKET-003** - Price API endpoint (30 min)
-5. **PHASE-6-TICKET-004** - Token price hook (30 min)
-6. **PHASE-6-TICKET-006** - WalletModule component (1 hour)
-7. **PHASE-6-TICKET-007** - Enhanced proposals list (45 min)
-8. **PHASE-6-TICKET-008** - Integrate into dashboard (30 min)
-9. **PHASE-6-TICKET-009** - Environment vars docs (15 min)
-10. **PHASE-6-TICKET-010** - Portfolio view (1 hour)
-11. **PHASE-6-TICKET-011** - Real-time updates (30 min)
-12. **PHASE-6-TICKET-012** - E2E test (45 min)
-
-**Total Estimated Time: 8.5 hours**
-
-## New Dependencies
-
-```json
-{
-  "dependencies": {
-    "@tanstack/react-query": "^5.62.14",
-    "ethers": "^6.13.4" // Already added in Phase 5
-  },
-  "devDependencies": {
-    "@tanstack/react-query-devtools": "^5.62.14"
-  }
-}
-```
-
-## What We're Skipping
-
-- ❌ Historical price charts (CoinGecko/TradingView)
-- ❌ Portfolio analytics & insights
-- ❌ Token staking/delegation
-- ❌ Governance voting interface
-- ❌ NFT achievement badges
-- ❌ Social sharing features
-- ❌ Advanced filtering/sorting
-- ❌ Export portfolio as PDF
-
-These are post-MVP enhancements.
-
-## Success Criteria
-
-After Phase 6 is complete:
-
-✅ Co-founders see their $CSTAKE balance
-
-✅ Real-time token price displayed
-
-✅ USD value calculated and shown
-
-✅ Portfolio of completed work visible
-
-✅ Dashboard is beautiful and motivating
-
-✅ All numbers update in real-time
-
-✅ Mobile responsive
-
-✅ Ready for polish and launch prep
-
-## The "Aha Moment"
-
-This phase creates the **dopamine hit** for co-founders:
-
-```
-Submit Proposal
-    ↓
-Do the Work
-    ↓
-Get Tokens Released
-    ↓
-SEE BALANCE INCREASE 🎉
-    ↓
-SEE USD VALUE 💰
-    ↓
-"I own part of this!"
-```
-
-This is what makes CrowdStaking addictive and viral.
-
-## Next Steps After Phase 6
-
-Phase 6 completes the core MVP! Next:
-
-- Phase 7: Polish, testing, bug fixes
-- Phase 8: Security audit
-- Phase 9: Testnet beta with real users
-- Phase 10: Mainnet deployment
-- Post-Launch: Marketing, community, iteration
-
-The full CrowdStaking platform is now functional from end to end! 🚀
+Now go ship! 🚢

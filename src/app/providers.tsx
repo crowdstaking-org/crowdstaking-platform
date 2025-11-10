@@ -12,6 +12,7 @@ import { client, supportedChains } from "@/lib/thirdweb";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   // Create QueryClient instance with default options
@@ -29,6 +30,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <ThirdwebProvider>
         {children}
+        {/* Toast notifications */}
+        <Toaster />
         {/* Show React Query Devtools in development mode */}
         {process.env.NODE_ENV === 'development' && (
           <ReactQueryDevtools initialIsOpen={false} />

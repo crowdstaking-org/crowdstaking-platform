@@ -97,18 +97,18 @@ export default function FounderDashboardPage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8 overflow-x-auto">
-            <div className="flex border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm mb-8 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 min-w-max sm:min-w-0">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-6 py-4 font-semibold transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                    className={`flex items-center space-x-2 px-4 sm:px-6 py-4 font-semibold transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                   >
                     <Icon className="w-5 h-5" />
-                    <span>{tab.label}</span>
+                    <span className="text-sm sm:text-base">{tab.label}</span>
                   </button>
                 )
               })}
@@ -134,7 +134,7 @@ export default function FounderDashboardPage() {
               </div>
 
               {/* Two Column Layout */}
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
                 {/* Active Mini-Missions */}
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">

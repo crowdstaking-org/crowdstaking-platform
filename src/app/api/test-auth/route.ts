@@ -1,6 +1,8 @@
 /**
  * Test Auth Endpoint
  * Verifies authentication helper functions work correctly
+ * 
+ * SECURITY: Only available in development mode
  */
 
 import { NextRequest } from 'next/server'
@@ -8,6 +10,12 @@ import { requireAuth, getAuthenticatedWallet } from '@/lib/auth'
 import { successResponse, errorResponse } from '@/lib/api'
 
 export async function GET(request: NextRequest) {
+  // SECURITY: Disable in production
+  if (process.env.NODE_ENV === 'production') {
+    return errorResponse('Not Found', 404)
+  }
+  
+
   try {
     // Try to get wallet (optional auth)
     const wallet = getAuthenticatedWallet(request)
@@ -30,6 +38,11 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // SECURITY: Disable in production
+  if (process.env.NODE_ENV === 'production') {
+    return errorResponse('Not Found', 404)
+  }
+  
   try {
     // Require authentication (mandatory)
     const wallet = requireAuth(request)

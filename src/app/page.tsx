@@ -1,17 +1,44 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Layout } from '@/components/Layout'
 import { NewHeroSection } from '@/components/NewHeroSection'
-import { MarketplaceShowcase } from '@/components/MarketplaceShowcase'
-import { DoubleHandshakeSection } from '@/components/DoubleHandshakeSection'
-import { OldVsNewSection } from '@/components/OldVsNewSection'
-import { MovementSection } from '@/components/MovementSection'
-import { FinalCTASection } from '@/components/FinalCTASection'
 import { useTheme } from '@/hooks/useTheme'
+
+/**
+ * Performance Optimization: Dynamic imports for below-the-fold components
+ * These components are lazy-loaded to reduce initial bundle size
+ */
+const MarketplaceShowcase = dynamic(
+  () => import('@/components/MarketplaceShowcase').then(mod => ({ default: mod.MarketplaceShowcase })),
+  { ssr: true }
+)
+
+const DoubleHandshakeSection = dynamic(
+  () => import('@/components/DoubleHandshakeSection').then(mod => ({ default: mod.DoubleHandshakeSection })),
+  { ssr: true }
+)
+
+const OldVsNewSection = dynamic(
+  () => import('@/components/OldVsNewSection').then(mod => ({ default: mod.OldVsNewSection })),
+  { ssr: true }
+)
+
+const MovementSection = dynamic(
+  () => import('@/components/MovementSection').then(mod => ({ default: mod.MovementSection })),
+  { ssr: true }
+)
+
+const FinalCTASection = dynamic(
+  () => import('@/components/FinalCTASection').then(mod => ({ default: mod.FinalCTASection })),
+  { ssr: true }
+)
 
 /**
  * Home page - renders the main CrowdStaking landing page
  * New structure with full-screen hero and clear narrative flow
+ * 
+ * PERFORMANCE: Below-the-fold sections are dynamically imported
  */
 export default function Home() {
   const { theme } = useTheme()
