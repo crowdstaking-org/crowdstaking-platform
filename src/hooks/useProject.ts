@@ -94,6 +94,45 @@ export function useFounderProjects(founderAddress?: string) {
 }
 
 /**
+ * Hook to load all projects (public access, no authentication required)
+ */
+export function useProjects(projectId?: string) {
+  const [projects, setProjects] = useState<Project[]>([])
+  const [project, setProject] = useState<Project | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+
+    // Fetch all projects without authentication
+    fetchProjects()
+      .then((data) => {
+        setProjects(data)
+        
+        // If projectId is provided, find and set that specific project
+        if (projectId && data.length > 0) {
+          const foundProject = data.find(p => p.id === projectId)
+          setProject(foundProject || null)
+        } else if (data.length > 0) {
+          // If no projectId, set first project as fallback
+          setProject(data[0])
+        }
+        
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Error fetching projects:', err)
+        setError(err.message)
+        setLoading(false)
+      })
+  }, [projectId])
+
+  return { projects, project, loading, error }
+}
+
+/**
  * Hook to load a single project with stats
  */
 export function useProject(projectId?: string) {

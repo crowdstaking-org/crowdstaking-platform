@@ -24,8 +24,8 @@ import { SettingsTab } from '@/components/founder/SettingsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { useFounderProjects } from '@/hooks/useProject'
+import { useProjects } from '@/hooks/useProject'
+import { ProtectedButton } from '@/components/auth/ProtectedButton'
 import type { Project, ProjectStats } from '@/types/project'
 
 /**
@@ -34,8 +34,8 @@ import type { Project, ProjectStats } from '@/types/project'
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { wallet, isAuthenticated, login } = useAuth()
-  const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
+  const projectId = searchParams.get('project') || undefined
+  const { projects, project: loadedProject, loading: projectsLoading } = useProjects(projectId)
   
   const [activeTab, setActiveTab] = useState('overview')
   const [currentContext, setCurrentContext] = useState('project-flight-ai')
@@ -43,24 +43,12 @@ function DashboardInner() {
   const [stats, setStats] = useState<ProjectStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
 
-  // Load project from URL parameter or first available project
+  // Use the project loaded by useProjects hook
   useEffect(() => {
-    const projectId = searchParams.get('project')
-    
-    if (projectId && projects && projects.length > 0) {
-      // Find the project with the matching ID
-      const selectedProject = projects.find(p => p.id === projectId)
-      if (selectedProject) {
-        setProject(selectedProject)
-        return
-      }
+    if (loadedProject) {
+      setProject(loadedProject)
     }
-    
-    // Fallback: Load first project when projects are available
-    if (projects && projects.length > 0 && !project) {
-      setProject(projects[0])
-    }
-  }, [projects, project, searchParams])
+  }, [loadedProject])
 
   // Load stats when project changes
   useEffect(() => {
@@ -122,60 +110,7 @@ function DashboardInner() {
     },
   ]
 
-  // Show auth required if not connected
-  if (!isAuthenticated || !wallet) {
-    return (
-      <Layout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-          <div className="max-w-2xl mx-auto px-4 text-center">
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Connect Your Wallet
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
-              Please connect your wallet to access your founder dashboard and manage your projects.
-            </p>
-            
-            <button
-              onClick={login}
-              className="inline-flex items-center px-8 py-4 bg-blue-600 dark:bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-            >
-              Connect Wallet
-            </button>
-
-            <div className="mt-12 grid md:grid-cols-3 gap-6">
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Manage Projects
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Create and manage your startup projects
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Review Proposals
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Accept proposals and build your team
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                  Track Growth
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Monitor tokenomics and team metrics
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Layout>
-    )
-  }
-
+  // Dashboard is now public - no auth check required
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -293,13 +228,14 @@ function DashboardInner() {
                     </div>
                   </div>
 
-                  <Link
-                    href="/create-mini-mission"
+                  <ProtectedButton
+                    onClick={() => router.push('/create-mini-mission')}
+                    actionName="Create Mission"
                     className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
                   >
                     <Plus className="w-5 h-5" />
                     <span>New Mini-Mission</span>
-                  </Link>
+                  </ProtectedButton>
                 </div>
 
                 {/* Project Statistics */}
@@ -358,13 +294,14 @@ function DashboardInner() {
                     </div>
                   )}
 
-                  <Link
-                    href="/liquidity-wizard"
+                  <ProtectedButton
+                    onClick={() => router.push('/liquidity-wizard')}
+                    actionName="Make Tokens Liquid"
                     className="w-full inline-flex items-center justify-center space-x-2 bg-purple-600 dark:bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold"
                   >
                     <Droplets className="w-5 h-5" />
                     <span>Make Your Tokens Liquid Now</span>
-                  </Link>
+                  </ProtectedButton>
                 </div>
               </div>
             </div>
