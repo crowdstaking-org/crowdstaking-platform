@@ -21,10 +21,10 @@ export function LegalFortressSection() {
           </div>
         </ScrollReveal>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 items-stretch">
           {/* Swiss Foundation */}
           <ScrollReveal direction="right" distance={60} duration={800}>
-            <div className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 rounded-xl p-8 shadow-lg border-2 border-blue-200 dark:border-blue-700">
+            <div className="bg-gradient-to-br from-blue-50 to-white dark:from-blue-900/20 dark:to-gray-800 rounded-xl p-8 shadow-lg border-2 border-blue-200 dark:border-blue-700 h-full flex flex-col">
               <div className="flex items-center justify-center w-16 h-16 bg-blue-600 dark:bg-blue-500 rounded-full mb-6">
                 <Shield className="w-8 h-8 text-white" />
               </div>
@@ -53,7 +53,7 @@ export function LegalFortressSection() {
 
           {/* Legal Wrapper */}
           <ScrollReveal direction="left" distance={60} duration={800}>
-            <div className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-800 rounded-xl p-8 shadow-lg border-2 border-green-200 dark:border-green-700">
+            <div className="bg-gradient-to-br from-green-50 to-white dark:from-green-900/20 dark:to-gray-800 rounded-xl p-8 shadow-lg border-2 border-green-200 dark:border-green-700 h-full flex flex-col">
               <div className="flex items-center justify-center w-16 h-16 bg-green-600 dark:bg-green-500 rounded-full mb-6">
                 <FileCheck className="w-8 h-8 text-white" />
               </div>
@@ -75,14 +75,14 @@ export function LegalFortressSection() {
                 allocation to the DAO treasury from the start.
               </p>
 
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4 flex-grow">
                 <span className="font-semibold">Legally:</span> The Foundation
                 offers founders a "Legal-Wrapper-as-a-Service". To use this
                 service, the founder signs a contract that mirrors the on-chain
                 split (the 1-2%) in the real world.
               </p>
 
-              <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-4 border-l-4 border-green-600 dark:border-green-400">
+              <div className="bg-green-100 dark:bg-green-900/30 rounded-lg p-4 border-l-4 border-green-600 dark:border-green-400 mt-auto">
                 <p className="text-gray-900 dark:text-white font-semibold">
                   The 1-2% isn't a "tax". It's the price for using the entire
                   technical and legal infrastructure. This is an unbeatable
