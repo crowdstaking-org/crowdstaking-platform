@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Build query - only published posts
     let query = supabase
       .from('blog_posts')
-      .select(\`
+      .select(`
         *,
         author:profiles!blog_posts_author_wallet_address_fkey (
           wallet_address,
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
           avatar_url,
           github_username
         )
-      \`, { count: 'exact' })
+      `, { count: 'exact' })
       .eq('status', 'published')
       .order('published_at', { ascending: false })
     

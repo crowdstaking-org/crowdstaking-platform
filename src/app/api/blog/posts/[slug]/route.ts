@@ -30,7 +30,7 @@ export async function GET(
     // Fetch post with author info (only published)
     const { data, error } = await supabase
       .from('blog_posts')
-      .select(\`
+      .select(`
         *,
         author:profiles!blog_posts_author_wallet_address_fkey (
           wallet_address,
@@ -38,7 +38,7 @@ export async function GET(
           avatar_url,
           github_username
         )
-      \`)
+      `)
       .eq('slug', slug)
       .eq('status', 'published')
       .single()
