@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+// Force dynamic rendering to avoid pre-rendering issues with useSearchParams
+export const dynamic = 'force-dynamic'
+
+import { useState, useEffect, Suspense } from 'react'
 import { Layout } from '@/components/Layout'
 import {
   Home,
@@ -26,10 +29,9 @@ import { useFounderProjects } from '@/hooks/useProject'
 import type { Project, ProjectStats } from '@/types/project'
 
 /**
- * Founder Dashboard page - Manage missions, review proposals, and track team
- * Client Component - has tab state management
+ * Inner component that uses useSearchParams
  */
-export default function FounderDashboardPage() {
+function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { wallet, isAuthenticated, login } = useAuth()
@@ -377,6 +379,26 @@ export default function FounderDashboardPage() {
         </div>
       </div>
     </Layout>
+  )
+}
+
+/**
+ * Main Dashboard Page - Wraps DashboardInner with Suspense
+ */
+export default function FounderDashboardPage() {
+  return (
+    <Suspense fallback={
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </div>
+      </Layout>
+    }>
+      <DashboardInner />
+    </Suspense>
   )
 }
 

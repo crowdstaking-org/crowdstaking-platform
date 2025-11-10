@@ -30,6 +30,7 @@ export function MissionsSection() {
           
           <ScrollReveal direction="up" scale={true} duration={900} distance={50}>
             <ProjectCard
+              projectId="1"
               title="QueryAI"
               mission="Building an AI-powered B2B SaaS tool to automate 80% of all customer support inquiries."
               tags={['SaaS', 'AI', 'B2B']}
@@ -43,6 +44,7 @@ export function MissionsSection() {
 
           <ScrollReveal direction="up" delay={150} scale={true} duration={900} distance={50}>
             <ProjectCard
+              projectId="2"
               title="Aura Protocol"
               mission="A decentralized, censorship-resistant identity protocol that enables 'Human Proof' without KYC."
               tags={['Solidity', 'Web3', 'Identity']}
@@ -55,6 +57,7 @@ export function MissionsSection() {
 
           <ScrollReveal direction="up" delay={300} scale={true} duration={900} distance={50}>
             <ProjectCard
+              projectId="3"
               title="VectorShift"
               mission="Developing a Rust-based vector database that is 10x faster for real-time AI applications."
               tags={['Rust', 'Database', 'AI', 'Infra']}

@@ -1,13 +1,5 @@
 import type { NextConfig } from "next";
 
-/**
- * Bundle Analyzer Configuration
- * Run with: ANALYZE=true npm run build
- */
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-})
-
 const nextConfig: NextConfig = {
   /**
    * Security Headers
@@ -77,4 +69,22 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withBundleAnalyzer(nextConfig);
+/**
+ * Bundle Analyzer Configuration (optional)
+ * Only loaded when ANALYZE=true is set
+ * Run with: ANALYZE=true npm run build
+ */
+let finalConfig = nextConfig;
+
+if (process.env.ANALYZE === 'true') {
+  try {
+    const withBundleAnalyzer = require('@next/bundle-analyzer')({
+      enabled: true,
+    });
+    finalConfig = withBundleAnalyzer(nextConfig);
+  } catch (e) {
+    console.warn('Bundle analyzer not available, continuing without it');
+  }
+}
+
+export default finalConfig;
