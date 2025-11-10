@@ -29,8 +29,8 @@ export default defineConfig({
   reporter: [
     ['html'],
     ['list'],
-    ...(process.env.CI ? [['github' as const]] : []),
-  ],
+    ...(process.env.CI ? [['github']] : []),
+  ] as any,
   
   // Shared settings for all the projects below
   use: {

@@ -1,19 +1,30 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { AlertTriangle, FileText } from 'lucide-react'
+import type { Project } from '@/types/project'
+
+interface SettingsTabProps {
+  project: Project | null
+}
 
 /**
  * Settings Tab for Founder Dashboard
  * Project settings and danger zone
  * Client Component - has form state
  */
-export function SettingsTab() {
-  const [projectName, setProjectName] = useState('Project Flight-AI')
-  const [mission, setMission] = useState(
-    "We're building the smartest AI tool for the travel industry."
-  )
+export function SettingsTab({ project }: SettingsTabProps) {
+  const [projectName, setProjectName] = useState('')
+  const [mission, setMission] = useState('')
   const [tags, setTags] = useState('AI, SaaS, Travel')
+
+  // Update form when project changes
+  useEffect(() => {
+    if (project) {
+      setProjectName(project.name)
+      setMission(project.description || '')
+    }
+  }, [project])
 
   const handleSave = () => {
     // TODO: Save to backend

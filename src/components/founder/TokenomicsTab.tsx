@@ -2,27 +2,26 @@
 
 import React from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import type { Project } from '@/types/project'
+
+interface TokenomicsTabProps {
+  project: Project | null
+}
 
 /**
  * Tokenomics Tab for Founder Dashboard
  * Shows token distribution with pie chart
  * Client Component - uses recharts
  */
-export function TokenomicsTab() {
+export function TokenomicsTab({ project }: TokenomicsTabProps) {
+  // TODO: Calculate actual distribution from VestingContract
   const data = [
     {
-      name: 'Founder (Sarah)',
+      name: 'Founder',
       value: 100,
       color: '#3B82F6',
     },
   ]
-
-  // After accepting Ben's proposal and setting up liquidity:
-  // const data = [
-  //   { name: 'Founder (Sarah)', value: 94.85, color: '#3B82F6' },
-  //   { name: 'Liquidity Pool (DEX)', value: 5.00, color: '#10B981' },
-  //   { name: 'Community (Ben)', value: 0.15, color: '#8B5CF6' },
-  // ]
 
   return (
     <div className="space-y-6">
@@ -32,10 +31,10 @@ export function TokenomicsTab() {
             Total Supply
           </p>
           <p className="text-2xl font-bold text-gray-900 dark:text-white">
-            1,000,000,000
+            {project?.total_supply.toLocaleString() || '1,000,000,000'}
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            $FLIGHT-AI
+            ${project?.token_symbol || 'TOKEN'}
           </p>
         </div>
 
@@ -43,9 +42,19 @@ export function TokenomicsTab() {
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
             Token Status
           </p>
-          <span className="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-semibold">
-            Illiquid
-          </span>
+          {project?.token_status === 'live' ? (
+            <span className="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full text-sm font-semibold">
+              Live
+            </span>
+          ) : project?.token_status === 'pending' ? (
+            <span className="inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 rounded-full text-sm font-semibold">
+              Pending
+            </span>
+          ) : (
+            <span className="inline-block px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full text-sm font-semibold">
+              Illiquid
+            </span>
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">

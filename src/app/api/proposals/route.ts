@@ -21,7 +21,10 @@ import { proposalSchema } from '@/types/proposal'
  * {
  *   "title": string (1-200 chars),
  *   "description": string (10-5000 chars),
- *   "requested_cstake_amount": number (> 0)
+ *   "deliverable": string (20-2000 chars),
+ *   "requested_cstake_amount": number (> 0),
+ *   "project_id"?: string (UUID, optional),
+ *   "mission_id"?: string (UUID, optional)
  * }
  */
 export async function POST(request: NextRequest) {
@@ -47,15 +50,26 @@ export async function POST(request: NextRequest) {
     const data = validation.data
     
     // Insert into database
+    const insertData: any = {
+      creator_wallet_address: wallet,
+      title: data.title.trim(),
+      description: data.description.trim(),
+      deliverable: data.deliverable.trim(),
+      requested_cstake_amount: data.requested_cstake_amount,
+    }
+    
+    // Add optional project_id and mission_id if provided
+    if (body.project_id) {
+      insertData.project_id = body.project_id
+    }
+    
+    if (body.mission_id) {
+      insertData.mission_id = body.mission_id
+    }
+    
     const { data: proposal, error } = await supabase
       .from('proposals')
-      .insert({
-        creator_wallet_address: wallet,
-        title: data.title.trim(),
-        description: data.description.trim(),
-        deliverable: data.deliverable.trim(),
-        requested_cstake_amount: data.requested_cstake_amount,
-      })
+      .insert(insertData)
       .select()
       .single()
     
@@ -82,17 +96,47 @@ export async function POST(request: NextRequest) {
 
 /**
  * GET /api/proposals
- * Retrieves all proposals (for MVP - will add filtering later)
+ * Retrieves proposals with optional filtering
+ * 
+ * Query parameters:
+ * - project_id: Filter by project ID
+ * - mission_id: Filter by mission ID
+ * - status: Filter by status (pending_review, approved, etc.)
+ * - creator: Filter by creator wallet address
+ * 
+ * Example: GET /api/proposals?project_id=123...&status=pending_review
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Optional: Get wallet for user-specific queries later
-    // For MVP, return all proposals
+    const { searchParams } = new URL(request.url)
+    const projectId = searchParams.get('project_id')
+    const missionId = searchParams.get('mission_id')
+    const status = searchParams.get('status')
+    const creator = searchParams.get('creator')
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('proposals')
       .select('*')
       .order('created_at', { ascending: false })
+    
+    // Apply filters
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+    
+    if (missionId) {
+      query = query.eq('mission_id', missionId)
+    }
+    
+    if (status) {
+      query = query.eq('status', status)
+    }
+    
+    if (creator) {
+      query = query.eq('creator_wallet_address', creator.toLowerCase())
+    }
+    
+    const { data, error } = await query
     
     if (error) {
       console.error('Database error:', error)

@@ -3,7 +3,8 @@
 import { Search, Filter } from 'lucide-react'
 import { ScrollReveal } from '../ScrollReveal'
 import { ProjectCard } from './ProjectCard'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { Project } from '@/types/project'
 
 /**
  * Project marketplace with search and filter functionality
@@ -11,6 +12,8 @@ import { useEffect, useRef } from 'react'
  */
 export function ProjectMarketplace() {
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [projects, setProjects] = useState<Project[]>([])
+  const [loading, setLoading] = useState(true)
 
   // Focus search input when user navigates via anchor link
   useEffect(() => {
@@ -34,35 +37,21 @@ export function ProjectMarketplace() {
       window.removeEventListener('hashchange', focusSearchInput)
     }
   }, [])
-  const projects = [
-    {
-      title: 'CrowdStaking: The Factory',
-      mission: 'Building the infrastructure for decentralized founding.',
-      tags: ['Rust', 'AI', 'Solidity', 'Infrastructure'],
-      coFounders: 12,
-      proposals: 45,
-      tokenStatus: 'live' as const,
-      tokenSymbol: '$CSTAKE',
-      featured: true,
-    },
-    {
-      title: 'Project Flight-AI',
-      mission: 'The smartest B2B SaaS tool for the travel industry.',
-      tags: ['Python', 'AI/ML', 'SaaS'],
-      coFounders: 3,
-      proposals: 8,
-      tokenStatus: 'pending' as const,
-    },
-    {
-      title: 'Decentralized Protocol X',
-      mission: 'A censorship-resistant, global open-source protocol.',
-      tags: ['Solidity', 'DeFi', 'Tokenomics'],
-      coFounders: 25,
-      proposals: 102,
-      tokenStatus: 'live' as const,
-      tokenSymbol: '$PROJ-X',
-    },
-  ]
+
+  // Load projects from API
+  useEffect(() => {
+    setLoading(true)
+    fetch('/api/projects')
+      .then((res) => res.json())
+      .then((data) => {
+        setProjects(data.projects || [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        console.error('Failed to load projects:', err)
+        setLoading(false)
+      })
+  }, [])
 
   return (
     <section id="missionen" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
@@ -145,19 +134,44 @@ export function ProjectMarketplace() {
         </ScrollReveal>
 
         {/* Project Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.map((project, index) => (
-            <ScrollReveal
-              key={index}
-              direction="up"
-              delay={index * 150}
-              scale={true}
-              duration={800}
-            >
-              <ProjectCard {...project} />
-            </ScrollReveal>
-          ))}
-        </div>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 dark:border-purple-400 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading projects...</p>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="text-center py-12 bg-gray-50 dark:bg-gray-900 rounded-xl p-12">
+            <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+              No projects available yet.
+            </p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm">
+              Be the first founder to launch a project!
+            </p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {projects.map((project, index) => (
+              <ScrollReveal
+                key={project.id}
+                direction="up"
+                delay={index * 150}
+                scale={true}
+                duration={800}
+              >
+                <ProjectCard
+                  title={project.name}
+                  mission={project.description || 'No description available'}
+                  tags={['Active']} // TODO: Add proper tags from project metadata
+                  coFounders={0} // TODO: Calculate from completed proposals
+                  proposals={0} // TODO: Fetch from stats API
+                  tokenStatus={project.token_status === 'live' ? 'live' : 'pending'}
+                  tokenSymbol={`$${project.token_symbol}`}
+                  featured={index === 0} // First project is featured for now
+                />
+              </ScrollReveal>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   )

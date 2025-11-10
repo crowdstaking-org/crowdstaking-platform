@@ -2,10 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { ChevronDown, User, Briefcase, Plus } from 'lucide-react'
+import type { Project } from '@/types/project'
 
 interface ContextSwitcherProps {
   currentContext: string
   onContextChange: (context: string) => void
+  projects?: Project[]
 }
 
 /**
@@ -16,31 +18,32 @@ interface ContextSwitcherProps {
 export function ContextSwitcher({
   currentContext,
   onContextChange,
+  projects = [],
 }: ContextSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
+  // Build dynamic context list from actual projects
   const contexts = [
     {
       id: 'cofounder',
       label: 'As Co-Founder',
       icon: User,
     },
-    {
-      id: 'divider',
-      label: '---',
-      icon: null,
-    },
-    {
-      id: 'project-flight-ai',
-      label: 'Project Flight-AI',
-      icon: Briefcase,
-    },
-    {
-      id: 'project-xyz',
-      label: 'Project XYZ',
-      icon: Briefcase,
-    },
+    ...(projects.length > 0
+      ? [
+          {
+            id: 'divider',
+            label: '---',
+            icon: null as any,
+          },
+          ...projects.map((project) => ({
+            id: `project-${project.id}`,
+            label: project.name,
+            icon: Briefcase,
+          })),
+        ]
+      : []),
     {
       id: 'new-project',
       label: '+ New Project',
@@ -49,7 +52,8 @@ export function ContextSwitcher({
   ]
 
   const currentLabel =
-    contexts.find((c) => c.id === currentContext)?.label || 'As Co-Founder'
+    contexts.find((c) => c.id === currentContext)?.label ||
+    (projects.length > 0 ? projects[0].name : 'Dashboard')
 
   // Close dropdown when clicking outside
   useEffect(() => {

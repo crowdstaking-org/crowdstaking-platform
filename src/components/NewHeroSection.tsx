@@ -1,9 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Rocket, Briefcase } from 'lucide-react'
+import { Rocket, Briefcase, LayoutDashboard } from 'lucide-react'
 import Link from 'next/link'
 import { HeroBackground } from './backgrounds/HeroBackground'
+import { useAuth } from '@/hooks/useAuth'
+import { useFounderProjects } from '@/hooks/useProject'
 
 interface NewHeroSectionProps {
   theme: 'light' | 'dark'
@@ -13,9 +15,12 @@ interface NewHeroSectionProps {
  * New Hero Section with "fork" design - showcasing two paths
  * Founders vs Contributors with full-screen impact
  * Flying rockets appear/disappear based on scroll position
+ * Smart CTAs that adapt based on auth status and projects
  */
 export function NewHeroSection({ theme }: NewHeroSectionProps) {
   const [isHeroVisible, setIsHeroVisible] = useState(true)
+  const { wallet, isAuthenticated } = useAuth()
+  const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,13 +71,26 @@ export function NewHeroSection({ theme }: NewHeroSectionProps) {
               Hire a world-class team. Pay with equity you create now—not with
               your cash.
             </p>
-            <Link
-              href="/wizard"
-              className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift btn-primary-glow mt-auto"
-            >
-              <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>Start Your Mission</span>
-            </Link>
+            {/* Smart CTA - adapts based on user status */}
+            {wallet && isAuthenticated && !projectsLoading && projects && projects.length > 0 ? (
+              // User has projects → Go to Dashboard
+              <Link
+                href="/dashboard"
+                className="w-full flex items-center justify-center space-x-2 bg-green-600 dark:bg-green-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift mt-auto"
+              >
+                <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Go to Dashboard</span>
+              </Link>
+            ) : (
+              // Default: Start new mission
+              <Link
+                href="/wizard"
+                className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift btn-primary-glow mt-auto"
+              >
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span>Start Your Mission</span>
+              </Link>
+            )}
           </div>
 
           {/* For Contributors */}

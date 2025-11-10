@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Layout } from '@/components/Layout'
 import {
   Home,
@@ -21,6 +21,9 @@ import { SettingsTab } from '@/components/founder/SettingsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
+import { useFounderProjects } from '@/hooks/useProject'
+import type { Project, ProjectStats } from '@/types/project'
 
 /**
  * Founder Dashboard page - Manage missions, review proposals, and track team
@@ -28,8 +31,38 @@ import { useRouter } from 'next/navigation'
  */
 export default function FounderDashboardPage() {
   const router = useRouter()
+  const { wallet, isAuthenticated, login } = useAuth()
+  const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
+  
   const [activeTab, setActiveTab] = useState('overview')
   const [currentContext, setCurrentContext] = useState('project-flight-ai')
+  const [project, setProject] = useState<Project | null>(null)
+  const [stats, setStats] = useState<ProjectStats | null>(null)
+  const [statsLoading, setStatsLoading] = useState(false)
+
+  // Load first project when projects are available
+  useEffect(() => {
+    if (projects && projects.length > 0 && !project) {
+      setProject(projects[0])
+    }
+  }, [projects, project])
+
+  // Load stats when project changes
+  useEffect(() => {
+    if (!project) return
+
+    setStatsLoading(true)
+    fetch(`/api/projects/${project.id}/stats`)
+      .then(res => res.json())
+      .then(data => {
+        setStats(data.stats)
+        setStatsLoading(false)
+      })
+      .catch(err => {
+        console.error('Failed to load stats:', err)
+        setStatsLoading(false)
+      })
+  }, [project])
 
   const handleContextChange = (context: string) => {
     setCurrentContext(context)
@@ -74,6 +107,60 @@ export default function FounderDashboardPage() {
     },
   ]
 
+  // Show auth required if not connected
+  if (!isAuthenticated || !wallet) {
+    return (
+      <Layout>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+          <div className="max-w-2xl mx-auto px-4 text-center">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Connect Your Wallet
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">
+              Please connect your wallet to access your founder dashboard and manage your projects.
+            </p>
+            
+            <button
+              onClick={login}
+              className="inline-flex items-center px-8 py-4 bg-blue-600 dark:bg-blue-500 text-white text-lg font-semibold rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
+            >
+              Connect Wallet
+            </button>
+
+            <div className="mt-12 grid md:grid-cols-3 gap-6">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  Manage Projects
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Create and manage your startup projects
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  Review Proposals
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Accept proposals and build your team
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
+                  Track Growth
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Monitor tokenomics and team metrics
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -83,17 +170,43 @@ export default function FounderDashboardPage() {
             <ContextSwitcher
               currentContext={currentContext}
               onContextChange={handleContextChange}
+              projects={projects}
             />
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Dashboard: Project Flight-AI
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage your mission, review proposals, and grow your team
-            </p>
+            {projectsLoading ? (
+              <div className="animate-pulse">
+                <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded w-96 mb-2"></div>
+                <div className="h-5 bg-gray-200 dark:bg-gray-600 rounded w-64"></div>
+              </div>
+            ) : project ? (
+              <>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  Dashboard: {project.name}
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {project.description || 'Manage your mission, review proposals, and grow your team'}
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                  Welcome to CrowdStaking
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  You don't have any projects yet. Create your first project to get started!
+                </p>
+                <button
+                  onClick={() => router.push('/wizard')}
+                  className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>Create Your First Project</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Tabs */}
@@ -180,35 +293,55 @@ export default function FounderDashboardPage() {
                     Project Statistics
                   </h3>
 
-                  <div className="space-y-4 mb-6">
-                    <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Co-Founders (Team)
-                      </span>
-                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                        0
-                      </span>
+                  {statsLoading ? (
+                    <div className="space-y-4 mb-6 animate-pulse">
+                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                      <div className="h-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
+                  ) : (
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Co-Founders (Team)
+                        </span>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {stats?.team_members_count || 0}
+                        </span>
+                      </div>
 
-                    <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Distributed Tokens
-                      </span>
-                      <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                        0%
-                      </span>
-                    </div>
+                      <div className="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Distributed Tokens
+                        </span>
+                        <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                          {stats?.distributed_tokens_percentage.toFixed(2) || 0}%
+                        </span>
+                      </div>
 
-                    <div className="flex items-center justify-between py-3">
-                      <span className="text-gray-600 dark:text-gray-400">
-                        Token Status
-                      </span>
-                      <span className="inline-flex items-center space-x-2 text-red-600 dark:text-red-400 font-semibold">
-                        <span className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full"></span>
-                        <span>Illiquid</span>
-                      </span>
+                      <div className="flex items-center justify-between py-3">
+                        <span className="text-gray-600 dark:text-gray-400">
+                          Token Status
+                        </span>
+                        {project?.token_status === 'live' ? (
+                          <span className="inline-flex items-center space-x-2 text-green-600 dark:text-green-400 font-semibold">
+                            <span className="w-2 h-2 bg-green-600 dark:bg-green-400 rounded-full"></span>
+                            <span>Live</span>
+                          </span>
+                        ) : project?.token_status === 'pending' ? (
+                          <span className="inline-flex items-center space-x-2 text-yellow-600 dark:text-yellow-400 font-semibold">
+                            <span className="w-2 h-2 bg-yellow-600 dark:bg-yellow-400 rounded-full"></span>
+                            <span>Pending</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center space-x-2 text-red-600 dark:text-red-400 font-semibold">
+                            <span className="w-2 h-2 bg-red-600 dark:bg-red-400 rounded-full"></span>
+                            <span>Illiquid</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <Link
                     href="/liquidity-wizard"
@@ -223,11 +356,11 @@ export default function FounderDashboardPage() {
           )}
 
           {/* Other tabs */}
-          {activeTab === 'missions' && <MissionsTab />}
-          {activeTab === 'proposals' && <ProposalsTab />}
-          {activeTab === 'team' && <TeamTab />}
-          {activeTab === 'tokenomics' && <TokenomicsTab />}
-          {activeTab === 'settings' && <SettingsTab />}
+          {activeTab === 'missions' && <MissionsTab projectId={project?.id} />}
+          {activeTab === 'proposals' && <ProposalsTab projectId={project?.id} />}
+          {activeTab === 'team' && <TeamTab project={project} />}
+          {activeTab === 'tokenomics' && <TokenomicsTab project={project} />}
+          {activeTab === 'settings' && <SettingsTab project={project} />}
         </div>
       </div>
     </Layout>

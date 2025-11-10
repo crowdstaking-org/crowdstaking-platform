@@ -97,7 +97,6 @@ export function getClientIdentifier(
   wallet?: string | null
 ): string {
   const ip =
-    request.ip ||
     request.headers.get('x-forwarded-for') ||
     request.headers.get('x-real-ip') ||
     'unknown'

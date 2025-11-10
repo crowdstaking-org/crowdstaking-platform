@@ -1,13 +1,18 @@
 import React from 'react'
 import { Users } from 'lucide-react'
+import type { Project } from '@/types/project'
+
+interface TeamTabProps {
+  project: Project | null
+}
 
 /**
  * Team Tab for Founder Dashboard
  * Shows co-founders list and stats
  * Server Component
  */
-export function TeamTab() {
-  const isEmpty = true
+export function TeamTab({ project }: TeamTabProps) {
+  const isEmpty = true // TODO: Load actual team members from completed proposals
 
   return (
     <div className="space-y-6">
