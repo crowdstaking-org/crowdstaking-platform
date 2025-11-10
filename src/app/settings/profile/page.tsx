@@ -123,7 +123,7 @@ export default function ProfileSettingsPage() {
         throw new Error('Failed to update profile')
       }
     } catch (error) {
-      showToast('Fehler beim Aktualisieren des Profils', 'error')
+      showToast('Failed to update profile', 'error')
     } finally {
       setSaving(false)
     }
@@ -154,7 +154,7 @@ export default function ProfileSettingsPage() {
         throw new Error('Failed to update privacy')
       }
     } catch (error) {
-      showToast('Fehler beim Aktualisieren der Privacy-Einstellungen', 'error')
+      showToast('Failed to update privacy settings', 'error')
     } finally {
       setSaving(false)
     }

@@ -23,7 +23,7 @@ export function BadgesGrid({ badges, walletAddress }: BadgesGridProps) {
       <div>
         <h2 className="text-2xl font-bold text-white mb-4">Badges</h2>
         <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700 text-center">
-          <p className="text-gray-400">Noch keine Badges verdient</p>
+          <p className="text-gray-400">No badges earned yet</p>
         </div>
       </div>
     )
