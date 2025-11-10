@@ -9,9 +9,9 @@ import { supabase } from '@/lib/supabase'
 import { requireAuth, getAuthenticatedWallet } from '@/lib/auth'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     address: string
-  }
+  }>
 }
 
 /**
@@ -28,12 +28,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Increment profile views (fire and forget)
-    supabase
+    void supabase
       .from('profiles')
       .update({ profile_views: supabase.rpc('increment', { x: 1 }) })
       .eq('wallet_address', address)
-      .then(() => {})
-      .catch(() => {})
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase

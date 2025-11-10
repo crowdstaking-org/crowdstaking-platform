@@ -97,18 +97,15 @@ export async function PUT(
         `for proposal ${id}`
       )
       
+      // Determine agreed amount (counter-offer or original request)
+      const agreedAmount = proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount
+      
       // Try to create blockchain agreement if vesting service is available
       let contractTxHash: string | null = null
       
       if (isVestingServiceAvailable()) {
         try {
-    // Await params (Next.js 16 change)
-    const { id } = await params
-
           console.log('[Phase 5] Creating blockchain agreement...')
-          
-          // Determine agreed amount (counter-offer or original request)
-          const agreedAmount = proposal.foundation_offer_cstake_amount || proposal.requested_cstake_amount
           
           if (!agreedAmount || agreedAmount <= 0) {
             throw new Error('Invalid token amount')
