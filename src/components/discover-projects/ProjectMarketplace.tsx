@@ -18,8 +18,6 @@ export function ProjectMarketplace() {
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
   const [onlyLiquid, setOnlyLiquid] = useState(false)
-  const [techStackFilter, setTechStackFilter] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
 
   // Focus search input when user navigates via anchor link
   useEffect(() => {
@@ -84,20 +82,6 @@ export function ProjectMarketplace() {
       }
     }
 
-    // Tech Stack filter - check if project has the selected tech tag
-    if (techStackFilter && techStackFilter !== 'Tech Stack') {
-      if (!project.tags || !project.tags.includes(techStackFilter)) {
-        return false
-      }
-    }
-
-    // Category filter - check if project has the selected category tag
-    if (categoryFilter && categoryFilter !== 'Category') {
-      if (!project.tags || !project.tags.includes(categoryFilter)) {
-        return false
-      }
-    }
-
     // Liquidity filter - show only projects with live tokens
     if (onlyLiquid && project.token_status !== 'live') {
       return false
@@ -110,33 +94,7 @@ export function ProjectMarketplace() {
   const clearFilters = () => {
     setSearchTerm('')
     setOnlyLiquid(false)
-    setTechStackFilter('')
-    setCategoryFilter('')
   }
-
-  // Get unique tech stack tags from all projects
-  const techStackTags = Array.from(
-    new Set(
-      projects
-        .flatMap((p) => p.tags || [])
-        .filter((tag) => 
-          // Tech tags (programming languages, frameworks, libraries)
-          ['React', 'Vue', 'JavaScript', 'TypeScript', 'Python', 'Go', 'Rust', 'Dart'].includes(tag)
-        )
-    )
-  ).sort()
-
-  // Get unique category tags from all projects
-  const categoryTags = Array.from(
-    new Set(
-      projects
-        .flatMap((p) => p.tags || [])
-        .filter((tag) => 
-          // Category tags (domains, use cases)
-          ['DeFi', 'SaaS', 'Infrastructure', 'DevOps', 'Mobile', 'Desktop', 'Education', 'Community', 'AI', 'Machine Learning', 'Data Science'].includes(tag)
-        )
-    )
-  ).sort()
 
   return (
     <section id="missionen" className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
@@ -169,30 +127,24 @@ export function ProjectMarketplace() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Tech Stack Filter */}
               <div className="relative">
-                <select 
-                  value={techStackFilter}
-                  onChange={(e) => setTechStackFilter(e.target.value)}
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer"
-                >
-                  <option value="">Tech Stack</option>
-                  {techStackTags.map((tag) => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer">
+                  <option>Tech Stack</option>
+                  <option>Rust</option>
+                  <option>Solidity</option>
+                  <option>Go</option>
+                  <option>AI/ML</option>
+                  <option>Python</option>
                 </select>
                 <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
 
               {/* Category Filter */}
               <div className="relative">
-                <select 
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer"
-                >
-                  <option value="">Category</option>
-                  {categoryTags.map((tag) => (
-                    <option key={tag} value={tag}>{tag}</option>
-                  ))}
+                <select className="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 appearance-none cursor-pointer">
+                  <option>Category</option>
+                  <option>DeFi</option>
+                  <option>SaaS</option>
+                  <option>Infrastructure</option>
                 </select>
                 <Filter className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
@@ -265,7 +217,7 @@ export function ProjectMarketplace() {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Showing <span className="font-semibold text-purple-600 dark:text-purple-400">{filteredProjects.length}</span> of <span className="font-semibold">{projects.length}</span> projects
               </p>
-              {(searchTerm || onlyLiquid || techStackFilter || categoryFilter) && (
+              {(searchTerm || onlyLiquid) && (
                 <button
                   onClick={clearFilters}
                   className="text-sm text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors underline"
@@ -294,7 +246,7 @@ export function ProjectMarketplace() {
                     proposals={0} // TODO: Fetch from stats API
                     tokenStatus={project.token_status === 'live' ? 'live' : 'pending'}
                     tokenSymbol={`$${project.token_symbol}`}
-                    featured={false} // TODO: Add featured field to DB and admin interface
+                    featured={index === 0} // First project is featured for now
                   />
                 </ScrollReveal>
               ))}

@@ -8,6 +8,9 @@ import { supabase } from '@/lib/supabase'
 import { successResponse, errorResponse } from '@/lib/api'
 import { requireAuth } from '@/lib/auth'
 import type { Project } from '@/types/project'
+import { updateFounderStats, updateActivityStats } from '@/lib/gamification/statsUpdater'
+import { checkAndAwardBadges } from '@/lib/gamification/badgeAwarder'
+import { createActivityEvent } from '@/lib/gamification/activityLogger'
 
 /**
  * GET /api/projects
@@ -125,6 +128,24 @@ export async function POST(request: NextRequest) {
       console.error('Database error:', error)
       return errorResponse('Failed to create project', 500)
     }
+    
+    // GAMIFICATION: Update founder stats and check badges (fire and forget)
+    Promise.all([
+      updateFounderStats(wallet.toLowerCase()),
+      updateActivityStats(wallet.toLowerCase()),
+      checkAndAwardBadges(wallet.toLowerCase()),
+      createActivityEvent(
+        wallet.toLowerCase(),
+        'project_created',
+        {
+          project_id: project.id,
+          project_name: project.name,
+          token_symbol: project.token_symbol,
+        }
+      ),
+    ]).catch((error) => {
+      console.error('Failed to update gamification stats:', error)
+    })
     
     return successResponse(
       {

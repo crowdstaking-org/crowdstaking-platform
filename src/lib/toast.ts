@@ -122,6 +122,30 @@ export const dismissAllToasts = () => {
 }
 
 /**
+ * Generic toast notification with type parameter
+ * @param message - Message to display
+ * @param type - Type of toast: 'success', 'error', 'info', 'warning'
+ * @param duration - Optional duration in milliseconds
+ */
+export const showToast = (
+  message: string,
+  type: 'success' | 'error' | 'info' | 'warning' = 'info',
+  duration?: number
+) => {
+  switch (type) {
+    case 'success':
+      return showSuccess(message, duration)
+    case 'error':
+      return showError(message, undefined, duration)
+    case 'warning':
+      return showWarning(message, duration)
+    case 'info':
+    default:
+      return showInfo(message, duration)
+  }
+}
+
+/**
  * Show a promise-based toast that updates based on promise state
  * @param promise - Promise to track
  * @param messages - Messages for loading, success, and error states
