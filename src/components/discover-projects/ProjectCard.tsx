@@ -40,7 +40,7 @@ export function ProjectCard({
   return (
     <div
       onClick={handleViewProject}
-      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer transition-transform hover:scale-[1.02]`}
+      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer transition-transform hover:scale-[1.02] flex flex-col`}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
@@ -101,7 +101,7 @@ export function ProjectCard({
       </div>
 
       {/* Liquidity Status */}
-      <div className="mb-6">
+      <div className="mb-6 flex-grow">
         <div className="flex items-center space-x-2">
           {tokenStatus === 'live' ? (
             <>
@@ -127,7 +127,7 @@ export function ProjectCard({
           e.stopPropagation()
           handleViewProject()
         }}
-        className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group cursor-pointer"
+        className="w-full bg-purple-600 dark:bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold flex items-center justify-center space-x-2 btn-hover-lift btn-primary-glow group cursor-pointer mt-auto"
       >
         <span>View Mission</span>
         <ArrowRight className="w-4 h-4 icon-slide" />
