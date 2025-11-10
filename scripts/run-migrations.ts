@@ -36,16 +36,8 @@ async function runMigration(migrationFile: string) {
     // Read migration file
     const sqlContent = fs.readFileSync(migrationFile, 'utf-8')
     
-    // Execute SQL via RPC or direct query
-    const { data, error } = await supabase.rpc('exec_sql', { sql: sqlContent })
-      .catch(async () => {
-        // Fallback: Try executing as raw SQL
-        // Note: This might not work for all SQL statements
-        return await supabase.from('_migrations').select('*').limit(0)
-      })
-    
-    // Since RPC might not exist, we'll use a different approach
-    // We'll just log the SQL for manual execution
+    // Log SQL for manual execution (safest approach)
+    // Direct SQL execution via Supabase client is limited
     console.log('   ℹ️  Please execute this SQL manually in Supabase SQL Editor:')
     console.log('   ' + '='.repeat(60))
     console.log(sqlContent)
