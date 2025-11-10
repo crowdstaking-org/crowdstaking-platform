@@ -14,19 +14,19 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ targetAddress }: FollowButtonProps) {
-  const { walletAddress } = useAuth()
+  const { wallet } = useAuth()
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (walletAddress) {
+    if (wallet) {
       checkIfFollowing()
     }
-  }, [walletAddress, targetAddress])
+  }, [wallet, targetAddress])
 
   async function checkIfFollowing() {
     try {
-      const response = await fetch(`/api/social/following/${walletAddress}`)
+      const response = await fetch(`/api/social/following/${wallet}`)
       if (response.ok) {
         const data = await response.json()
         const following = data.following.some(
@@ -40,7 +40,7 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
   }
 
   async function handleFollow() {
-    if (!walletAddress) {
+    if (!wallet) {
       showToast('Bitte verbinde deine Wallet', 'error')
       return
     }
@@ -82,7 +82,7 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
     }
   }
 
-  if (!walletAddress) {
+  if (!wallet) {
     return null
   }
 

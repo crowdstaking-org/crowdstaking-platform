@@ -11,7 +11,7 @@ import { showToast } from '@/lib/toast'
 import { useRouter } from 'next/navigation'
 
 export default function ProfileSettingsPage() {
-  const { walletAddress, isAuthenticated } = useAuth()
+  const { wallet, isAuthenticated } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'basic' | 'privacy'>('basic')
   const [loading, setLoading] = useState(true)
@@ -47,13 +47,13 @@ export default function ProfileSettingsPage() {
     }
     fetchProfile()
     fetchPrivacy()
-  }, [walletAddress, isAuthenticated])
+  }, [wallet, isAuthenticated])
 
   async function fetchProfile() {
-    if (!walletAddress) return
+    if (!wallet) return
 
     try {
-      const response = await fetch(`/api/profiles/${walletAddress}`)
+      const response = await fetch(`/api/profiles/${wallet}`)
       if (response.ok) {
         const data = await response.json()
         const profile = data.profile
@@ -97,11 +97,11 @@ export default function ProfileSettingsPage() {
 
   async function handleSaveBasicInfo(e: React.FormEvent) {
     e.preventDefault()
-    if (!walletAddress) return
+    if (!wallet) return
 
     setSaving(true)
     try {
-      const response = await fetch(`/api/profiles/${walletAddress}`, {
+      const response = await fetch(`/api/profiles/${wallet}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

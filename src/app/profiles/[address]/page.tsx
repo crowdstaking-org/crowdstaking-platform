@@ -28,14 +28,14 @@ interface ProfileData {
 export default function ProfilePage({ params }: ProfilePageProps) {
   const resolvedParams = use(params)
   const { address } = resolvedParams
-  const { walletAddress } = useAuth()
+  const { wallet } = useAuth()
 
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'overview' | 'portfolio' | 'activity'>('overview')
 
-  const isOwnProfile = walletAddress?.toLowerCase() === address.toLowerCase()
+  const isOwnProfile = wallet?.toLowerCase() === address.toLowerCase()
 
   useEffect(() => {
     fetchProfile()

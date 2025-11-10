@@ -14,15 +14,15 @@ interface BookmarkButtonProps {
 }
 
 export function BookmarkButton({ targetAddress }: BookmarkButtonProps) {
-  const { walletAddress } = useAuth()
+  const { wallet } = useAuth()
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (walletAddress) {
+    if (wallet) {
       checkIfBookmarked()
     }
-  }, [walletAddress, targetAddress])
+  }, [wallet, targetAddress])
 
   async function checkIfBookmarked() {
     try {
@@ -40,7 +40,7 @@ export function BookmarkButton({ targetAddress }: BookmarkButtonProps) {
   }
 
   async function handleBookmark() {
-    if (!walletAddress) {
+    if (!wallet) {
       showToast('Bitte verbinde deine Wallet', 'error')
       return
     }
@@ -81,7 +81,7 @@ export function BookmarkButton({ targetAddress }: BookmarkButtonProps) {
     }
   }
 
-  if (!walletAddress) {
+  if (!wallet) {
     return null
   }
 

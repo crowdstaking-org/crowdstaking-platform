@@ -6,17 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-interface RouteParams {
-  params: {
-    address: string
-  }
-}
-
 /**
  * GET /api/social/endorsements/[address]
  * Get endorsements for a user, grouped by skill
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ address: string }> }
+) {
   try {
     const { address } = await params
 
