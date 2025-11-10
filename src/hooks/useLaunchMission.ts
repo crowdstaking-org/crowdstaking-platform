@@ -80,7 +80,8 @@ export function useLaunchMission() {
         throw new Error(errorData.error || 'Failed to create project')
       }
       
-      const { project } = await projectResponse.json()
+      const responseData = await projectResponse.json()
+      const project = responseData.data.project
       projectId = project.id
       
       // Phase 2: Deploy Token via ThirdWeb SDK

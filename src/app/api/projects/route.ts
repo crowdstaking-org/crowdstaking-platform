@@ -94,19 +94,8 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Check if user already has a project (MVP: one project per founder)
-    const { data: existingProjects } = await supabase
-      .from('projects')
-      .select('id')
-      .eq('founder_wallet_address', wallet.toLowerCase())
-      .limit(1)
-    
-    if (existingProjects && existingProjects.length > 0) {
-      return errorResponse(
-        'You already have a project. Multiple projects per founder will be supported in a future update.',
-        400
-      )
-    }
+    // MVP Note: Allowing multiple projects per founder for testing
+    // This can be re-enabled later if needed
     
     // Insert into database
     const { data: project, error } = await supabase
