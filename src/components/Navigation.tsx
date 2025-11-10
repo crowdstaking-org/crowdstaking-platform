@@ -85,19 +85,19 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               </div>
             </button>
 
-            {/* Connect Wallet or User Account */}
+            {/* Login or User Account */}
             <div className="flex items-center space-x-2">
               {account ? (
-                // Show custom user account button when connected
+                // Show custom user account button when logged in
                 <UserAccountButton />
               ) : (
-                // Show connect button when not connected
+                // Show login button when not logged in
                 <ConnectButton
                   client={client}
                   wallets={wallets}
                   theme="dark"
                   connectButton={{
-                    label: "Connect",
+                    label: "Login",
                   }}
                   connectModal={{
                     title: "Login to CrowdStaking",

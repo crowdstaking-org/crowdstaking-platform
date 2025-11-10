@@ -5,8 +5,8 @@
  * Wraps pages/components that require wallet authentication
  * 
  * Flow:
- * 1. No wallet? -> Show "Connect Wallet" prompt
- * 2. Wallet but not authenticated? -> Show "Sign Message" prompt
+ * 1. Not logged in? -> Show "Login" prompt
+ * 2. Logged in but not authenticated? -> Show "Sign Message" prompt
  * 3. Authenticated? -> Render children
  */
 
@@ -56,11 +56,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
           </div>
           
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Connect Your Wallet
+            Login to CrowdStaking
           </h2>
           
           <p className="text-gray-600 dark:text-gray-300">
-            You need to connect a Web3 wallet to access this page
+            Please login to access this page
           </p>
           
           <div className="pt-4">
@@ -68,7 +68,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
               client={client}
               theme="dark"
               connectButton={{
-                label: "Connect Wallet",
+                label: "Login",
               }}
               connectModal={{
                 title: "Join CrowdStaking",

@@ -120,7 +120,7 @@ function DashboardInner() {
     },
   ]
 
-  // Show "Connect Wallet" screen if not authenticated
+  // Show "Login" screen if not authenticated
   if (!isAuthenticated || !wallet) {
     return (
       <Layout>
@@ -153,15 +153,15 @@ function DashboardInner() {
 
               {/* Description */}
               <p className="text-gray-600 dark:text-gray-400 mb-8">
-                Please connect your wallet to access your founder dashboard and manage your projects.
+                Please login to access your founder dashboard and manage your projects.
               </p>
 
-              {/* Connect Button */}
+              {/* Login Button */}
               <button
                 onClick={login}
                 className="w-full bg-blue-600 dark:bg-blue-500 text-white py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold text-lg"
               >
-                Connect Wallet
+                Login
               </button>
 
               {/* Info Text */}

@@ -83,7 +83,7 @@ export function UserAccountButton() {
       }
       setIsOpen(false)
     } catch (error) {
-      console.error('Disconnect failed:', error)
+      console.error('Logout failed:', error)
     }
   }
 
@@ -187,7 +187,7 @@ export function UserAccountButton() {
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              <span>Disconnect</span>
+              <span>Logout</span>
             </button>
           </div>
         </div>
