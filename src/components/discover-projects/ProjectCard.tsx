@@ -40,24 +40,30 @@ export function ProjectCard({
   return (
     <div
       onClick={handleViewProject}
-      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer transition-transform hover:scale-[1.02] flex flex-col`}
+      className={`group bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 ${featured ? 'border-purple-600 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700'} card-hover card-shadow-grow card-border-glow cursor-pointer transition-transform hover:scale-[1.02] flex flex-col relative overflow-hidden`}
     >
+      {/* Featured Badge - Diagonal Corner */}
+      {featured && (
+        <div className="absolute top-0 right-0 z-10">
+          <div className="relative w-32 h-32 overflow-hidden">
+            <div className="absolute top-6 -right-10 rotate-45 bg-purple-600 dark:bg-purple-500 text-white text-xs font-bold px-12 py-1 shadow-lg badge-pulse">
+              FEATURED
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
             {title}
           </h3>
-          {featured && (
-            <span className="inline-block bg-purple-600 dark:bg-purple-500 text-white text-xs px-2 py-1 rounded badge-pulse">
-              FEATURED
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Mission Statement */}
-      <p className="text-gray-700 dark:text-gray-300 mb-4 text-lg leading-relaxed">
+      {/* Mission Statement - Fixed to exactly 2 lines */}
+      <p className="text-gray-700 dark:text-gray-300 mb-4 text-lg leading-relaxed line-clamp-2 min-h-[3.625rem]">
         "{mission}"
       </p>
 

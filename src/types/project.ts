@@ -34,6 +34,7 @@ export interface Project {
   // Metadata
   name: string
   description?: string
+  tags?: string[] // Tech stack, categories, features (e.g., ["React", "DeFi", "AI/ML"])
   
   // Token Information
   token_name: string
