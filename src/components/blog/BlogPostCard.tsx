@@ -38,6 +38,19 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
       href={`/blog/${post.slug}`}
       className="block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden group"
     >
+      {/* Featured Image */}
+      {post.featured_image && (
+        <div className="aspect-video relative overflow-hidden bg-gray-100 dark:bg-gray-700">
+          <Image
+            src={post.featured_image}
+            alt={post.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
+      )}
+      
       {/* Card Content */}
       <div className="p-6">
         {/* Title */}
@@ -99,7 +112,7 @@ export function BlogPostCard({ post }: BlogPostCardProps) {
       {/* Read More Indicator */}
       <div className="px-6 pb-4">
         <div className="text-blue-600 dark:text-blue-400 text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-          Weiterlesen
+          Read More
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>

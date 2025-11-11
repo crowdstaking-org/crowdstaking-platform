@@ -66,6 +66,21 @@ export function BlogPostDetail({ post }: BlogPostDetailProps) {
 
         {/* Main Article */}
         <article className="flex-1 min-w-0">
+          
+          {/* Featured Image */}
+          {post.featured_image && (
+            <div className="mb-8 -mx-4 sm:mx-0 sm:rounded-xl overflow-hidden">
+              <Image
+                src={post.featured_image}
+                alt={post.title}
+                width={1200}
+                height={630}
+                className="w-full h-auto object-cover"
+                priority
+                sizes="(max-width: 768px) 100vw, 1200px"
+              />
+            </div>
+          )}
 
           {/* Header */}
           <header className="mb-8">

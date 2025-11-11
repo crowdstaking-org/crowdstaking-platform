@@ -17,9 +17,9 @@ export function KeyTakeaway({ children }: KeyTakeawayProps) {
       <div className="flex items-start gap-3">
         <Target className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
         <div>
-          <h4 className="text-sm font-semibold text-green-900 dark:text-green-100 uppercase tracking-wide mb-2">
+          <div className="text-sm font-semibold text-green-900 dark:text-green-100 uppercase tracking-wide mb-2">
             Key Takeaway
-          </h4>
+          </div>
           <div className="text-sm text-green-800 dark:text-green-200 leading-relaxed">
             {children}
           </div>

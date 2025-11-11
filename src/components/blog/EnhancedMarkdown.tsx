@@ -32,11 +32,12 @@ function preprocessMarkdown(markdown: string): string {
   let processed = markdown
 
   // Process custom blocks: ::: type ... :::
+  // Add newlines before/after to prevent wrapping in <p> tags
   const blockRegex = /:::\s*(callout-info|callout-warning|callout-success|callout-tip|tldr|pullquote|key-takeaway)\s*\n([\s\S]*?)\n:::/g
   
   processed = processed.replace(blockRegex, (match, type, content) => {
-    // Convert to HTML-style tags that we can intercept
-    return `<custom-${type}>${content.trim()}</custom-${type}>`
+    // Convert to HTML-style tags with newlines to prevent <p> wrapping
+    return `\n\n<custom-${type}>\n\n${content.trim()}\n\n</custom-${type}>\n\n`
   })
 
   return processed

@@ -20,6 +20,7 @@ export interface BlogPost {
   published_at: string | null
   tags: string[]
   view_count: number
+  featured_image?: string | null // Optional featured image URL/path
   created_at: string
   updated_at: string
   author?: Profile // Optional joined author info
