@@ -14,6 +14,8 @@ interface MissionData {
   mission: string
   vision: string
   tags: string
+  tokenName: string
+  tokenSymbol: string
   legalWrapper: boolean
   agreedToFee: boolean
 }
@@ -30,6 +32,8 @@ export default function WizardPage() {
     mission: '',
     vision: '',
     tags: '',
+    tokenName: '',
+    tokenSymbol: '',
     legalWrapper: true,
     agreedToFee: false,
   })

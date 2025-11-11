@@ -53,7 +53,7 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
         </div>
       )}
       
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 sm:p-12">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
           Ready to Launch, Founder?
@@ -193,11 +193,11 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
           </div>
         ) : (
           // Show launch button if wallet is connected
-          <button
+        <button
             onClick={handleLaunch}
             disabled={isLaunching}
             className="w-full group flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white px-10 py-5 rounded-lg hover:from-blue-700 hover:to-purple-700 dark:hover:from-blue-600 dark:hover:to-purple-600 transition-all text-xl font-bold shadow-lg btn-hover-lift btn-primary-glow ripple disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        >
             <Rocket className={`w-6 h-6 ${isLaunching ? 'animate-spin' : ''}`} />
             <span>
               {isLaunching 
@@ -205,7 +205,7 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
                 : '🚀 LAUNCH MISSION NOW & CONFIRM TRANSACTIONS'
               }
             </span>
-          </button>
+        </button>
         )}
 
         {/* Back Button */}

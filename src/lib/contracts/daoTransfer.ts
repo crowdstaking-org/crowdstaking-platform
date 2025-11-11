@@ -24,12 +24,12 @@ export function calculate2Percent(totalSupply: string): string {
  * Get DAO wallet address from environment
  */
 export function getDAOWalletAddress(): string {
-  const daoWallet = process.env.DAO_WALLET_ADDRESS || 
-                    process.env.NEXT_PUBLIC_DAO_WALLET_ADDRESS
+  const daoWallet = process.env.NEXT_PUBLIC_DAO_WALLET_ADDRESS || 
+                    process.env.DAO_WALLET_ADDRESS
   
   if (!daoWallet) {
     throw new Error(
-      'DAO_WALLET_ADDRESS not configured. Please set it in .env.local'
+      'NEXT_PUBLIC_DAO_WALLET_ADDRESS not configured. Please set it in .env.local'
     )
   }
   
