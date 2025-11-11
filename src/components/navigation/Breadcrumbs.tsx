@@ -6,12 +6,43 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRight, Home } from 'lucide-react'
+import { 
+  ChevronRight, 
+  Home, 
+  FolderOpen, 
+  Rocket, 
+  Users, 
+  Briefcase, 
+  Settings, 
+  FileText,
+  Target,
+  Sparkles,
+  User,
+  Newspaper,
+  Trophy
+} from 'lucide-react'
+
+// Map of icon names to Lucide components
+const iconMap = {
+  'folder-open': FolderOpen,
+  'rocket': Rocket,
+  'users': Users,
+  'briefcase': Briefcase,
+  'settings': Settings,
+  'file-text': FileText,
+  'target': Target,
+  'sparkles': Sparkles,
+  'user': User,
+  'newspaper': Newspaper,
+  'trophy': Trophy,
+} as const
+
+export type IconName = keyof typeof iconMap
 
 export interface BreadcrumbItem {
   label: string
   href?: string // Optional - if not provided, it's just text (current page)
-  icon?: React.ComponentType<{ className?: string }>
+  icon?: IconName // Icon name as string instead of component
 }
 
 interface BreadcrumbsProps {
@@ -33,7 +64,7 @@ export function Breadcrumbs({ items, className = '' }: BreadcrumbsProps) {
 
       {items.map((item, index) => {
         const isLast = index === items.length - 1
-        const Icon = item.icon
+        const Icon = item.icon ? iconMap[item.icon] : null
 
         return (
           <div key={index} className="flex items-center space-x-2">

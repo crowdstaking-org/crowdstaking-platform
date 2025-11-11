@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Sparkles } from 'lucide-react'
+import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
@@ -139,7 +139,7 @@ export default function WizardPage() {
         <div className="max-w-4xl mx-auto px-4 mb-6">
           <Breadcrumbs 
             items={[
-              { label: 'Create Mission', href: '/wizard', icon: Sparkles },
+              { label: 'Create Mission', href: '/wizard', icon: 'sparkles' },
               { label: `Step ${currentStep + 1}: ${getStepLabel()}` }
             ]} 
           />

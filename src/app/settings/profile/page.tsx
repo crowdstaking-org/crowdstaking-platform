@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { Layout } from '@/components/Layout'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { BackButton } from '@/components/navigation/BackButton'
-import { Settings as SettingsIcon, User } from 'lucide-react'
+import { Settings as SettingsIcon } from 'lucide-react'
 
 export default function ProfileSettingsPage() {
   const { wallet, isAuthenticated } = useAuth()
@@ -197,8 +197,8 @@ export default function ProfileSettingsPage() {
           <div className="flex items-center justify-between mb-6">
             <Breadcrumbs 
               items={[
-                { label: 'Settings', href: '/settings/profile', icon: SettingsIcon },
-                { label: 'Profile', icon: User }
+                { label: 'Settings', href: '/settings/profile', icon: 'settings' },
+                { label: 'Profile', icon: 'user' }
               ]} 
             />
             <BackButton 

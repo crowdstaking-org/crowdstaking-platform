@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { BackButton } from '@/components/navigation/BackButton'
-import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle, Rocket, Target, FolderOpen } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Mission } from '@/types/mission'
@@ -176,9 +176,9 @@ export default async function MissionDetailPage({ params }: PageProps) {
           <div className="flex items-center justify-between mb-6">
             <Breadcrumbs 
               items={[
-                { label: 'Discover Projects', href: '/discover-projects', icon: FolderOpen },
-                { label: project?.name || 'Project', href: `/projects/${projectId}`, icon: Rocket },
-                { label: mission.title, icon: Target }
+                { label: 'Discover Projects', href: '/discover-projects', icon: 'folder-open' },
+                { label: project?.name || 'Project', href: `/projects/${projectId}`, icon: 'rocket' },
+                { label: mission.title, icon: 'target' }
               ]} 
             />
             <BackButton 

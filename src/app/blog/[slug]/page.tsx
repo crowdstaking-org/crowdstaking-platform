@@ -17,7 +17,7 @@ import { BackButton } from '@/components/navigation/BackButton'
 import { BlogPostDetail } from '@/components/blog/BlogPostDetail'
 import { CommentSection } from '@/components/blog/CommentSection'
 import { useBlogPost } from '@/hooks/useBlog'
-import { FileText, Newspaper } from 'lucide-react'
+// Lucide icons imported in Breadcrumbs component
 
 export default function BlogPostPage() {
   const params = useParams()
@@ -57,8 +57,8 @@ export default function BlogPostPage() {
             <div className="flex items-center justify-between mb-6">
               <Breadcrumbs 
                 items={[
-                  { label: 'Blog', href: '/blog', icon: Newspaper },
-                  { label: post.title, icon: FileText }
+                  { label: 'Blog', href: '/blog', icon: 'newspaper' },
+                  { label: post.title, icon: 'file-text' }
                 ]} 
               />
               <BackButton 

@@ -17,7 +17,7 @@ import { BadgesGrid } from '@/components/profile/BadgesGrid'
 import { PortfolioGrid } from '@/components/profile/PortfolioGrid'
 import { ActivityTimeline } from '@/components/profile/ActivityTimeline'
 import { TrustScoreDisplay } from '@/components/profile/TrustScoreDisplay'
-import { Trophy, User } from 'lucide-react'
+// Lucide icons imported in Breadcrumbs component
 
 interface ProfilePageProps {
   params: Promise<{ address: string }>
@@ -99,7 +99,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     const items = []
     
     if (referrer === 'leaderboards') {
-      items.push({ label: 'Leaderboards', href: '/leaderboards', icon: Trophy })
+      items.push({ label: 'Leaderboards', href: '/leaderboards', icon: 'trophy' as const })
     } else if (referrer === 'bookmarks') {
       items.push({ label: 'Bookmarks', href: '/bookmarks' })
     } else if (referrer === 'project') {
@@ -107,7 +107,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       items.push({ label: 'Projects', href: '/discover-projects' })
     }
     
-    items.push({ label: profileData.profile.display_name, icon: User })
+    items.push({ label: profileData.profile.display_name, icon: 'user' as const })
     
     return items
   }
