@@ -8,8 +8,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useActiveAccount, useDisconnect } from 'thirdweb/react'
-import { ChevronDown, User, LogOut, Wallet, Mail } from 'lucide-react'
+import { ChevronDown, User, LogOut, Wallet, Mail, Bookmark, UserCircle, Settings } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import Link from 'next/link'
 
 export function UserAccountButton() {
   const account = useActiveAccount()
@@ -77,11 +78,18 @@ export function UserAccountButton() {
 
   const handleDisconnect = async () => {
     try {
+      setIsOpen(false)
+      
+      // Logout from auth system
       await logout()
+      
+      // Disconnect wallet
       if (wallet) {
         disconnect(wallet)
       }
-      setIsOpen(false)
+      
+      // Reload page to ensure clean state
+      window.location.href = '/'
     } catch (error) {
       console.error('Logout failed:', error)
     }
@@ -173,7 +181,7 @@ export function UserAccountButton() {
                 onClick={() => {
                   navigator.clipboard.writeText(account.address)
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:underline"
+                className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
               >
                 Copy
               </button>
@@ -182,9 +190,37 @@ export function UserAccountButton() {
 
           {/* Actions */}
           <div className="py-1">
+            <Link
+              href={`/profiles/${account.address}`}
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
+            >
+              <UserCircle className="w-4 h-4" />
+              <span>My Profile</span>
+            </Link>
+            <Link
+              href="/bookmarks"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
+            >
+              <Bookmark className="w-4 h-4" />
+              <span>Bookmarks</span>
+            </Link>
+            <Link
+              href="/settings/profile"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </Link>
+          </div>
+
+          {/* Logout - Separator */}
+          <div className="border-t border-gray-200 dark:border-gray-700 py-1">
             <button
               onClick={handleDisconnect}
-              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors"
+              className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Logout</span>

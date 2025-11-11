@@ -12,9 +12,12 @@
 
 import { useParams } from 'next/navigation'
 import { Layout } from '@/components/Layout'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
+import { BackButton } from '@/components/navigation/BackButton'
 import { BlogPostDetail } from '@/components/blog/BlogPostDetail'
 import { CommentSection } from '@/components/blog/CommentSection'
 import { useBlogPost } from '@/hooks/useBlog'
+import { FileText, Newspaper } from 'lucide-react'
 
 export default function BlogPostPage() {
   const params = useParams()
@@ -24,7 +27,7 @@ export default function BlogPostPage() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto py-12 px-4">
+      <div className="max-w-7xl mx-auto py-8 px-4">
         {/* Loading State */}
         {isLoading ? (
           <div className="text-center py-12">
@@ -50,6 +53,20 @@ export default function BlogPostPage() {
           </div>
         ) : (
           <>
+            {/* Navigation: Breadcrumbs + Back Button */}
+            <div className="flex items-center justify-between mb-6">
+              <Breadcrumbs 
+                items={[
+                  { label: 'Blog', href: '/blog', icon: Newspaper },
+                  { label: post.title, icon: FileText }
+                ]} 
+              />
+              <BackButton 
+                fallbackUrl="/blog"
+                label="Back"
+              />
+            </div>
+
             {/* Blog Post Content */}
             <BlogPostDetail post={post} />
 

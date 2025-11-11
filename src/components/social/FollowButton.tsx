@@ -14,7 +14,7 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ targetAddress }: FollowButtonProps) {
-  const { wallet } = useAuth()
+  const { wallet, isAuthenticated } = useAuth()
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -40,8 +40,15 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
   }
 
   async function handleFollow() {
-    if (!wallet) {
-      showToast('Bitte verbinde deine Wallet', 'error')
+    if (!wallet || !isAuthenticated) {
+      showToast('Please log in to follow users', 'error')
+      return
+    }
+
+    // Validate wallet format
+    if (!wallet.match(/^0x[a-fA-F0-9]{40}$/)) {
+      console.error('Invalid wallet format:', wallet)
+      showToast('Invalid wallet address format', 'error')
       return
     }
 
@@ -51,39 +58,62 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
         // Unfollow
         const response = await fetch(`/api/social/follow?address=${targetAddress}`, {
           method: 'DELETE',
+          headers: {
+            'x-wallet-address': wallet,
+          },
         })
 
         if (response.ok) {
           setIsFollowing(false)
-          showToast('Nicht mehr gefolgt', 'success')
+          showToast('Unfollowed successfully', 'success')
         } else {
-          throw new Error('Failed to unfollow')
+          const errorData = await response.json()
+          if (response.status === 401) {
+            showToast('Please log in to unfollow users', 'error')
+          } else {
+            throw new Error(errorData.error || 'Failed to unfollow')
+          }
         }
       } else {
         // Follow
         const response = await fetch('/api/social/follow', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-wallet-address': wallet,
+          },
           body: JSON.stringify({ following_address: targetAddress }),
         })
 
         if (response.ok) {
           setIsFollowing(true)
-          showToast('Erfolgreich gefolgt', 'success')
+          showToast('Followed successfully', 'success')
         } else {
-          const error = await response.json()
-          throw new Error(error.error || 'Failed to follow')
+          const errorData = await response.json()
+          if (response.status === 401) {
+            showToast('Please log in to follow users', 'error')
+          } else {
+            throw new Error(errorData.error || 'Failed to follow')
+          }
         }
       }
     } catch (error: any) {
-      showToast(error.message || 'Fehler beim Folgen', 'error')
+      showToast(error.message || 'Error while following', 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  if (!wallet) {
-    return null
+  // Show login prompt if not authenticated
+  if (!wallet || !isAuthenticated) {
+    return (
+      <button
+        onClick={() => showToast('Please log in to follow users', 'info')}
+        className="px-4 py-2 rounded-lg font-medium bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+      >
+        Follow
+      </button>
+    )
   }
 
   return (
@@ -94,9 +124,9 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
         isFollowing
           ? 'bg-gray-600 hover:bg-gray-700 text-white'
           : 'bg-blue-600 hover:bg-blue-700 text-white'
-      } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+      } ${loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
-      {loading ? 'Lädt...' : isFollowing ? 'Nicht mehr folgen' : 'Folgen'}
+      {loading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
     </button>
   )
 }

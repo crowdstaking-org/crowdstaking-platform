@@ -43,6 +43,7 @@ export interface UserProfileLinkProps {
   asLink?: boolean                 // Default: true - render as link, false for span
   className?: string               // Additional CSS classes
   onClick?: () => void             // Optional custom click handler
+  referrer?: string                // Optional: Where the user came from (for breadcrumbs)
 }
 
 interface ProfileData {
@@ -64,6 +65,7 @@ export function UserProfileLink({
   asLink = true,
   className = '',
   onClick,
+  referrer,
 }: UserProfileLinkProps) {
   const [profileData, setProfileData] = useState<ProfileData | null>(null)
   const [loading, setLoading] = useState(false)
@@ -222,9 +224,14 @@ export function UserProfileLink({
     )
   }
 
+  // Build profile URL with optional referrer
+  const profileUrl = referrer 
+    ? `/profiles/${walletAddress}?from=${referrer}`
+    : `/profiles/${walletAddress}`
+
   return (
     <Link
-      href={`/profiles/${walletAddress}`}
+      href={profileUrl}
       onClick={handleClick}
       className={`flex items-center ${config.gap} hover:opacity-80 transition-opacity ${className}`}
       title={`View profile of ${finalDisplayName || walletAddress}`}

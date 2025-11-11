@@ -5,6 +5,8 @@
 
 'use client'
 
+import { CheckCircle2, BarChart3, Award, Rocket, Target, ClipboardList, Flame, Calendar } from 'lucide-react'
+
 interface StatsCardsProps {
   stats: any
   privacy: any
@@ -15,58 +17,50 @@ export function StatsCards({ stats, privacy }: StatsCardsProps) {
 
   const contributorStats = [
     {
-      label: 'Missions abgeschlossen',
+      label: 'Missions completed',
       value: stats.missions_completed || 0,
-      icon: '✓',
-      color: 'blue',
+      icon: CheckCircle2,
     },
     {
-      label: 'Erfolgsrate',
+      label: 'Success rate',
       value: stats.completion_rate ? `${Math.round(stats.completion_rate)}%` : '0%',
-      icon: '📊',
-      color: 'green',
+      icon: BarChart3,
     },
     {
-      label: 'Empfehlungen',
+      label: 'Endorsements',
       value: stats.endorsements_count || 0,
-      icon: '⭐',
-      color: 'purple',
+      icon: Award,
     },
   ]
 
   const founderStats = [
     {
-      label: 'Projekte erstellt',
+      label: 'Projects created',
       value: stats.projects_created || 0,
-      icon: '🚀',
-      color: 'indigo',
+      icon: Rocket,
     },
     {
-      label: 'Live Projekte',
+      label: 'Live projects',
       value: stats.projects_live || 0,
-      icon: '🎯',
-      color: 'pink',
+      icon: Target,
     },
     {
-      label: 'Missions erstellt',
+      label: 'Missions created',
       value: stats.missions_created || 0,
-      icon: '📋',
-      color: 'orange',
+      icon: ClipboardList,
     },
   ]
 
   const activityStats = [
     {
       label: 'Streak',
-      value: `${stats.streak_days || 0} Tage`,
-      icon: '🔥',
-      color: 'red',
+      value: `${stats.streak_days || 0} days`,
+      icon: Flame,
     },
     {
-      label: 'Aktive Tage',
+      label: 'Active days',
       value: stats.total_activity_days || 0,
-      icon: '📅',
-      color: 'yellow',
+      icon: Calendar,
     },
   ]
 
@@ -78,18 +72,21 @@ export function StatsCards({ stats, privacy }: StatsCardsProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white mb-4">Statistiken</h2>
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Statistics</h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {allStats.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700 hover:border-gray-600 transition-colors"
-          >
-            <div className="text-3xl mb-2">{stat.icon}</div>
-            <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-            <div className="text-sm text-gray-400">{stat.label}</div>
-          </div>
-        ))}
+        {allStats.map((stat, index) => {
+          const IconComponent = stat.icon
+          return (
+            <div
+              key={index}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors shadow-sm"
+            >
+              <IconComponent className="w-6 h-6 text-gray-600 dark:text-gray-400 mb-3" strokeWidth={1.5} />
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{stat.value}</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

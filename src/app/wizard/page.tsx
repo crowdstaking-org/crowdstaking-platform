@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Sparkles } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { WelcomeStep } from '@/components/wizard/WelcomeStep'
 import { MissionStep } from '@/components/wizard/MissionStep'
@@ -107,17 +108,42 @@ export default function WizardPage() {
     }
   }
 
+  // Get current step label
+  const getStepLabel = () => {
+    switch (currentStep) {
+      case 0: return 'Welcome'
+      case 1: return 'Define Mission'
+      case 2: return 'Setup Project'
+      case 3: return 'Token Deal'
+      case 4: return 'Review'
+      case 5: return 'Success'
+      default: return 'Welcome'
+    }
+  }
+
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 relative">
       {/* Close Button - only shown on steps 0-4 (not on success page) */}
       {currentStep < 5 && (
         <button
           onClick={handleClose}
-          className="fixed top-6 right-6 z-50 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group"
+          className="fixed top-6 right-6 z-50 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
           aria-label="Close wizard"
         >
           <X className="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
         </button>
+      )}
+      
+      {/* Breadcrumbs - shown on all steps */}
+      {currentStep < 5 && (
+        <div className="max-w-4xl mx-auto px-4 mb-6">
+          <Breadcrumbs 
+            items={[
+              { label: 'Create Mission', href: '/wizard', icon: Sparkles },
+              { label: `Step ${currentStep + 1}: ${getStepLabel()}` }
+            ]} 
+          />
+        </div>
       )}
       
       {/* Progress bar only shown on steps 1-4 */}

@@ -50,7 +50,9 @@ export default function LeaderboardsPage() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`/api/leaderboards?type=${activeTab}&period=${timePeriod}`)
+      // Map frontend type to API type
+      const apiType = activeTab === 'rising' ? 'rising_stars' : activeTab
+      const response = await fetch(`/api/leaderboards?type=${apiType}&period=${timePeriod}`)
       
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard')
@@ -104,7 +106,7 @@ export default function LeaderboardsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors ${
+                    className={`flex items-center gap-2 px-6 py-4 font-semibold transition-colors cursor-pointer ${
                       activeTab === tab.id
                         ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -123,7 +125,7 @@ export default function LeaderboardsPage() {
                 <button
                   key={period.id}
                   onClick={() => setTimePeriod(period.id)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                     timePeriod === period.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -240,6 +242,7 @@ function LeaderboardRow({ entry, rank, type }: LeaderboardRowProps) {
             showTrustScore={true}
             size="md"
             showAvatar={true}
+            referrer="leaderboards"
           />
           
           {entry.bio && (

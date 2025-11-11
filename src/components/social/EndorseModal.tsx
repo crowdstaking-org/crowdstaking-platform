@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/hooks/useAuth'
 import { showToast } from '@/lib/toast'
 
 interface EndorseModalProps {
@@ -16,6 +17,7 @@ interface EndorseModalProps {
 }
 
 export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: EndorseModalProps) {
+  const { wallet, isAuthenticated } = useAuth()
   const [skill, setSkill] = useState('')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,8 +25,22 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
+    if (!wallet || !isAuthenticated) {
+      showToast('Please log in to endorse users', 'error')
+      onClose()
+      return
+    }
+
+    // Validate wallet format
+    if (!wallet.match(/^0x[a-fA-F0-9]{40}$/)) {
+      console.error('Invalid wallet format:', wallet)
+      showToast('Invalid wallet address format', 'error')
+      onClose()
+      return
+    }
+
     if (!skill.trim()) {
-      showToast('Bitte gib einen Skill ein', 'error')
+      showToast('Please enter a skill', 'error')
       return
     }
 
@@ -32,7 +48,10 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
     try {
       const response = await fetch('/api/social/endorse', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': wallet,
+        },
         body: JSON.stringify({
           endorsed_address: targetAddress,
           skill: skill.trim(),
@@ -41,14 +60,19 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
       })
 
       if (response.ok) {
-        showToast('Empfehlung erfolgreich abgegeben', 'success')
+        showToast('Endorsement submitted successfully', 'success')
         onSuccess()
+        onClose()
       } else {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to endorse')
+        if (response.status === 401) {
+          showToast('Please log in to endorse users', 'error')
+        } else {
+          throw new Error(error.error || 'Failed to endorse')
+        }
       }
     } catch (error: any) {
-      showToast(error.message || 'Fehler beim Empfehlen', 'error')
+      showToast(error.message || 'Error while endorsing', 'error')
     } finally {
       setLoading(false)
     }
@@ -59,7 +83,7 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
       <div className="bg-gray-800 rounded-2xl p-6 max-w-md w-full border border-gray-700">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">
-            {targetName} empfehlen
+            Endorse {targetName}
           </h2>
           <button
             onClick={onClose}
@@ -80,27 +104,27 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
               type="text"
               value={skill}
               onChange={(e) => setSkill(e.target.value)}
-              placeholder="z.B. Solidity, React, Design..."
+              placeholder="e.g. Solidity, React, Design..."
               maxLength={50}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
-            <p className="text-xs text-gray-400 mt-1">2-50 Zeichen</p>
+            <p className="text-xs text-gray-400 mt-1">2-50 characters</p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Nachricht (optional)
+              Message (optional)
             </label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Warum empfiehlst du diesen Skill?"
+              placeholder="Why do you endorse this skill?"
               maxLength={500}
               rows={4}
               className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
-            <p className="text-xs text-gray-400 mt-1">{message.length}/500 Zeichen</p>
+            <p className="text-xs text-gray-400 mt-1">{message.length}/500 characters</p>
           </div>
 
           <div className="flex gap-3 pt-2">
@@ -109,14 +133,14 @@ export function EndorseModal({ targetAddress, targetName, onClose, onSuccess }: 
               onClick={onClose}
               className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
             >
-              Abbrechen
+              Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !skill.trim()}
               className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Wird gesendet...' : 'Empfehlen'}
+              {loading ? 'Sending...' : 'Endorse'}
             </button>
           </div>
         </form>

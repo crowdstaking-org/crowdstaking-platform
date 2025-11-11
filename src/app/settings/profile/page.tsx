@@ -9,6 +9,10 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { showToast } from '@/lib/toast'
 import { useRouter } from 'next/navigation'
+import { Layout } from '@/components/Layout'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
+import { BackButton } from '@/components/navigation/BackButton'
+import { Settings as SettingsIcon, User } from 'lucide-react'
 
 export default function ProfileSettingsPage() {
   const { wallet, isAuthenticated } = useAuth()
@@ -174,45 +178,62 @@ export default function ProfileSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-400">Einstellungen werden geladen...</p>
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading settings...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-white mb-8">Profil-Einstellungen</h1>
-
-        {/* Tabs */}
-        <div className="border-b border-gray-700 mb-8">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('basic')}
-              className={`pb-4 px-2 font-semibold transition-colors ${
-                activeTab === 'basic'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Basis-Info
-            </button>
-            <button
-              onClick={() => setActiveTab('privacy')}
-              className={`pb-4 px-2 font-semibold transition-colors ${
-                activeTab === 'privacy'
-                  ? 'text-blue-400 border-b-2 border-blue-400'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Privacy
-            </button>
+    <Layout>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+        <div className="max-w-4xl mx-auto px-4">
+          {/* Navigation: Breadcrumbs + Back Button */}
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumbs 
+              items={[
+                { label: 'Settings', href: '/settings/profile', icon: SettingsIcon },
+                { label: 'Profile', icon: User }
+              ]} 
+            />
+            <BackButton 
+              fallbackUrl="/"
+              label="Back"
+            />
           </div>
-        </div>
+
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">Profile Settings</h1>
+
+          {/* Tabs */}
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-8">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => setActiveTab('basic')}
+                className={`pb-4 px-2 font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'basic'
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Basic Info
+              </button>
+              <button
+                onClick={() => setActiveTab('privacy')}
+                className={`pb-4 px-2 font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'privacy'
+                    ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Privacy
+              </button>
+            </div>
+          </div>
 
         {/* Basic Info Tab */}
         {activeTab === 'basic' && (
@@ -464,14 +485,15 @@ export default function ProfileSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {saving ? 'Speichern...' : 'Änderungen speichern'}
+              {saving ? 'Saving...' : 'Save changes'}
             </button>
           </form>
         )}
+        </div>
       </div>
-    </div>
+    </Layout>
   )
 }
 

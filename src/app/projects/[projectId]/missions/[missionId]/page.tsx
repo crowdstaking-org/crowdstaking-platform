@@ -1,11 +1,14 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
-import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle } from 'lucide-react'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
+import { BackButton } from '@/components/navigation/BackButton'
+import { ArrowLeft, ArrowRight, Users, Clock, CheckCircle, Rocket, Target, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { UserProfileLink } from '@/components/profile/UserProfileLink'
 import type { Mission } from '@/types/mission'
 import type { Proposal } from '@/types/proposal'
+import type { Project } from '@/types/project'
 
 /**
  * Public Mission Detail Page
@@ -48,6 +51,28 @@ async function getBaseUrl(): Promise<string> {
   
   // Fallback to localhost for development
   return 'http://localhost:3000'
+}
+
+/**
+ * Fetch project data (server-side) - for breadcrumbs
+ */
+async function fetchProject(projectId: string): Promise<Project | null> {
+  try {
+    const baseUrl = await getBaseUrl()
+    const response = await fetch(`${baseUrl}/api/projects/${projectId}`, {
+      cache: 'no-store'
+    })
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    const result = await response.json()
+    return result.data?.project || null
+  } catch (error) {
+    console.error('Failed to fetch project:', error)
+    return null
+  }
 }
 
 /**
@@ -131,10 +156,11 @@ export default async function MissionDetailPage({ params }: PageProps) {
   // In Next.js 15+, params is a Promise and must be awaited
   const { projectId, missionId } = await params
   
-  // Fetch mission and proposals server-side
-  const [mission, proposals] = await Promise.all([
+  // Fetch mission, proposals, and project (for breadcrumbs) server-side
+  const [mission, proposals, project] = await Promise.all([
     fetchMission(projectId, missionId),
-    fetchMissionProposals(missionId)
+    fetchMissionProposals(missionId),
+    fetchProject(projectId)
   ])
   
   // If mission doesn't exist, show 404
@@ -145,15 +171,21 @@ export default async function MissionDetailPage({ params }: PageProps) {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Back Navigation */}
-          <Link
-            href={`/projects/${projectId}`}
-            className="inline-flex items-center space-x-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 mb-8 font-semibold"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Project</span>
-          </Link>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Navigation: Breadcrumbs + Back Button */}
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumbs 
+              items={[
+                { label: 'Discover Projects', href: '/discover-projects', icon: FolderOpen },
+                { label: project?.name || 'Project', href: `/projects/${projectId}`, icon: Rocket },
+                { label: mission.title, icon: Target }
+              ]} 
+            />
+            <BackButton 
+              fallbackUrl={`/projects/${projectId}`}
+              label="Back"
+            />
+          </div>
 
           {/* Mission Header */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">

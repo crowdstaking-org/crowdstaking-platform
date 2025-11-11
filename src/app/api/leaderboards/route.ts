@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 })
     }
 
-    return NextResponse.json({ leaderboard: data || [] })
+    return NextResponse.json({ data: data || [] })
   } catch (error) {
     console.error('Error fetching leaderboard:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
@@ -90,7 +90,22 @@ async function getContributorsLeaderboard(period: string, limit: number) {
     query = query.gte('last_active_at', cutoffDate.toISOString())
   }
 
-  return query
+  const { data, error } = await query
+  
+  // Flatten the nested profile data
+  const flattenedData = data?.map(item => ({
+    wallet_address: item.wallet_address,
+    missions_completed: item.missions_completed,
+    proposals_completed: item.proposals_completed,
+    completion_rate: item.completion_rate,
+    last_active_at: item.last_active_at,
+    display_name: item.profiles?.display_name,
+    avatar_url: item.profiles?.avatar_url,
+    bio: item.profiles?.bio,
+    trust_score: item.profiles?.trust_score,
+  }))
+
+  return { data: flattenedData, error }
 }
 
 /**
@@ -130,7 +145,23 @@ async function getFoundersLeaderboard(period: string, limit: number) {
     query = query.gte('last_active_at', cutoffDate.toISOString())
   }
 
-  return query
+  const { data, error } = await query
+  
+  // Flatten the nested profile data
+  const flattenedData = data?.map(item => ({
+    wallet_address: item.wallet_address,
+    projects_created: item.projects_created,
+    projects_live: item.projects_live,
+    missions_created: item.missions_created,
+    total_missions_payout: item.total_missions_payout,
+    last_active_at: item.last_active_at,
+    display_name: item.profiles?.display_name,
+    avatar_url: item.profiles?.avatar_url,
+    bio: item.profiles?.bio,
+    trust_score: item.profiles?.trust_score,
+  }))
+
+  return { data: flattenedData, error }
 }
 
 /**

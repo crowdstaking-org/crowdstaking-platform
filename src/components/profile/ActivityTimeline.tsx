@@ -93,11 +93,11 @@ export function ActivityTimeline({ walletAddress, showPrivate = false }: Activit
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white mb-4">Aktivitäten</h2>
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Activity</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 shadow-sm">
         {activities.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-400">Noch keine öffentlichen Aktivitäten</p>
+            <p className="text-gray-600 dark:text-gray-400">No public activity yet</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -133,7 +133,7 @@ function ActivityItem({ activity, icon }: ActivityItemProps) {
         if (event_data?.endorser_wallet_address) {
           return (
             <span>
-              Empfehlung erhalten von{' '}
+              Endorsement received from{' '}
               <UserProfileLink
                 walletAddress={event_data.endorser_wallet_address}
                 displayName={event_data.endorser_display_name}
@@ -142,16 +142,16 @@ function ActivityItem({ activity, icon }: ActivityItemProps) {
                 asLink={true}
                 className="inline-flex items-center"
               />
-              {event_data.skill && <> für <strong>{event_data.skill}</strong></>}
+              {event_data.skill && <> for <strong>{event_data.skill}</strong></>}
             </span>
           )
         }
-        return 'Empfehlung erhalten'
+        return 'Endorsement received'
 
       case 'badge_earned':
         return (
           <span>
-            Badge verdient: <strong>{event_data?.badge_name || 'Unknown Badge'}</strong>
+            Badge earned: <strong>{event_data?.badge_name || 'Unknown Badge'}</strong>
           </span>
         )
 
@@ -172,7 +172,7 @@ function ActivityItem({ activity, icon }: ActivityItemProps) {
       case 'proposal_completed':
         return (
           <span>
-            Mission abgeschlossen: <strong>{event_data?.proposal_title || 'Untitled'}</strong>
+            Mission completed: <strong>{event_data?.proposal_title || 'Untitled'}</strong>
             {event_data?.cstake_earned && (
               <> ({(event_data.cstake_earned / 10000000).toFixed(2)}% $CSTAKE)</>
             )}
@@ -182,28 +182,28 @@ function ActivityItem({ activity, icon }: ActivityItemProps) {
       case 'project_created':
         return (
           <span>
-            Projekt erstellt: <strong>{event_data?.project_name || 'Untitled Project'}</strong>
+            Project created: <strong>{event_data?.project_name || 'Untitled Project'}</strong>
           </span>
         )
 
       case 'project_launched':
         return (
           <span>
-            Projekt gelauncht: <strong>{event_data?.project_name || 'Untitled Project'}</strong>
+            Project launched: <strong>{event_data?.project_name || 'Untitled Project'}</strong>
           </span>
         )
 
       case 'mission_created':
         return (
           <span>
-            Mission erstellt: <strong>{event_data?.mission_title || 'Untitled Mission'}</strong>
+            Mission created: <strong>{event_data?.mission_title || 'Untitled Mission'}</strong>
           </span>
         )
 
       case 'milestone_reached':
         return (
           <span>
-            Meilenstein erreicht: <strong>{event_data?.milestone || 'Unknown'}</strong>
+            Milestone reached: <strong>{event_data?.milestone || 'Unknown'}</strong>
           </span>
         )
 
@@ -213,14 +213,14 @@ function ActivityItem({ activity, icon }: ActivityItemProps) {
   }
 
   return (
-    <div className="flex gap-4 pb-4 border-b border-gray-700 last:border-0">
+    <div className="flex gap-4 pb-4 border-b border-gray-200 dark:border-gray-700 last:border-0">
       <div className="text-2xl flex-shrink-0">{icon}</div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-medium mb-1">
+        <p className="text-gray-900 dark:text-white font-medium mb-1">
           {renderMessage()}
         </p>
-        <p className="text-sm text-gray-400">
-          {new Date(created_at).toLocaleString('de-DE', {
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {new Date(created_at).toLocaleString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',

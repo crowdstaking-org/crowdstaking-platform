@@ -42,11 +42,11 @@ export function SkillTags({ skills, walletAddress, editable = false, onSkillsCha
       {skills.map((skill) => (
         <div
           key={skill}
-          className="inline-flex items-center gap-2 px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-full text-sm"
+          className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm hover:border-gray-300 dark:hover:border-gray-500 transition-colors"
         >
-          <span className="text-blue-300">{skill}</span>
+          <span className="text-gray-700 dark:text-gray-200 font-medium">{skill}</span>
           {endorsements[skill] > 0 && (
-            <span className="text-xs text-gray-400">+{endorsements[skill]}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">+{endorsements[skill]}</span>
           )}
         </div>
       ))}

@@ -1,7 +1,9 @@
 import { notFound } from 'next/navigation'
 import { headers } from 'next/headers'
 import { Layout } from '@/components/Layout'
-import { Users, Lightbulb, TrendingUp, CheckCircle, Clock, ArrowRight } from 'lucide-react'
+import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
+import { BackButton } from '@/components/navigation/BackButton'
+import { Users, Lightbulb, TrendingUp, CheckCircle, Clock, ArrowRight, FolderOpen, Rocket } from 'lucide-react'
 import Link from 'next/link'
 import type { Project, ProjectStats } from '@/types/project'
 import type { MissionWithStats } from '@/types/mission'
@@ -141,7 +143,21 @@ export default async function ProjectDetailPage({ params }: PageProps) {
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Navigation: Breadcrumbs + Back Button */}
+          <div className="flex items-center justify-between mb-6">
+            <Breadcrumbs 
+              items={[
+                { label: 'Discover Projects', href: '/discover-projects', icon: FolderOpen },
+                { label: project.name, icon: Rocket }
+              ]} 
+            />
+            <BackButton 
+              fallbackUrl="/discover-projects"
+              label="Back"
+            />
+          </div>
+
           {/* Header */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
