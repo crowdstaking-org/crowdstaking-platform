@@ -197,13 +197,13 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
         <button
             onClick={handleLaunch}
             disabled={isLaunching}
-            className="w-full group flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white px-10 py-5 rounded-lg hover:from-blue-700 hover:to-purple-700 dark:hover:from-blue-600 dark:hover:to-purple-600 transition-all text-xl font-bold shadow-lg btn-hover-lift btn-primary-glow ripple disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full group flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white px-10 py-5 rounded-lg hover:from-blue-700 hover:to-purple-700 dark:hover:from-blue-600 dark:hover:to-purple-600 transition-all text-xl font-bold shadow-lg btn-hover-lift btn-primary-glow ripple cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
             <Rocket className={`w-6 h-6 ${isLaunching ? 'animate-spin' : ''}`} />
             <span>
               {isLaunching 
                 ? currentPhase || 'Launching...' 
-                : '🚀 Launch Mission Now'
+                : 'Launch Mission Now'
               }
             </span>
         </button>
