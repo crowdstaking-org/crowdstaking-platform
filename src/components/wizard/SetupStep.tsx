@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, CheckCircle, XCircle, Loader2, AlertTriangle } f
 
 interface SetupStepProps {
   data: {
-    legalWrapper: boolean
     tokenName: string
     tokenSymbol: string
   }
@@ -60,7 +59,6 @@ export function SetupStep({ data, onUpdate, onNext, onBack }: SetupStepProps) {
   }, [data.tokenSymbol])
   
   const canProceed = 
-    data.legalWrapper !== undefined &&
     data.tokenName.length >= 2 &&
     data.tokenSymbol.length >= 2 &&
     data.tokenSymbol.length <= 10 &&
@@ -71,108 +69,46 @@ export function SetupStep({ data, onUpdate, onNext, onBack }: SetupStepProps) {
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 sm:p-12">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-          We're Now Incorporating Your "Digital Company".
+          Configure Your Project Token
         </h2>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
-          To remove complexity, all projects start with our audited "Factory"
-          setup. You don't need to code or design anything yourself. This is our
-          "all-inclusive" package.
+          To remove complexity, all projects start with our audited token deployment.
+          You don't need to code or design anything yourself - we handle the technical implementation for you.
         </p>
 
         {/* What We Do For You */}
         <div className="space-y-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            What We Do For You:
-          </h3>
-
-          {/* Token */}
-          <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700">
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700">
             <div className="flex items-start space-x-3">
               <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
               <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  Your Project Token (Your "Equity")
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300">
-                  We deploy a standard token contract for you (e.g.,
-                  $PROJECT-A). This represents 100% ownership of your project.
-                  We recommend a hard cap of 1 billion tokens, analogous to
-                  Bitcoin.
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                  Your Project Token - Your Digital "Equity"
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  We'll automatically deploy a secure token contract for your project.
+                  This represents 100% ownership and can be distributed to co-founders and contributors.
                 </p>
+                <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Total supply: 1 billion tokens (industry standard)</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>98% allocated to you, 2% platform contribution</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span>Deployed on Base (low gas fees, high security)</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-600 dark:text-green-400">✓</span>
+                    <span className="font-semibold">No ETH required - we pay all gas fees!</span>
+                  </li>
+                </ul>
               </div>
             </div>
-          </div>
-
-          {/* Legal Wrapper */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-700">
-            <div className="flex items-start space-x-3">
-              <CheckCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
-              <div>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                  The "Legal-Wrapper-as-a-Service"
-                </h4>
-                <p className="text-gray-700 dark:text-gray-300">
-                  This is your bridge to the real world. We provide a legal
-                  shell (e.g., a Wyoming DAO LLC, managed by our Swiss
-                  Foundation) so you can invoice B2B customers and sign
-                  contracts.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Your Choice */}
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 mb-8">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            Your Only Choice (Important for Sarah):
-          </h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            Do you want to use the "Legal-Wrapper-as-a-Service"?
-          </p>
-
-          <div className="space-y-3">
-            <label className="flex items-start space-x-3 cursor-pointer">
-              <input
-                type="radio"
-                checked={data.legalWrapper === true}
-                onChange={() =>
-                  onUpdate({
-                    legalWrapper: true,
-                  })
-                }
-                className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  Yes, please activate.
-                </span>
-                <span className="text-green-600 dark:text-green-400 ml-2">
-                  (Recommended. Required for invoicing and contracts)
-                </span>
-              </div>
-            </label>
-
-            <label className="flex items-start space-x-3 cursor-pointer">
-              <input
-                type="radio"
-                checked={data.legalWrapper === false}
-                onChange={() =>
-                  onUpdate({
-                    legalWrapper: false,
-                  })
-                }
-                className="mt-1 w-5 h-5 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="font-semibold text-gray-900 dark:text-white">
-                  No, I'm starting as a purely decentralized on-chain protocol.
-                </span>
-                <span className="text-gray-500 dark:text-gray-400 ml-2">
-                  (Only for Web3 pros like "Alex")
-                </span>
-              </div>
-            </label>
           </div>
         </div>
 

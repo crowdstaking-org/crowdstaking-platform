@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
-import { requestLegalSignature, type LegalSignatureParams } from '@/lib/legal/wyomingSignature'
 import toast from 'react-hot-toast'
 
 export interface LaunchMissionData {
@@ -12,7 +11,6 @@ export interface LaunchMissionData {
   tags: string
   tokenName: string
   tokenSymbol: string
-  legalWrapper: boolean
 }
 
 export interface LaunchResult {
@@ -28,13 +26,12 @@ export interface LaunchResult {
  * 
  * Flow:
  * 1. Create project in database
- * 2. Deploy token via ThirdWeb (founder signs TX)
- * 3. Transfer 2% to DAO (founder signs TX)
- * 4. Sign legal message (founder signs message)
- * 5. Update project with token info
- * 6. Create initial mission
+ * 2. Deploy token via backend (automatic - no user interaction needed!)
+ * 3. Update project with token info
+ * 4. Create initial mission
  * 
- * All blockchain operations require founder's wallet signatures
+ * NO blockchain confirmations required from user!
+ * Backend handles all gas fees via server wallet.
  */
 export function useLaunchMission() {
   const [isLaunching, setIsLaunching] = useState(false)
@@ -128,28 +125,7 @@ export function useLaunchMission() {
         throw new Error(error.message || 'Token deployment failed')
       }
       
-      // Phase 3: Legal Signature (ONLY user confirmation!)
-      let legalSignature = null
-      if (data.legalWrapper) {
-        setCurrentPhase('📝 Please sign legal incorporation message...')
-        toast('Please sign the Wyoming DAO LLC incorporation in your wallet', {
-          icon: '📝',
-          duration: 10000,
-        })
-        
-        const signatureParams: LegalSignatureParams = {
-          projectName: data.projectName,
-          founderAddress: account.address,
-          tokenAddress,
-        }
-        
-        // This will trigger MetaMask/wallet signature popup
-        legalSignature = await requestLegalSignature(account as any, signatureParams)
-        
-        toast.success('Legal incorporation signed!')
-      }
-      
-      // Phase 4: Update Project with Token & Legal Info
+      // Phase 3: Update Project with Token Info
       setCurrentPhase('Finalizing project setup...')
       await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
@@ -163,13 +139,10 @@ export function useLaunchMission() {
           token_symbol: data.tokenSymbol,
           project_wallet_address: account.address, // For MVP, founder wallet = project wallet
           token_status: 'illiquid',
-          legal_signature: legalSignature?.signature || null,
-          legal_message: legalSignature?.message || null,
-          legal_signed_at: legalSignature?.signedAt || null,
         }),
       })
       
-      // Phase 5: Create Initial Mission
+      // Phase 4: Create Initial Mission
       setCurrentPhase('Creating initial mission...')
       await fetch('/api/missions', {
         method: 'POST',
@@ -222,8 +195,6 @@ export function useLaunchMission() {
           console.log('Token address:', tokenAddress)
           console.log('View on Basescan:', `https://sepolia.basescan.org/address/${tokenAddress}`)
         }
-      } else if (error.message?.includes('Legal signature was rejected')) {
-        toast.error('Legal signature required to activate Wyoming DAO LLC.')
       } else {
         toast.error(error.message || 'Failed to launch mission. Please try again.')
       }

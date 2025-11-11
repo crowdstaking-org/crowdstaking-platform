@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Rocket, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Rocket, CheckCircle } from 'lucide-react'
 import { useLaunchMission } from '@/hooks/useLaunchMission'
 import { ConnectButton } from 'thirdweb/react'
 import { client, wallets } from '@/lib/thirdweb'
@@ -14,7 +14,6 @@ interface ReviewStepProps {
     tags: string
     tokenName: string
     tokenSymbol: string
-    legalWrapper: boolean
   }
   onNext: () => void
   onBack: () => void
@@ -118,55 +117,46 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
 
           <div>
             <span className="font-semibold text-gray-700 dark:text-gray-300">
-              Token Setup:
+              Token Distribution:
             </span>
             <p className="text-gray-900 dark:text-white">
-              1 Billion {data.tokenSymbol} Tokens (98% to you, 2% to DAO)
-            </p>
-          </div>
-
-          <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">
-              Legal Setup:
-            </span>
-            <p className="text-gray-900 dark:text-white">
-              {data.legalWrapper
-                ? 'Legal Wrapper (Wyoming DAO LLC) - Activated'
-                : 'On-Chain Only'}
-            </p>
-          </div>
-
-          <div>
-            <span className="font-semibold text-gray-700 dark:text-gray-300">
-              Protocol Contribution:
-            </span>
-            <p className="text-gray-900 dark:text-white">
-              2% (20,000,000 tokens) to CrowdStaking DAO
+              1 Billion {data.tokenSymbol} Tokens (98% to you, 2% to CrowdStaking DAO)
             </p>
           </div>
         </div>
 
-        {/* Wallet Notice */}
-        <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-6 border-l-4 border-yellow-600 dark:border-yellow-400 mb-8">
+        {/* Info Notice */}
+        <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700 mb-8">
           <div className="flex items-start space-x-3">
-            <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-1" />
+            <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
             <div>
               <h4 className="font-bold text-gray-900 dark:text-white mb-2">
-                Important: The "Wallet Moment"
+                100% Automatic Deployment
               </h4>
               <p className="text-gray-700 dark:text-gray-300 mb-3">
-                To incorporate your "Digital Company", you only need to confirm
-                ONE action in your wallet:
+                When you click "Launch Mission", everything happens automatically via our infrastructure:
               </p>
-              <ol className="list-decimal ml-6 space-y-2 text-gray-700 dark:text-gray-300">
-                <li>Legal signature (Wyoming DAO LLC incorporation)</li>
-              </ol>
-              <div className="mt-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500 dark:border-green-400">
-                <p className="text-sm text-gray-700 dark:text-gray-300">
-                  ✅ <strong>Good news:</strong> Token deployment and distribution 
-                  happen automatically via our backend infrastructure. 
-                  <strong className="text-green-700 dark:text-green-300">You don't need any ETH!</strong> 
-                  {' '}We handle all gas fees for you.
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>Token contract deployment on Base blockchain</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>98% of tokens sent to your wallet</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-600 dark:text-green-400">✓</span>
+                  <span>2% platform contribution to CrowdStaking DAO</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
+                  <span className="font-semibold">You don't need any ETH - we pay all gas fees!</span>
+                </li>
+              </ul>
+              <div className="mt-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg p-3">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  ⏱️ The entire process takes about 30-60 seconds. Please don't close this window during deployment.
                 </p>
               </div>
             </div>
@@ -179,7 +169,10 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
           <div className="space-y-4">
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-700">
               <p className="text-center text-gray-700 dark:text-gray-300 mb-4">
-                <strong>Connect your wallet to launch your mission</strong>
+                <strong>Create your account to launch your mission</strong>
+              </p>
+              <p className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+                You can login with email, Google, or connect your existing wallet
               </p>
               <div className="flex justify-center">
                 <ConnectButton
@@ -187,11 +180,11 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
                   wallets={wallets}
                   theme="dark"
                   connectButton={{
-                    label: "Connect Wallet to Launch",
+                    label: "Login or Create Account",
                     className: "!px-10 !py-5 !text-xl !font-bold !bg-gradient-to-r !from-blue-600 !to-purple-600 !text-white !shadow-lg",
                   }}
                   connectModal={{
-                    title: "Connect Wallet to Launch Mission",
+                    title: "Login or Create Your Account",
                     size: "wide",
                     showThirdwebBranding: false,
                   }}
@@ -210,7 +203,7 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
             <span>
               {isLaunching 
                 ? currentPhase || 'Launching...' 
-                : '🚀 LAUNCH MISSION NOW & CONFIRM TRANSACTIONS'
+                : '🚀 Launch Mission Now'
               }
             </span>
         </button>

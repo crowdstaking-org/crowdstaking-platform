@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { X } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { WelcomeStep } from '@/components/wizard/WelcomeStep'
 import { MissionStep } from '@/components/wizard/MissionStep'
@@ -16,7 +18,6 @@ interface MissionData {
   tags: string
   tokenName: string
   tokenSymbol: string
-  legalWrapper: boolean
   agreedToFee: boolean
 }
 
@@ -26,6 +27,7 @@ interface MissionData {
  * NO Navigation/Footer - full-screen wizard experience
  */
 export default function WizardPage() {
+  const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [missionData, setMissionData] = useState<MissionData>({
     projectName: '',
@@ -34,9 +36,17 @@ export default function WizardPage() {
     tags: '',
     tokenName: '',
     tokenSymbol: '',
-    legalWrapper: true,
     agreedToFee: false,
   })
+  
+  const handleClose = () => {
+    // Navigate back to homepage or previous page
+    if (window.history.length > 1) {
+      router.back()
+    } else {
+      router.push('/')
+    }
+  }
 
   const updateMissionData = (updates: Partial<MissionData>) => {
     setMissionData((prev) => ({
@@ -98,7 +108,18 @@ export default function WizardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 relative">
+      {/* Close Button - only shown on steps 0-4 (not on success page) */}
+      {currentStep < 5 && (
+        <button
+          onClick={handleClose}
+          className="fixed top-6 right-6 z-50 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group"
+          aria-label="Close wizard"
+        >
+          <X className="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
+        </button>
+      )}
+      
       {/* Progress bar only shown on steps 1-4 */}
       {currentStep > 0 && currentStep < 5 && (
         <WizardProgress currentStep={currentStep} totalSteps={4} />
