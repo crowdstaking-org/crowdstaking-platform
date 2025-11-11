@@ -1,9 +1,19 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-10 (Gamification System - Profiles, Badges, Trust Score, Social Features)
+**Last Updated:** 2025-11-10 (Profile Linking & Gamification Enhancement)
 **Status:** Current state of codebase - marks gaps and dead ends
 
 **Recent Updates:**
+- ✅ **PROFILE LINKING SYSTEM** (Complete)
+  - ✅ Wiederverwendbare Components: UserProfileLink, UserAvatarStack, ProfileBadge
+  - ✅ Proposals: Creator Profile-Links mit Avatar, Name, Trust Score
+  - ✅ Blog: Author Profile-Links in Posts & Comments
+  - ✅ Admin Panel: Creator Profile-Links mit Trust Score
+  - ✅ Team Tab: Co-Founders mit Profile-Links und Stats
+  - ✅ Leaderboards Page: /leaderboards mit Rankings und Profile-Links
+  - ✅ Activity Timeline: User-Mentions in Activities verlinkt
+  - ✅ API Extensions: Proposals API liefert Creator-Profile-Daten
+  - ✅ Navigation: Leaderboards-Link hinzugefügt
 - ✅ **GAMIFICATION SYSTEM** (Phase 1-6 Complete)
   - ✅ Database Schema: profiles extended, stats, badges, social features, privacy, activity
   - ✅ Trust Score Algorithm: Multi-factor reputation system (0-100)
@@ -512,9 +522,9 @@ PHASE 3 COMPLETED:
 | `/discover-projects`                 | ✅     | 85%          | Has proposal CTA (Phase 3)          |
 | `/projects/[projectId]`              | ✅     | 90%          | Public project details              |
 | `/projects/[projectId]/missions/[id]`| ✅     | 90%          | Public mission details              |
-| `/profiles/[address]`                | ✅     | 95%          | **NEW** - Profile with stats, badges, portfolio |
-| `/settings/profile`                  | ✅     | 95%          | **NEW** - Profile & Privacy settings |
-| `/leaderboards`                      | 🟡     | 80%          | **NEW** - API ready, UI needed      |
+| `/profiles/[address]`                | ✅     | 98%          | Profile with stats, badges, portfolio, activity |
+| `/settings/profile`                  | ✅     | 95%          | Profile & Privacy settings |
+| `/leaderboards`                      | ✅     | 95%          | **NEW** - Rankings with Profile Links |
 | `/how-it-works`                      | ✅     | 100%         | Information only                    |
 | `/about`                             | ✅     | 100%         | Information only                    |
 | `/whitepaper`                        | ✅     | 100%         | Information only                    |
@@ -528,7 +538,7 @@ PHASE 3 COMPLETED:
 | `/liquidity-wizard`                  | ✅     | 85%          | Missing: Return navigation          |
 | `/submit-proposal`                   | ⚠️     | 60%          | Old version - replaced by /dashboard/propose |
 
-**Overall Application Completeness: ~85%** (+10% from Gamification System)
+**Overall Application Completeness: ~88%** (+10% from Gamification, +3% from Profile Linking)
 
 ---
 
@@ -562,6 +572,24 @@ PHASE 3 COMPLETED:
 - User flow modifications
 - Feature additions/removals
 
-**Last Review:** 2025-11-10 (Gamification System Complete)
+**Last Review:** 2025-11-10 (Profile Linking System Complete)
 **Next Review:** After next feature implementation
+
+## 9. PROFILE LINKING SYSTEM (NEW)
+
+Profile-Links sind jetzt überall im System integriert:
+
+### ✅ Implementiert
+- **Proposals**: Creator Profile mit Avatar, Name, Trust Score (Mission Detail, Founder Dashboard, Admin Panel)
+- **Blog**: Author Profile-Links in Posts & Comments  
+- **Leaderboards**: Top Contributors/Founders/Rising Stars mit Profile-Links
+- **Team Tab**: Co-Founders mit Profile-Cards (Avatar, Trust Score, Contributions)
+- **Activity Timeline**: User-Mentions in Activities verlinkt
+- **Navigation**: Leaderboards-Link in Main Nav & Mobile Menu
+
+### 🎯 Gamification-Effekt
+- User sehen Trust Scores anderer überall
+- Ein Klick zu jedem User-Profil
+- Social Discovery wird gefördert
+- Team-Zusammenarbeit wird sichtbar
 

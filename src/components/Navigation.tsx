@@ -62,6 +62,12 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               >
                 Blog
               </Link>
+              <Link
+                href="/leaderboards"
+                className="nav-link text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Leaderboards
+              </Link>
               
               {/* Dashboard Link - nur wenn authenticated */}
               {wallet && isAuthenticated && (
@@ -177,6 +183,13 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
                 className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 Blog
+              </Link>
+              <Link
+                href="/leaderboards"
+                onClick={closeMobileMenu}
+                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors px-2 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Leaderboards
               </Link>
               
               {/* Dashboard Link - nur wenn authenticated */}
