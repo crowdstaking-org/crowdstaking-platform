@@ -27,18 +27,32 @@ export function UserAccountButton() {
   // Get the wallet from account
   const wallet = (account as any)?._wallet
 
-  // Get user info from Thirdweb account
+  // Get user info from Supabase profile and ThirdWeb account
   useEffect(() => {
     async function getUserInfo() {
       if (!account) return
 
       try {
-        // For InAppWallet with social login, account might have user details
-        // Try to extract from account metadata or make API call
+        // First, try to get info from Supabase profile
+        const response = await fetch(`/api/profiles/${account.address}`)
+        if (response.ok) {
+          const data = await response.json()
+          const profile = data.profile
+          
+          if (profile) {
+            setUserInfo({
+              email: profile.email,
+              name: profile.display_name,
+              avatar: profile.avatar_url,
+            })
+            return
+          }
+        }
+        
+        // Fallback: Try to extract from ThirdWeb account metadata
         const accountDetails = (account as any)?.details
         const accountInfo = (account as any)?.info
         
-        // Check various possible locations for user data
         const email = accountDetails?.email || accountInfo?.email
         const name = accountDetails?.name || accountInfo?.name || accountDetails?.displayName
         const avatar = accountDetails?.picture || accountDetails?.avatar || accountInfo?.picture
@@ -77,21 +91,48 @@ export function UserAccountButton() {
   if (!account) return null
 
   const handleDisconnect = async () => {
+    setIsOpen(false)
+    
+    console.log('🔴 LOGOUT: Starting logout process...')
+    
     try {
-      setIsOpen(false)
+      // Step 1: Clear ThirdWeb wallet data from localStorage FIRST
+      // This prevents auto-reconnect on next page load
+      const thirdWebKeys = Object.keys(localStorage).filter(key => 
+        key.startsWith('thirdweb:') || 
+        key.startsWith('walletToken-') ||
+        key === 'lastAuthProvider'
+      )
+      console.log('🔴 LOGOUT: Clearing ThirdWeb keys:', thirdWebKeys)
+      thirdWebKeys.forEach(key => localStorage.removeItem(key))
       
-      // Logout from auth system
-      await logout()
+      // Step 2: Call logout API to clear session cookie
+      console.log('🔴 LOGOUT: Calling logout API...')
+      await logout().catch(error => {
+        console.error('Logout API call failed:', error)
+      })
       
-      // Disconnect wallet
+      // Step 3: Disconnect wallet from ThirdWeb
+      // This will set account to null and trigger useAuth cleanup
+      console.log('🔴 LOGOUT: Disconnecting wallet...')
       if (wallet) {
-        disconnect(wallet)
+        await disconnect(wallet).catch(error => {
+          console.error('Wallet disconnect failed:', error)
+        })
       }
       
-      // Reload page to ensure clean state
-      window.location.href = '/'
+      console.log('🔴 LOGOUT: Complete! Redirecting to homepage...')
+      
+      // Step 4: Navigate to homepage (triggers state reset without page reload)
+      // Small delay to ensure disconnect completes
+      setTimeout(() => {
+        window.location.href = '/'
+      }, 100)
+      
     } catch (error) {
-      console.error('Logout failed:', error)
+      console.error('🔴 LOGOUT ERROR:', error)
+      // Even on error, try to navigate away
+      window.location.href = '/'
     }
   }
 
@@ -219,7 +260,12 @@ export function UserAccountButton() {
           {/* Logout - Separator */}
           <div className="border-t border-gray-200 dark:border-gray-700 py-1">
             <button
-              onClick={handleDisconnect}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                console.log('🔴 LOGOUT BUTTON CLICKED!')
+                handleDisconnect()
+              }}
               className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
             >
               <LogOut className="w-4 h-4" />

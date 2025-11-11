@@ -30,19 +30,23 @@ interface BookmarkedUser {
 }
 
 export default function BookmarksPage() {
-  const { wallet, isAuthenticated } = useAuth()
+  const { wallet, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [bookmarks, setBookmarks] = useState<BookmarkedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for auth check to complete before redirecting
+    if (!wallet && !authLoading) {
       router.push('/')
       return
     }
-    fetchBookmarks()
-  }, [wallet, isAuthenticated])
+    
+    if (wallet && isAuthenticated) {
+      fetchBookmarks()
+    }
+  }, [wallet, isAuthenticated, authLoading])
 
   async function fetchBookmarks() {
     if (!wallet) return

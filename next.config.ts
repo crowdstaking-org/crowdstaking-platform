@@ -32,6 +32,12 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    /**
+     * Allow SVG images from dicebear.com avatar API
+     * contentDispositionType: 'attachment' for security (prevents SVG execution)
+     */
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
   },
   
   /**

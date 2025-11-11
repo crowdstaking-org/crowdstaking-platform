@@ -15,7 +15,7 @@ import { BackButton } from '@/components/navigation/BackButton'
 import { Settings as SettingsIcon } from 'lucide-react'
 
 export default function ProfileSettingsPage() {
-  const { wallet, isAuthenticated } = useAuth()
+  const { wallet, isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<'basic' | 'privacy'>('basic')
   const [loading, setLoading] = useState(true)
@@ -45,13 +45,17 @@ export default function ProfileSettingsPage() {
   const [skillInput, setSkillInput] = useState('')
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Wait for auth check to complete before redirecting
+    if (!wallet && !authLoading) {
       router.push('/')
       return
     }
-    fetchProfile()
-    fetchPrivacy()
-  }, [wallet, isAuthenticated])
+    
+    if (wallet && isAuthenticated) {
+      fetchProfile()
+      fetchPrivacy()
+    }
+  }, [wallet, isAuthenticated, authLoading])
 
   async function fetchProfile() {
     if (!wallet) return

@@ -24,11 +24,14 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid wallet address' }, { status: 400 })
     }
 
+    // Normalize address to lowercase (Ethereum addresses are case-insensitive)
+    const normalizedAddress = address.toLowerCase()
+
     // Increment profile views (fire and forget)
     supabase
       .from('profiles')
       .update({ profile_views: supabase.rpc('increment', { x: 1 }) as any })
-      .eq('wallet_address', address)
+      .eq('wallet_address', normalizedAddress)
       .then(() => {})
       .catch(() => {}) as any
 
@@ -36,7 +39,7 @@ export async function GET(
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('wallet_address', address)
+      .eq('wallet_address', normalizedAddress)
       .single()
 
     if (profileError || !profile) {
@@ -47,7 +50,7 @@ export async function GET(
     const { data: stats } = await supabase
       .from('profile_stats')
       .select('*')
-      .eq('wallet_address', address)
+      .eq('wallet_address', normalizedAddress)
       .single()
 
     // Fetch badges
@@ -67,14 +70,14 @@ export async function GET(
         )
       `
       )
-      .eq('wallet_address', address)
+      .eq('wallet_address', normalizedAddress)
       .order('earned_at', { ascending: false })
 
     // Fetch privacy settings
     const { data: privacy } = await supabase
       .from('profile_privacy')
       .select('*')
-      .eq('wallet_address', address)
+      .eq('wallet_address', normalizedAddress)
       .single()
 
     // Apply privacy filters
