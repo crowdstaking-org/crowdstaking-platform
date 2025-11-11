@@ -12,7 +12,7 @@ const THIRDWEB_API_BASE = 'https://api.thirdweb.com'
 /**
  * Call ThirdWeb HTTP API with authentication
  */
-async function callThirdWebAPI(endpoint: string, options: RequestInit = {}) {
+export async function callThirdWebAPI(endpoint: string, options: RequestInit = {}) {
   const secretKey = process.env.THIRDWEB_SECRET_KEY
   
   if (!secretKey) {

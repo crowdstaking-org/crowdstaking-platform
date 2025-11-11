@@ -47,3 +47,4 @@ COMMENT ON COLUMN proposals.foundation_offer_cstake_amount IS
 COMMENT ON COLUMN proposals.foundation_notes IS 
   'Foundation feedback or notes regarding the proposal';
 
+

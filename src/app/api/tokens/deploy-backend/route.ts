@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { requireAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { waitForTransactionConfirmation, transferTokens, getGasMode } from '@/lib/thirdweb-backend'
+import { waitForTransactionConfirmation, transferTokens, getGasMode, callThirdWebAPI } from '@/lib/thirdweb-backend'
 
 /**
  * POST /api/tokens/deploy-backend
@@ -90,28 +90,10 @@ export async function POST(request: NextRequest) {
       deployPayload.tx_overrides = { mode: 'sponsored' }
     }
     
-    const secretKey = process.env.THIRDWEB_SECRET_KEY
-    
-    if (!secretKey) {
-      throw new Error('THIRDWEB_SECRET_KEY not configured')
-    }
-    
-    const deployResponse = await fetch(`${THIRDWEB_API_BASE}/v1/deploy`, {
+    const deployResult = await callThirdWebAPI('/v1/deploy', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-secret-key': secretKey,
-      },
       body: JSON.stringify(deployPayload),
     })
-    
-    if (!deployResponse.ok) {
-      const errorText = await deployResponse.text()
-      console.error('Token deployment failed:', errorText)
-      throw new Error(`Token deployment failed: ${errorText}`)
-    }
-    
-    const deployResult = await deployResponse.json()
     const tokenAddress = deployResult.contractAddress || deployResult.result?.contractAddress
     const deployTxId = deployResult.queueId || deployResult.transactionId
     

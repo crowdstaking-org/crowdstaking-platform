@@ -45,3 +45,4 @@ COMMENT ON COLUMN profiles.bio IS
 COMMENT ON COLUMN profiles.github_username IS 
   'GitHub username for social linking';
 
+

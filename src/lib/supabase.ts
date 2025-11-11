@@ -21,3 +21,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create and export Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+

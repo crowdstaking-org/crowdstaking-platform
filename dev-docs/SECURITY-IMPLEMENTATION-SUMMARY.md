@@ -272,3 +272,4 @@ Questions? Check:
 
 **Recommendation:** MVP kann mit aktuellen Security-Maßnahmen gelauncht werden (limited users). Für Production Scale: Redis + Thirdweb Engine ASAP implementieren.
 
+
