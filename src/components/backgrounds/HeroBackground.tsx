@@ -1,6 +1,6 @@
 'use client'
 
-import { AnimatedBlobs } from './AnimatedBlobs'
+import { GravityMesh } from './GravityMesh'
 import { ParticleNetwork } from './ParticleNetwork'
 
 interface HeroBackgroundProps {
@@ -10,9 +10,9 @@ interface HeroBackgroundProps {
 
 /**
  * Combined background effect for hero section
- * Layers particle network with animated blobs/rockets
+ * Layers particle network with gravity mesh effect
  * @param theme Current theme (light/dark)
- * @param isHeroVisible Controls visibility of animated blobs
+ * @param isHeroVisible Controls visibility of background effects
  */
 export function HeroBackground({ theme, isHeroVisible }: HeroBackgroundProps) {
   return (
@@ -23,8 +23,8 @@ export function HeroBackground({ theme, isHeroVisible }: HeroBackgroundProps) {
       {/* Gradient Overlay for better text contrast */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/50 dark:to-gray-800/50 pointer-events-none" />
 
-      {/* Animated Blobs/Rockets - fade out when Hero not visible */}
-      <AnimatedBlobs theme={theme} isVisible={isHeroVisible} />
+      {/* Gravity Mesh - animated undulating grid effect */}
+      <GravityMesh theme={theme} />
     </div>
   )
 }
