@@ -7,6 +7,7 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/hooks/useAuth'
 import type { BlogPost, BlogComment, CreateBlogPostInput, UpdateBlogPostInput, CreateCommentInput } from '@/types/blog'
 
 /**
@@ -229,12 +230,20 @@ export function useBlogComments(slug: string) {
  */
 export function useCreateComment(slug: string) {
   const queryClient = useQueryClient()
+  const { wallet } = useAuth()
 
   return useMutation({
     mutationFn: async (input: CreateCommentInput) => {
+      if (!wallet) {
+        throw new Error('Wallet not connected')
+      }
+
       const response = await fetch(`/api/blog/posts/${slug}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': wallet, // Send wallet address for auth
+        },
         body: JSON.stringify(input),
       })
 
@@ -258,11 +267,19 @@ export function useCreateComment(slug: string) {
  */
 export function useDeleteComment(commentId: string, slug: string) {
   const queryClient = useQueryClient()
+  const { wallet } = useAuth()
 
   return useMutation({
     mutationFn: async () => {
+      if (!wallet) {
+        throw new Error('Wallet not connected')
+      }
+
       const response = await fetch(`/api/blog/comments/${commentId}`, {
         method: 'DELETE',
+        headers: {
+          'x-wallet-address': wallet, // Send wallet address for auth
+        },
       })
 
       if (!response.ok) {

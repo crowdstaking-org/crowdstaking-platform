@@ -463,3 +463,125 @@ button:active {
     animation: none;
   }
 }
+
+/* ========================================
+   Blog Article Enhanced Typography
+   ======================================== */
+
+.prose-blog {
+  /* Base Typography */
+  font-size: 1.125rem; /* 18px */
+  line-height: 1.75;
+  max-width: 70ch; /* ~700px optimal reading width */
+}
+
+.prose-blog h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  font-weight: 800;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: hsl(var(--foreground));
+}
+
+.prose-blog h2 {
+  font-size: 1.875rem; /* 30px */
+  line-height: 1.3;
+  font-weight: 700;
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 100px; /* Offset for fixed header + progress bar */
+}
+
+.prose-blog h3 {
+  font-size: 1.5rem; /* 24px */
+  line-height: 1.4;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  color: hsl(var(--foreground));
+  scroll-margin-top: 100px;
+}
+
+.prose-blog p {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: hsl(var(--foreground));
+}
+
+.prose-blog ul,
+.prose-blog ol {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding-left: 1.75rem;
+}
+
+.prose-blog li {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-blog blockquote {
+  font-style: italic;
+  font-size: 1.125rem;
+  border-left-width: 4px;
+  border-left-color: hsl(var(--primary));
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.prose-blog strong {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.prose-blog a {
+  color: rgb(37, 99, 235); /* blue-600 */
+  text-decoration: underline;
+  text-decoration-color: rgb(191, 219, 254); /* blue-200 */
+  text-underline-offset: 2px;
+  transition: all 0.2s;
+}
+
+.prose-blog a:hover {
+  color: rgb(29, 78, 216); /* blue-700 */
+  text-decoration-color: rgb(37, 99, 235); /* blue-600 */
+}
+
+:root[class~="dark"] .prose-blog a {
+  color: rgb(96, 165, 250); /* blue-400 */
+  text-decoration-color: rgb(30, 58, 138); /* blue-900 */
+}
+
+:root[class~="dark"] .prose-blog a:hover {
+  color: rgb(147, 197, 253); /* blue-300 */
+  text-decoration-color: rgb(59, 130, 246); /* blue-500 */
+}
+
+.prose-blog hr {
+  margin: 3rem 0;
+  border-top: 2px solid hsl(var(--border));
+}
+
+.prose-blog code {
+  font-size: 0.9em;
+  padding: 0.2em 0.4em;
+  background-color: hsl(var(--muted));
+  border-radius: 0.25rem;
+  font-family: var(--font-mono);
+}
+
+.prose-blog pre {
+  background-color: hsl(var(--muted));
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.prose-blog pre code {
+  background-color: transparent;
+  padding: 0;
+}
