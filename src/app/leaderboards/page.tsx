@@ -91,7 +91,7 @@ export default function LeaderboardsPage() {
               </h1>
             </div>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Entdecke die Top-Performer in der CrowdStaking-Community
+              Discover the top performers in the CrowdStaking community
             </p>
           </div>
 
@@ -140,7 +140,7 @@ export default function LeaderboardsPage() {
             {loading ? (
               <div className="text-center py-16">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-400">Lade Leaderboard...</p>
+                <p className="text-gray-600 dark:text-gray-400">Loading leaderboard...</p>
               </div>
             ) : error ? (
               <div className="text-center py-16">
@@ -149,14 +149,14 @@ export default function LeaderboardsPage() {
                   onClick={fetchLeaderboard}
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Erneut versuchen
+                  Try again
                 </button>
               </div>
             ) : data.length === 0 ? (
               <div className="text-center py-16">
                 <Award className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  Noch keine Einträge für diesen Zeitraum
+                  No entries for this time period yet
                 </p>
               </div>
             ) : (
@@ -203,19 +203,19 @@ function LeaderboardRow({ entry, rank, type }: LeaderboardRowProps) {
         return {
           value: entry.missions_completed || 0,
           label: 'Missions',
-          sublabel: `${entry.completion_rate?.toFixed(1) || 0}% Erfolgsrate`
+          sublabel: `${entry.completion_rate?.toFixed(1) || 0}% success rate`
         }
       case 'founders':
         return {
           value: entry.projects_live || 0,
           label: 'Live Projects',
-          sublabel: `${entry.missions_created || 0} Missions erstellt`
+          sublabel: `${entry.missions_created || 0} missions created`
         }
       case 'rising':
         return {
           value: entry.missions_completed || 0,
           label: 'Missions',
-          sublabel: 'Neues Talent'
+          sublabel: 'Rising talent'
         }
     }
   }

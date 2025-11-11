@@ -32,8 +32,12 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
-            <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white logo-hover cursor-pointer">
-              CrowdStaking
+            <Link href="/" className="flex items-center logo-hover cursor-pointer">
+              <img 
+                src="/logo-crowdstaking.svg" 
+                alt="CrowdStaking Logo" 
+                className="h-8 w-auto sm:h-10"
+              />
             </Link>
 
             {/* Desktop Navigation */}
