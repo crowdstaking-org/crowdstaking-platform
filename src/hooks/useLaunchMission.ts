@@ -3,8 +3,6 @@
 import { useState } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 import { requestLegalSignature, type LegalSignatureParams } from '@/lib/legal/wyomingSignature'
-import { deployProjectToken, transfer2PercentToDAO, formatTokenAmount } from '@/lib/contracts/tokenDeploy'
-import { getDAOWalletAddress } from '@/lib/contracts/daoTransfer'
 import toast from 'react-hot-toast'
 
 export interface LaunchMissionData {
@@ -12,6 +10,8 @@ export interface LaunchMissionData {
   mission: string
   vision: string
   tags: string
+  tokenName: string
+  tokenSymbol: string
   legalWrapper: boolean
 }
 
@@ -84,64 +84,55 @@ export function useLaunchMission() {
       const project = responseData.data.project
       projectId = project.id
       
-      // Phase 2: Deploy Token via ThirdWeb SDK
-      setCurrentPhase('🔐 Transaction 1/3: Deploying token contract...')
-      toast('Please confirm the token deployment in your wallet', {
-        icon: '🔐',
+      // Phase 2: Deploy Token via Backend (automatic, no user confirmations!)
+      setCurrentPhase('🚀 Deploying token & distributing ownership...')
+      toast('Deploying token via CrowdStaking infrastructure... This takes ~30 seconds.', {
+        icon: '⚡',
         duration: 10000,
       })
       
-      const tokenSymbol = data.projectName.substring(0, 6).toUpperCase()
-      const totalSupplyWei = 1_000_000_000n * 10n ** 18n // 1 Billion with 18 decimals
-      
-      // Deploy token using ThirdWeb SDK
+      // Deploy token via backend API
       try {
-        tokenAddress = await deployProjectToken({
-          account,
-          name: data.projectName,
-          symbol: tokenSymbol,
+        const deployResponse = await fetch('/api/tokens/deploy-backend', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-wallet-address': account.address,
+          },
+          body: JSON.stringify({
+            tokenName: data.tokenName,
+            tokenSymbol: data.tokenSymbol,
+            projectName: data.projectName,
+          }),
         })
         
+        if (!deployResponse.ok) {
+          const errorData = await deployResponse.json()
+          throw new Error(errorData.error || 'Token deployment failed')
+        }
+        
+        const { tokenAddress: deployedAddress, gasMode } = await deployResponse.json()
+        tokenAddress = deployedAddress
+        
         const shortAddress = `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`
-        toast.success(`Token deployed at ${shortAddress}! Check Basescan.`, { duration: 10000 })
-        console.log('Token deployed:', tokenAddress)
-        console.log('View on Basescan:', `https://sepolia.basescan.org/address/${tokenAddress}`)
+        toast.success(
+          `${data.tokenSymbol} deployed! 98% in your wallet, 2% to DAO. Check console for Basescan link.`,
+          { duration: 15000 }
+        )
+        console.log('\n🎉 Token Deployment Success!')
+        console.log('Token Address:', tokenAddress)
+        console.log('Token Symbol:', data.tokenSymbol)
+        console.log('Basescan:', `https://sepolia.basescan.org/address/${tokenAddress}`)
+        console.log('Gas paid via:', gasMode)
       } catch (error: any) {
         throw new Error(error.message || 'Token deployment failed')
       }
       
-      // Phase 3: Transfer 2% to DAO
-      setCurrentPhase('🔐 Transaction 2/3: Transferring 2% to DAO...')
-      toast('Please confirm the 2% transfer to CrowdStaking DAO', {
-        icon: '💰',
-        duration: 10000,
-      })
-      
-      const daoWallet = getDAOWalletAddress()
-      
-      // Transfer 2% using ThirdWeb SDK
-      let transferResult
-      try {
-        transferResult = await transfer2PercentToDAO({
-          account,
-          tokenAddress,
-          totalSupply: totalSupplyWei,
-          daoWallet,
-        })
-        
-        const twoPercentTokens = formatTokenAmount(transferResult.amount)
-        toast.success(`${twoPercentTokens} tokens (2%) transferred to DAO!`, { duration: 10000 })
-        console.log('2% Transfer TX:', transferResult.transactionHash)
-        console.log('View on Basescan:', `https://sepolia.basescan.org/tx/${transferResult.transactionHash}`)
-      } catch (error: any) {
-        throw new Error(error.message || '2% transfer failed')
-      }
-      
-      // Phase 4: Legal Signature (if enabled)
+      // Phase 3: Legal Signature (ONLY user confirmation!)
       let legalSignature = null
       if (data.legalWrapper) {
-        setCurrentPhase('🔐 Transaction 3/3: Legal incorporation signature...')
-        toast('Please sign the Wyoming DAO LLC incorporation message', {
+        setCurrentPhase('📝 Please sign legal incorporation message...')
+        toast('Please sign the Wyoming DAO LLC incorporation in your wallet', {
           icon: '📝',
           duration: 10000,
         })
@@ -158,7 +149,7 @@ export function useLaunchMission() {
         toast.success('Legal incorporation signed!')
       }
       
-      // Phase 5: Update Project with Token & Legal Info
+      // Phase 4: Update Project with Token & Legal Info
       setCurrentPhase('Finalizing project setup...')
       await fetch(`/api/projects/${projectId}`, {
         method: 'PUT',
@@ -168,7 +159,8 @@ export function useLaunchMission() {
         },
         body: JSON.stringify({
           token_address: tokenAddress,
-          token_symbol: tokenSymbol,
+          token_name: data.tokenName,
+          token_symbol: data.tokenSymbol,
           project_wallet_address: account.address, // For MVP, founder wallet = project wallet
           token_status: 'illiquid',
           legal_signature: legalSignature?.signature || null,
@@ -177,7 +169,7 @@ export function useLaunchMission() {
         }),
       })
       
-      // Phase 6: Create Initial Mission
+      // Phase 5: Create Initial Mission
       setCurrentPhase('Creating initial mission...')
       await fetch('/api/missions', {
         method: 'POST',

@@ -12,6 +12,8 @@ interface ReviewStepProps {
     mission: string
     vision: string
     tags: string
+    tokenName: string
+    tokenSymbol: string
     legalWrapper: boolean
   }
   onNext: () => void
@@ -102,10 +104,24 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
 
           <div>
             <span className="font-semibold text-gray-700 dark:text-gray-300">
+              Token Name:
+            </span>
+            <p className="text-gray-900 dark:text-white">{data.tokenName}</p>
+          </div>
+
+          <div>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">
+              Token Symbol:
+            </span>
+            <p className="text-gray-900 dark:text-white">{data.tokenSymbol}</p>
+          </div>
+
+          <div>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">
               Token Setup:
             </span>
             <p className="text-gray-900 dark:text-white">
-              Factory Contract (1 Billion Tokens)
+              1 Billion {data.tokenSymbol} Tokens (98% to you, 2% to DAO)
             </p>
           </div>
 
@@ -139,28 +155,20 @@ export function ReviewStep({ data, onNext, onBack }: ReviewStepProps) {
                 Important: The "Wallet Moment"
               </h4>
               <p className="text-gray-700 dark:text-gray-300 mb-3">
-                To incorporate your "Digital Company", you'll need to confirm
-                THREE transactions in your wallet (e.g., MetaMask):
+                To incorporate your "Digital Company", you only need to confirm
+                ONE action in your wallet:
               </p>
               <ol className="list-decimal ml-6 space-y-2 text-gray-700 dark:text-gray-300">
-                <li>
-                  Token deployment (creates your ERC20 token)
-                </li>
-                <li>2% transfer to DAO (protocol contribution)</li>
                 <li>Legal signature (Wyoming DAO LLC incorporation)</li>
               </ol>
-              <p className="text-gray-700 dark:text-gray-300 mt-3">
-                Make sure you have ~0.002 ETH for gas fees on Base Sepolia.
-                Get testnet ETH from:{' '}
-                <a 
-                  href="https://www.alchemy.com/faucets/base-sepolia" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="underline hover:text-blue-600"
-                >
-                  Alchemy Faucet ↗
-                </a>
-              </p>
+              <div className="mt-4 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border-l-4 border-green-500 dark:border-green-400">
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  ✅ <strong>Good news:</strong> Token deployment and distribution 
+                  happen automatically via our backend infrastructure. 
+                  <strong className="text-green-700 dark:text-green-300">You don't need any ETH!</strong> 
+                  {' '}We handle all gas fees for you.
+                </p>
+              </div>
             </div>
           </div>
         </div>
