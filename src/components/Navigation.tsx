@@ -72,16 +72,6 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               >
                 Leaderboards
               </Link>
-              
-              {/* Dashboard Link - nur wenn authenticated */}
-              {wallet && isAuthenticated && (
-                <Link
-                  href="/dashboard"
-                  className="nav-link text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors font-semibold"
-                >
-                  Dashboard
-                </Link>
-              )}
             </div>
           </div>
 
