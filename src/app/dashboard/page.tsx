@@ -159,7 +159,7 @@ function DashboardInner() {
               {/* Login Button */}
               <button
                 onClick={login}
-                className="w-full bg-blue-600 dark:bg-blue-500 text-white py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold text-lg"
+                className="w-full bg-blue-600 dark:bg-blue-500 text-white py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold text-lg cursor-pointer"
               >
                 Login
               </button>
@@ -214,7 +214,7 @@ function DashboardInner() {
                 </p>
                 <button
                   onClick={() => router.push('/wizard')}
-                  className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                  className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
                 >
                   <Plus className="w-5 h-5" />
                   <span>Create Your First Project</span>
@@ -232,7 +232,7 @@ function DashboardInner() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center space-x-2 px-4 sm:px-6 py-4 font-semibold transition-colors whitespace-nowrap ${activeTab === tab.id ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
+                    className={`flex items-center space-x-2 px-4 sm:px-6 py-4 font-semibold transition-colors whitespace-nowrap cursor-pointer ${activeTab === tab.id ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400' : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'}`}
                   >
                     <Icon className="w-5 h-5" />
                     <span className="text-sm sm:text-base">{tab.label}</span>
@@ -294,7 +294,7 @@ function DashboardInner() {
 
                   <button
                     onClick={() => router.push('/create-mini-mission')}
-                    className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                    className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
                   >
                     <Plus className="w-5 h-5" />
                     <span>New Mini-Mission</span>
@@ -359,7 +359,7 @@ function DashboardInner() {
 
                   <button
                     onClick={() => router.push('/liquidity-wizard')}
-                    className="w-full inline-flex items-center justify-center space-x-2 bg-purple-600 dark:bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold"
+                    className="w-full inline-flex items-center justify-center space-x-2 bg-purple-600 dark:bg-purple-500 text-white px-4 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold cursor-pointer"
                   >
                     <Droplets className="w-5 h-5" />
                     <span>Make Your Tokens Liquid Now</span>

@@ -79,7 +79,7 @@ export function ContextSwitcher({
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        className="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
       >
         <span className="font-semibold text-gray-900 dark:text-white">
           {currentLabel}
@@ -110,7 +110,7 @@ export function ContextSwitcher({
                   onContextChange(context.id)
                   setIsOpen(false)
                 }}
-                className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${
+                className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer ${
                   currentContext === context.id
                     ? 'bg-blue-50 dark:bg-blue-900/20'
                     : ''

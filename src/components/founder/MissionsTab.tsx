@@ -53,7 +53,7 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
         </h2>
         <button
           onClick={() => router.push('/create-mini-mission')}
-          className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+          className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
         >
           <Plus className="w-5 h-5" />
           <span>Create New Mini-Mission</span>
@@ -73,7 +73,7 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
             </p>
             <button
               onClick={() => router.push('/create-mini-mission')}
-              className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold"
+              className="inline-flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create First Mission</span>
@@ -144,7 +144,7 @@ export function MissionsTab({ projectId }: MissionsTabProps) {
                   <td className="px-6 py-4">
                     <Link
                       href={`/projects/${projectId}/missions/${mission.id}`}
-                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold cursor-pointer"
                     >
                       View Details
                     </Link>

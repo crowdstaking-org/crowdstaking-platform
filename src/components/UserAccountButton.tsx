@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useActiveAccount, useDisconnect } from 'thirdweb/react'
-import { ChevronDown, User, LogOut, Wallet, Mail, Bookmark, UserCircle, Settings } from 'lucide-react'
+import { ChevronDown, User, LogOut, Wallet, Mail, Bookmark, UserCircle, Settings, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import Link from 'next/link'
 
@@ -142,44 +142,55 @@ export function UserAccountButton() {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* User Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-      >
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden">
-          {userInfo.avatar ? (
-            <img 
-              src={userInfo.avatar} 
-              alt="User avatar" 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <User className="w-5 h-5 text-white" />
-          )}
-        </div>
+      {/* Split Button: Dashboard Link + Dropdown */}
+      <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+        {/* Left: Dashboard Link (Avatar + User Info) */}
+        <Link
+          href="/dashboard"
+          className="flex items-center space-x-2 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+        >
+          {/* Avatar */}
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center overflow-hidden">
+            {userInfo.avatar ? (
+              <img 
+                src={userInfo.avatar} 
+                alt="User avatar" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-5 h-5 text-white" />
+            )}
+          </div>
 
-        {/* User Info */}
-        <div className="hidden sm:flex flex-col items-start">
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
-            {userInfo.name || 'Account'}
-          </span>
-          {userInfo.email && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {userInfo.email}
+          {/* User Info */}
+          <div className="hidden sm:flex flex-col items-start">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              {userInfo.name || 'Account'}
             </span>
-          )}
-          {!hasEmailOrName && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {account.address.slice(0, 6)}...{account.address.slice(-4)}
-            </span>
-          )}
-        </div>
+            {userInfo.email && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {userInfo.email}
+              </span>
+            )}
+            {!hasEmailOrName && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {account.address.slice(0, 6)}...{account.address.slice(-4)}
+              </span>
+            )}
+          </div>
+        </Link>
 
-        {/* Chevron */}
-        <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+        {/* Divider */}
+        <div className="w-px h-8 bg-gray-300 dark:bg-gray-600" />
+
+        {/* Right: Dropdown Toggle */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+        >
+          <ChevronDown className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+      </div>
 
       {/* Dropdown Menu */}
       {isOpen && (
@@ -231,6 +242,14 @@ export function UserAccountButton() {
 
           {/* Actions */}
           <div className="py-1">
+            <Link
+              href="/dashboard"
+              onClick={() => setIsOpen(false)}
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
             <Link
               href={`/profiles/${account.address}`}
               onClick={() => setIsOpen(false)}

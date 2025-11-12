@@ -80,7 +80,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
 
           <button
             onClick={handleSave}
-            className="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+            className="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
           >
             Save Changes
           </button>
@@ -116,7 +116,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
             // TODO: Implement legal wrapper process
             console.log('Starting legal wrapper process...')
           }}
-          className="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+          className="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
         >
           Start Legal Wrapper Process
         </button>
@@ -137,7 +137,7 @@ export function SettingsTab({ project }: SettingsTabProps) {
             // TODO: Implement archive project logic with confirmation
             console.log('Archiving project...')
           }}
-          className="bg-red-600 dark:bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-semibold"
+          className="bg-red-600 dark:bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-700 dark:hover:bg-red-600 transition-colors font-semibold cursor-pointer"
         >
           Archive Project
         </button>

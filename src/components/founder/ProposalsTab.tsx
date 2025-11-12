@@ -98,7 +98,7 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
             <button
               key={tab.id}
               onClick={() => setActiveSubTab(tab.id)}
-              className={`flex items-center space-x-2 px-6 py-4 font-semibold transition-colors whitespace-nowrap ${
+              className={`flex items-center space-x-2 px-6 py-4 font-semibold transition-colors whitespace-nowrap cursor-pointer ${
                 activeSubTab === tab.id
                   ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
@@ -165,7 +165,7 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
                     // TODO: Implement proposal review logic
                     console.log('Review proposal:', proposal.id)
                   }}
-                  className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
                 >
                   Review
                 </button>

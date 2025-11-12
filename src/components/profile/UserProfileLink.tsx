@@ -233,7 +233,7 @@ export function UserProfileLink({
     <Link
       href={profileUrl}
       onClick={handleClick}
-      className={`flex items-center ${config.gap} hover:opacity-80 transition-opacity ${className}`}
+      className={`flex items-center ${config.gap} hover:opacity-80 transition-opacity cursor-pointer ${className}`}
       title={`View profile of ${finalDisplayName || walletAddress}`}
     >
       {content}

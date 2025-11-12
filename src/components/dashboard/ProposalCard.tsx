@@ -64,7 +64,7 @@ export function ProposalCard({
 
         <Link
           href="/proposal-review"
-          className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+          className="w-full inline-flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
         >
           <span>Review Proposal Now</span>
           <ArrowRight className="w-5 h-5" />
