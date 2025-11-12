@@ -33,7 +33,7 @@
   --radius: 0.5rem;
 }
 
-:root[class~="dark"] {
+.dark {
   --background: 224 71% 4%;
   --foreground: 213 31% 91%;
 
@@ -550,12 +550,12 @@ button:active {
   text-decoration-color: rgb(37, 99, 235); /* blue-600 */
 }
 
-:root[class~="dark"] .prose-blog a {
+.dark .prose-blog a {
   color: rgb(96, 165, 250); /* blue-400 */
   text-decoration-color: rgb(30, 58, 138); /* blue-900 */
 }
 
-:root[class~="dark"] .prose-blog a:hover {
+.dark .prose-blog a:hover {
   color: rgb(147, 197, 253); /* blue-300 */
   text-decoration-color: rgb(59, 130, 246); /* blue-500 */
 }
