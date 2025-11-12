@@ -48,3 +48,4 @@ COMMENT ON COLUMN proposals.foundation_notes IS
   'Foundation feedback or notes regarding the proposal';
 
 
+

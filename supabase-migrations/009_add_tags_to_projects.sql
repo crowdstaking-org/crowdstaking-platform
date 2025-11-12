@@ -14,3 +14,4 @@ COMMENT ON COLUMN projects.tags IS
   'Flexible tags for tech stack, categories, and features (e.g., ["React", "DeFi", "AI/ML"])';
 
 
+

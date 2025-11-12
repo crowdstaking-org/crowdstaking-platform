@@ -31,3 +31,4 @@ INSERT INTO projects (founder_wallet_address, name, description, token_name, tok
 ('0x5e51c2cce8b1c2c2a2d8f0d7e0e5b3c2a1f0e9d8', 'Electron', 'Build cross-platform desktop apps', 'Electron Token', 'ELEC', 1050000000, 'pending', 'active');
 
 
+

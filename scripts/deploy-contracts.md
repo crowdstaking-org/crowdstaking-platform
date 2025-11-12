@@ -192,3 +192,4 @@ console.log("VestingContract deployed:", await contract.getAddress());
 Nach diesen Schritten ist Phase 5 vollständig deployed und die komplette CrowdStaking Anwendung ist funktionsfähig mit echten Smart Contracts auf Base Sepolia!
 
 
+

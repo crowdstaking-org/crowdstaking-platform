@@ -107,3 +107,4 @@ console.log('- Events:', contract.abi.filter(item => item.type === 'event').leng
 console.log('- Bytecode size:', contract.evm.bytecode.object.length / 2, 'bytes');
 
 
+
