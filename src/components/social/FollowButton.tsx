@@ -14,7 +14,7 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ targetAddress }: FollowButtonProps) {
-  const { wallet, isAuthenticated } = useAuth()
+  const { wallet, isAuthenticated, isLoading: authLoading } = useAuth()
   const [isFollowing, setIsFollowing] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -104,7 +104,19 @@ export function FollowButton({ targetAddress }: FollowButtonProps) {
     }
   }
 
-  // Show login prompt if not authenticated
+  // Show loading state while auth is being checked
+  if (authLoading) {
+    return (
+      <button
+        disabled
+        className="px-4 py-2 rounded-lg font-medium bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 cursor-wait opacity-70"
+      >
+        Loading...
+      </button>
+    )
+  }
+
+  // Show login prompt if not authenticated (after auth check completes)
   if (!wallet || !isAuthenticated) {
     return (
       <button

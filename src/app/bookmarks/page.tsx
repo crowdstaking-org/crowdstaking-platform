@@ -37,23 +37,29 @@ export default function BookmarksPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Wait for auth check to complete before redirecting
-    if (!wallet && !authLoading) {
+    // Don't do anything while auth is loading
+    if (authLoading) {
+      return
+    }
+    
+    // Only redirect if auth check is complete AND no wallet
+    if (!wallet) {
       router.push('/')
       return
     }
     
-    if (wallet && isAuthenticated) {
+    // Fetch bookmarks if authenticated
+    if (isAuthenticated) {
       fetchBookmarks()
     }
-  }, [wallet, isAuthenticated, authLoading])
+  }, [wallet, isAuthenticated, authLoading, router])
 
   async function fetchBookmarks() {
     if (!wallet) return
 
     try {
       setLoading(true)
-      const response = await fetch('/api/social/bookmarks', {
+      const response = await fetch('/api/social/bookmark', {
         headers: {
           'x-wallet-address': wallet,
         },

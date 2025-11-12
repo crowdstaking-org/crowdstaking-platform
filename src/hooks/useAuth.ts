@@ -37,24 +37,39 @@ interface AuthState {
 export function useAuth(): AuthState {
   const account = useActiveAccount()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true) // Start as true until initial check completes
   const [error, setError] = useState<string | null>(null)
   const loginAttemptedRef = useRef<string | null>(null)
+  const initialCheckDoneRef = useRef(false)
+  const initTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Check if user is already authenticated when wallet connects
   // If not authenticated, auto-trigger login (once per address)
   useEffect(() => {
+    // Clear any existing timeout
+    if (initTimeoutRef.current) {
+      clearTimeout(initTimeoutRef.current)
+      initTimeoutRef.current = null
+    }
+    
     if (account) {
       const address = account.address.toLowerCase()
       
+      // Mark initial check as done
+      if (!initialCheckDoneRef.current) {
+        initialCheckDoneRef.current = true
+      }
+      
       // Prevent multiple login attempts for same address
       if (loginAttemptedRef.current === address) {
+        setIsLoading(false) // Mark as complete
         return
       }
       
       checkAuthStatus().then(async () => {
         // Double-check we haven't already tried this address
         if (loginAttemptedRef.current === address) {
+          setIsLoading(false)
           return
         }
         
@@ -69,10 +84,32 @@ export function useAuth(): AuthState {
           console.log('✅ Valid session found for:', address)
           setIsAuthenticated(true)
         }
+        
+        // Mark loading as complete after auth check
+        setIsLoading(false)
       })
     } else {
       setIsAuthenticated(false)
       loginAttemptedRef.current = null
+      
+      // Give ThirdWeb time to initialize and restore wallet from localStorage
+      // Only set isLoading = false after timeout if still no account
+      if (!initialCheckDoneRef.current) {
+        console.log('⏳ No account yet, waiting for ThirdWeb to initialize...')
+        initTimeoutRef.current = setTimeout(() => {
+          console.log('⏳ ThirdWeb initialization timeout, marking as complete')
+          initialCheckDoneRef.current = true
+          setIsLoading(false)
+        }, 1000) // Give ThirdWeb 1 second to initialize
+      }
+    }
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (initTimeoutRef.current) {
+        clearTimeout(initTimeoutRef.current)
+        initTimeoutRef.current = null
+      }
     }
   }, [account])
 

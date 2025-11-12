@@ -136,8 +136,8 @@ export async function POST(request: NextRequest) {
     // Set secure httpOnly cookie
     response.cookies.set('session_id', sessionId, {
       httpOnly: true, // Cannot be accessed by JavaScript (XSS protection)
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-      sameSite: 'lax', // CSRF protection
+      secure: false, // Set to false for development (localhost)
+      sameSite: 'strict', // Changed from 'lax' to 'strict' for better cookie sending
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/', // Available site-wide
     })

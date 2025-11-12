@@ -166,11 +166,11 @@ export async function PUT(
     // Add updated_at timestamp
     updates.updated_at = new Date().toISOString()
 
-    // Update profile
+    // Update profile (normalize address to lowercase)
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('wallet_address', address)
+      .eq('wallet_address', address.toLowerCase())
       .select()
       .single()
 

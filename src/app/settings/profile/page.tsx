@@ -45,17 +45,23 @@ export default function ProfileSettingsPage() {
   const [skillInput, setSkillInput] = useState('')
 
   useEffect(() => {
-    // Wait for auth check to complete before redirecting
-    if (!wallet && !authLoading) {
+    // Don't do anything while auth is loading
+    if (authLoading) {
+      return
+    }
+
+    // Only redirect if auth check is complete AND no wallet
+    if (!wallet) {
       router.push('/')
       return
     }
     
-    if (wallet && isAuthenticated) {
+    // CRITICAL: Only fetch if auth is COMPLETE (not loading) AND authenticated
+    if (!authLoading && isAuthenticated) {
       fetchProfile()
       fetchPrivacy()
     }
-  }, [wallet, isAuthenticated, authLoading])
+  }, [wallet, isAuthenticated, authLoading, router])
 
   async function fetchProfile() {
     if (!wallet) return
@@ -82,8 +88,15 @@ export default function ProfileSettingsPage() {
   }
 
   async function fetchPrivacy() {
+    if (!wallet) return
+    
     try {
-      const response = await fetch('/api/profiles/privacy')
+      const response = await fetch('/api/profiles/privacy', {
+        credentials: 'include', // Send cookies with request
+        headers: {
+          'x-wallet-address': wallet, // Fallback header for development
+        },
+      })
       if (response.ok) {
         const data = await response.json()
         const privacy = data.privacy
@@ -111,7 +124,11 @@ export default function ProfileSettingsPage() {
     try {
       const response = await fetch(`/api/profiles/${wallet}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Send cookies with request
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': wallet, // Fallback header for development
+        },
         body: JSON.stringify({
           display_name: displayName,
           bio,
@@ -126,12 +143,12 @@ export default function ProfileSettingsPage() {
       })
 
       if (response.ok) {
-        showToast('Profil erfolgreich aktualisiert', 'success')
+        showToast('Profile updated successfully', 'success')
       } else {
         throw new Error('Failed to update profile')
       }
     } catch (error) {
-      showToast('Fehler beim Aktualisieren des Profils', 'error')
+      showToast('Error updating profile', 'error')
     } finally {
       setSaving(false)
     }
@@ -139,12 +156,18 @@ export default function ProfileSettingsPage() {
 
   async function handleSavePrivacy(e: React.FormEvent) {
     e.preventDefault()
+    
+    if (!wallet) return
 
     setSaving(true)
     try {
       const response = await fetch('/api/profiles/privacy', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Send cookies with request
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-wallet-address': wallet, // Fallback header for development
+        },
         body: JSON.stringify({
           show_token_holdings: showTokenHoldings,
           show_earnings: showEarnings,
@@ -157,12 +180,12 @@ export default function ProfileSettingsPage() {
       })
 
       if (response.ok) {
-        showToast('Privacy-Einstellungen aktualisiert', 'success')
+        showToast('Privacy settings updated', 'success')
       } else {
         throw new Error('Failed to update privacy')
       }
     } catch (error) {
-      showToast('Fehler beim Aktualisieren der Privacy-Einstellungen', 'error')
+      showToast('Error updating privacy settings', 'error')
     } finally {
       setSaving(false)
     }
@@ -292,15 +315,15 @@ export default function ProfileSettingsPage() {
                       value={skillInput}
                       onChange={(e) => setSkillInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                      placeholder="z.B. Solidity, React..."
+                      placeholder="e.g. Solidity, React..."
                       className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                       type="button"
                       onClick={addSkill}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer"
                     >
-                      Hinzufügen
+                      Add
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -324,16 +347,16 @@ export default function ProfileSettingsPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Verfügbarkeit
+                    Availability
                   </label>
                   <select
                     value={availability}
                     onChange={(e) => setAvailability(e.target.value)}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="open">Verfügbar</option>
-                    <option value="busy">Beschäftigt</option>
-                    <option value="unavailable">Nicht verfügbar</option>
+                    <option value="open">Available</option>
+                    <option value="busy">Busy</option>
+                    <option value="unavailable">Unavailable</option>
                   </select>
                 </div>
 
@@ -396,9 +419,9 @@ export default function ProfileSettingsPage() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              {saving ? 'Speichern...' : 'Änderungen speichern'}
+              {saving ? 'Saving...' : 'Save Changes'}
             </button>
           </form>
         )}
@@ -407,10 +430,10 @@ export default function ProfileSettingsPage() {
         {activeTab === 'privacy' && (
           <form onSubmit={handleSavePrivacy} className="space-y-6">
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Sichtbarkeit</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Visibility</h2>
               <div className="space-y-4">
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Token Holdings anzeigen</span>
+                  <span className="text-gray-300">Show token holdings</span>
                   <input
                     type="checkbox"
                     checked={showTokenHoldings}
@@ -420,7 +443,7 @@ export default function ProfileSettingsPage() {
                 </label>
 
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Verdienste anzeigen</span>
+                  <span className="text-gray-300">Show earnings</span>
                   <input
                     type="checkbox"
                     checked={showEarnings}
@@ -430,7 +453,7 @@ export default function ProfileSettingsPage() {
                 </label>
 
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Vollständige Wallet-Adresse anzeigen</span>
+                  <span className="text-gray-300">Show full wallet address</span>
                   <input
                     type="checkbox"
                     checked={showWalletAddress}
@@ -440,7 +463,7 @@ export default function ProfileSettingsPage() {
                 </label>
 
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Aktivitäts-Feed anzeigen</span>
+                  <span className="text-gray-300">Show activity feed</span>
                   <input
                     type="checkbox"
                     checked={showActivityFeed}
@@ -450,7 +473,7 @@ export default function ProfileSettingsPage() {
                 </label>
 
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">GitHub-Aktivität anzeigen</span>
+                  <span className="text-gray-300">Show GitHub activity</span>
                   <input
                     type="checkbox"
                     checked={showGithubActivity}
@@ -462,10 +485,10 @@ export default function ProfileSettingsPage() {
             </div>
 
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-700">
-              <h2 className="text-xl font-bold text-white mb-4">Interaktionen</h2>
+              <h2 className="text-xl font-bold text-white mb-4">Interactions</h2>
               <div className="space-y-4">
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Andere können mir folgen</span>
+                  <span className="text-gray-300">Allow others to follow me</span>
                   <input
                     type="checkbox"
                     checked={allowFollows}
@@ -475,7 +498,7 @@ export default function ProfileSettingsPage() {
                 </label>
 
                 <label className="flex items-center justify-between">
-                  <span className="text-gray-300">Andere können mich empfehlen</span>
+                  <span className="text-gray-300">Allow others to endorse me</span>
                   <input
                     type="checkbox"
                     checked={allowEndorsements}
