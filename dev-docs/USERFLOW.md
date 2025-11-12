@@ -1,9 +1,15 @@
 # CrowdStaking User Flow Diagram
 
-**Last Updated:** 2025-11-10 (Profile Linking & Gamification Enhancement)
+**Last Updated:** 2025-11-12 (Account Deletion Feature)
 **Status:** Current state of codebase - marks gaps and dead ends
 
 **Recent Updates:**
+- ✅ **ACCOUNT DELETION** (Complete - GDPR-compliant)
+  - ✅ SQL Migration: Anonymisierungs- und Löschfunktionen
+  - ✅ API Endpoint: DELETE /api/profiles/delete
+  - ✅ UI: Settings Tab mit 2-Schritt-Bestätigung
+  - ✅ Flow: Settings → Delete Dialog → Logout → Landing
+  - ✅ GDPR Art. 17 konform: Löscht personenbezogene Daten, anonymisiert Content
 - ✅ **PROFILE LINKING SYSTEM** (Complete)
   - ✅ Wiederverwendbare Components: UserProfileLink, UserAvatarStack, ProfileBadge
   - ✅ Proposals: Creator Profile-Links mit Avatar, Name, Trust Score
@@ -134,7 +140,25 @@
     │    └─ [!GAP!] Token distribution visualization
     │
     └─── Tab: Settings
-         └─ [!GAP!] Project settings
+         ├─ Project Details (Name, Mission, Tags)
+         ├─ Legal Wrapper Setup
+         ├─ Danger Zone: Archive Project
+         └─ ✅ Account Deletion (NEW - GDPR-compliant)
+              │
+              ├─ Warning: Permanent deletion notice
+              ├─ Lists what will be deleted (Profile, Stats, Badges, Social)
+              ├─ Lists what stays anonymized (Proposals, Blog Posts, Comments)
+              │
+              ├─ (Click "Account permanent löschen")
+              │   └──> Inline Dialog opens
+              │        ├─ Input field: Type "DELETE"
+              │        ├─ (Cancel) → closes dialog
+              │        └─ (Confirm) → API call
+              │             ├─ DELETE /api/profiles/delete
+              │             ├─ Anonymizes content (SQL function)
+              │             ├─ Deletes profile + CASCADE all related data
+              │             ├─ Logout & clear localStorage
+              │             └─> Redirect to [HOME PAGE] /
     
     
 [DASHBOARD] - Project Statistics Section
@@ -572,7 +596,7 @@ PHASE 3 COMPLETED:
 - User flow modifications
 - Feature additions/removals
 
-**Last Review:** 2025-11-10 (Profile Linking System Complete)
+**Last Review:** 2025-11-12 (Account Deletion Feature Complete)
 **Next Review:** After next feature implementation
 
 ## 9. PROFILE LINKING SYSTEM (NEW)
@@ -592,4 +616,88 @@ Profile-Links sind jetzt überall im System integriert:
 - Ein Klick zu jedem User-Profil
 - Social Discovery wird gefördert
 - Team-Zusammenarbeit wird sichtbar
+
+---
+
+## 10. ACCOUNT DELETION SYSTEM (NEW - GDPR-COMPLIANT)
+
+### ✅ Implementiert (2025-11-12)
+
+**Location**: Founder Dashboard → Settings Tab → Account Deletion Sektion
+
+**Features**:
+- **2-Schritt-Bestätigung**: Minimiert versehentliche Löschungen
+- **Inline-Dialog**: Keine Overlay-Modals, direkt in der Settings-Sektion
+- **DELETE-Eingabe**: User muss "DELETE" tippen zur finalen Bestätigung
+- **Loading-States**: Klare Feedback während des Löschvorgangs
+- **Error-Handling**: Aussagekräftige Fehlermeldungen
+
+**GDPR-Compliance (Art. 17 - Recht auf Vergessenwerden)**:
+
+**Gelöscht (Personenbezogene Daten)**:
+- ✅ Wallet-Adresse, Display-Name, Bio
+- ✅ Email, Avatar-URL, Social-Links (GitHub, Twitter, LinkedIn, Website)
+- ✅ Skills, Trust-Score, Profile-Views
+- ✅ Total Earned Tokens, Availability Status
+- ✅ Profile Stats (Proposals, Missions, Completion Rate, etc.)
+- ✅ User Badges (alle erworbenen Badges)
+- ✅ Social Connections:
+  - Follows (als Follower und Following)
+  - Bookmarks (als Bookmarker und Gebookmarkter)
+  - Endorsements (als Endorser und Endorsed)
+- ✅ Activity Timeline
+- ✅ Privacy Settings
+
+**Anonymisiert (User-Generated Content)**:
+- ✅ Proposals: `creator_address` → NULL
+- ✅ Blog Posts: `author_address` → NULL, `author_name` → "Deleted User"
+- ✅ Blog Comments: `author_address` → NULL, `author_name` → "Deleted User"
+
+**Technische Implementierung**:
+
+1. **Database Migration**: `supabase-migrations/016_account_deletion.sql`
+   - SQL-Funktion `anonymize_user_content(wallet_text)`: Anonymisiert Proposals, Blog Posts, Comments
+   - SQL-Funktion `delete_user_account(wallet_text)`: Löscht Profile + CASCADE-Delete aller Related Data
+
+2. **API Endpoint**: `src/app/api/profiles/delete/route.ts`
+   - DELETE-Methode mit Auth-Validierung (`getAuthenticatedWallet`)
+   - Ruft SQL-Funktion via `supabase.rpc('delete_user_account')`
+   - Error-Handling: 401 Unauthorized, 500 Server Error
+
+3. **UI Component**: `src/components/founder/SettingsTab.tsx`
+   - Inline-Dialog mit State Management
+   - DELETE-Eingabe-Validierung (case-insensitive)
+   - Logout + localStorage.clear() + Redirect zu `/`
+
+**User Flow**:
+```
+[Settings Tab]
+    │
+    ├─ Scroll zu "Account Deletion" Sektion (roter Border)
+    │
+    ├─ Lesen: Warnung + Liste der zu löschenden Daten
+    │
+    ├─ (Click "Account permanent löschen")
+    │   └──> Inline-Dialog erscheint
+    │        ├─ Input: "DELETE" eintippen
+    │        ├─ Disabled bis korrekte Eingabe
+    │        └─ (Click "Account endgültig löschen")
+    │             ├─ Loading-State: "Wird gelöscht..."
+    │             ├─ API Call: DELETE /api/profiles/delete
+    │             ├─ Success: Logout + Clear localStorage
+    │             └─ Redirect: [HOME PAGE] /
+    │
+    └─ (Click "Abbrechen") → Dialog schließt sich
+```
+
+**Rechtliche Basis**:
+- Art. 17 DSGVO: Recht auf Vergessenwerden ✅
+- Art. 6(1)(f) DSGVO: Berechtigtes Interesse an Plattform-Integrität ✅
+- Standard-Praxis: Reddit, GitHub, Stack Overflow verwenden gleiche Strategie ✅
+
+**Security**:
+- ✅ Auth-Validierung auf API-Level
+- ✅ Keine Möglichkeit für andere User, Accounts zu löschen
+- ✅ 2-Schritt-Bestätigung verhindert versehentliche Löschung
+- ✅ Logout erfolgt vor Redirect (verhindert Session-Leaks)
 
