@@ -9,26 +9,22 @@ CREATE OR REPLACE FUNCTION anonymize_user_content(wallet_text TEXT)
 RETURNS void AS $$
 BEGIN
   -- Anonymize proposals
-  -- Set creator_address to NULL for all proposals by this user
+  -- Set creator_wallet_address to NULL for all proposals by this user
   UPDATE proposals 
-  SET creator_address = NULL
-  WHERE creator_address = wallet_text;
+  SET creator_wallet_address = NULL
+  WHERE creator_wallet_address = wallet_text;
   
   -- Anonymize blog posts
-  -- Set author info to NULL/"Deleted User"
+  -- Set author_wallet_address to NULL (author name shown as "Deleted User" via JOIN)
   UPDATE blog_posts 
-  SET 
-    author_address = NULL,
-    author_name = 'Deleted User'
-  WHERE author_address = wallet_text;
+  SET author_wallet_address = NULL
+  WHERE author_wallet_address = wallet_text;
   
   -- Anonymize blog comments
-  -- Set author info to NULL/"Deleted User"
+  -- Set author_wallet_address to NULL (author name shown as "Deleted User" via JOIN)
   UPDATE blog_comments 
-  SET 
-    author_address = NULL,
-    author_name = 'Deleted User'
-  WHERE author_address = wallet_text;
+  SET author_wallet_address = NULL
+  WHERE author_wallet_address = wallet_text;
   
   RAISE NOTICE 'Anonymized content for wallet: %', wallet_text;
 END;

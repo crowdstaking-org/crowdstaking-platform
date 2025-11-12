@@ -84,15 +84,15 @@ npx tsx scripts/run-migrations.ts 016_account_deletion.sql
 
 ### Anonymisiert (User-Generated Content)
 ✅ **Proposals**:
-- `creator_address` → `NULL`
+- `creator_wallet_address` → `NULL`
 
 ✅ **Blog Posts**:
-- `author_address` → `NULL`
-- `author_name` → `"Deleted User"`
+- `author_wallet_address` → `NULL`
+- (Author name wird als "Deleted User" angezeigt via JOIN)
 
 ✅ **Blog Comments**:
-- `author_address` → `NULL`
-- `author_name` → `"Deleted User"`
+- `author_wallet_address` → `NULL`
+- (Author name wird als "Deleted User" angezeigt via JOIN)
 
 ### Rechtliche Basis
 - **Art. 17 DSGVO**: Recht auf Vergessenwerden ✅

@@ -39,17 +39,23 @@ export async function DELETE(request: NextRequest) {
     // This function will:
     // - Anonymize proposals, blog posts, comments
     // - Delete profile (CASCADE deletes stats, badges, follows, etc.)
-    const { error } = await supabase.rpc('delete_user_account', {
+    const { data, error } = await supabase.rpc('delete_user_account', {
       wallet_text: walletAddress
     })
 
     if (error) {
       console.error('❌ Account deletion failed:', error)
+      console.error('❌ Error details:', JSON.stringify(error, null, 2))
       return NextResponse.json(
-        { error: 'Account deletion failed. Please try again.' },
+        { 
+          error: 'Account deletion failed. Please try again.',
+          details: error.message || 'Unknown error'
+        },
         { status: 500 }
       )
     }
+
+    console.log('✅ RPC call successful, data:', data)
 
     console.log('✅ Account deleted successfully:', walletAddress)
 

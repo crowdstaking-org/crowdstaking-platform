@@ -12,14 +12,20 @@ import { useRouter } from 'next/navigation'
 import { Layout } from '@/components/Layout'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { BackButton } from '@/components/navigation/BackButton'
-import { Settings as SettingsIcon } from 'lucide-react'
+import { Settings as SettingsIcon, Trash2 } from 'lucide-react'
 
 export default function ProfileSettingsPage() {
-  const { wallet, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { wallet, isAuthenticated, isLoading: authLoading, logout } = useAuth()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'basic' | 'privacy'>('basic')
+  const [activeTab, setActiveTab] = useState<'basic' | 'privacy' | 'account'>('basic')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  
+  // Account Deletion State
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Basic Info
   const [displayName, setDisplayName] = useState('')
@@ -203,6 +209,46 @@ export default function ProfileSettingsPage() {
     setSkills(skills.filter((s) => s !== skill))
   }
 
+  async function handleDeleteAccount() {
+    if (deleteConfirmation.toLowerCase() !== 'delete') {
+      return
+    }
+
+    setIsDeleting(true)
+    setDeleteError(null)
+
+    try {
+      const response = await fetch('/api/profiles/delete', {
+        method: 'DELETE',
+        credentials: 'include', // Send cookies with request
+        headers: {
+          'x-wallet-address': wallet || '', // Fallback header for development
+        },
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        const errorMessage = data.details 
+          ? `${data.error}: ${data.details}` 
+          : (data.error || 'Account deletion failed')
+        throw new Error(errorMessage)
+      }
+
+      console.log('✅ Account deleted successfully')
+
+      // Clear localStorage and logout
+      localStorage.clear()
+      await logout()
+
+      // Redirect to landing page
+      window.location.href = '/'
+    } catch (error) {
+      console.error('❌ Account deletion error:', error)
+      setDeleteError(error instanceof Error ? error.message : 'An error occurred')
+      setIsDeleting(false)
+    }
+  }
+
   if (loading) {
     return (
       <Layout>
@@ -258,6 +304,16 @@ export default function ProfileSettingsPage() {
                 }`}
               >
                 Privacy
+              </button>
+              <button
+                onClick={() => setActiveTab('account')}
+                className={`pb-4 px-2 font-semibold transition-colors cursor-pointer ${
+                  activeTab === 'account'
+                    ? 'text-red-600 dark:text-red-400 border-b-2 border-red-600 dark:border-red-400'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                }`}
+              >
+                Account Deletion
               </button>
             </div>
           </div>
@@ -517,6 +573,94 @@ export default function ProfileSettingsPage() {
               {saving ? 'Saving...' : 'Save changes'}
             </button>
           </form>
+        )}
+
+        {/* Account Tab - Danger Zone */}
+        {activeTab === 'account' && (
+          <div className="space-y-6">
+            {/* Account Deletion */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 border-2 border-red-500/50">
+              <div className="flex items-center space-x-3 mb-4">
+                <Trash2 className="w-6 h-6 text-red-500" />
+                <h2 className="text-xl font-bold text-red-500">Delete Account</h2>
+              </div>
+              
+              <div className="bg-red-500/10 rounded-lg p-4 mb-4 border border-red-500/30">
+                <p className="text-white font-semibold mb-2">
+                  ⚠️ This action cannot be undone!
+                </p>
+                <p className="text-gray-300 mb-3">
+                  Deleting your account will <strong>permanently</strong> remove all of the following data:
+                </p>
+                <ul className="list-disc list-inside text-gray-300 space-y-1 ml-2">
+                  <li>Profile and personal information (Name, Bio, Avatar, Email)</li>
+                  <li>Badges, Statistics, and Activity Timeline</li>
+                  <li>Social Connections (Follows, Bookmarks, Endorsements)</li>
+                  <li>Privacy Settings</li>
+                </ul>
+                <p className="text-gray-300 mt-3">
+                  <strong>Note:</strong> Your public contributions (Proposals, Blog Posts, Comments) will remain anonymized to preserve platform integrity.
+                </p>
+              </div>
+
+              {!showDeleteDialog ? (
+                <button
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="w-full px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold cursor-pointer"
+                >
+                  Delete Account Permanently
+                </button>
+              ) : (
+                <div className="bg-gray-900/80 rounded-lg p-6 border-2 border-red-500">
+                  <h4 className="text-lg font-bold text-white mb-4">
+                    Confirmation Required
+                  </h4>
+                  
+                  <p className="text-gray-300 mb-4">
+                    To continue, type <code className="px-2 py-1 bg-gray-800 rounded font-mono text-sm text-red-400">DELETE</code> in the field below:
+                  </p>
+                  
+                  <input
+                    type="text"
+                    value={deleteConfirmation}
+                    onChange={(e) => setDeleteConfirmation(e.target.value)}
+                    placeholder="DELETE"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 mb-4 font-mono"
+                    disabled={isDeleting}
+                  />
+
+                  {deleteError && (
+                    <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+                      <p className="text-red-300 text-sm">
+                        {deleteError}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => {
+                        setShowDeleteDialog(false)
+                        setDeleteConfirmation('')
+                        setDeleteError(null)
+                      }}
+                      disabled={isDeleting}
+                      className="flex-1 px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirmation.toLowerCase() !== 'delete' || isDeleting}
+                      className="flex-1 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDeleting ? 'Deleting...' : 'Delete Account Permanently'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
         </div>
       </div>

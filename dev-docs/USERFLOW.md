@@ -649,9 +649,9 @@ Profile-Links sind jetzt überall im System integriert:
 - ✅ Privacy Settings
 
 **Anonymisiert (User-Generated Content)**:
-- ✅ Proposals: `creator_address` → NULL
-- ✅ Blog Posts: `author_address` → NULL, `author_name` → "Deleted User"
-- ✅ Blog Comments: `author_address` → NULL, `author_name` → "Deleted User"
+- ✅ Proposals: `creator_wallet_address` → NULL
+- ✅ Blog Posts: `author_wallet_address` → NULL (Author als "Deleted User" via JOIN)
+- ✅ Blog Comments: `author_wallet_address` → NULL (Author als "Deleted User" via JOIN)
 
 **Technische Implementierung**:
 
