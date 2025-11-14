@@ -38,10 +38,15 @@ export const defaultChain = base;
 export const deploymentChain = baseSepolia; // TODO: Change to 'base' for mainnet
 
 // Multi-Auth Configuration: Email + Wallet + Social Login
+// With Smart Account for Sponsored Transactions (gasless!)
 export const wallets = [
   inAppWallet({
     auth: {
       options: ["email", "google", "wallet"],
+    },
+    smartAccount: {
+      chain: baseSepolia,
+      sponsorGas: true, // ThirdWeb pays gas - user needs NO ETH!
     },
   }),
 ];

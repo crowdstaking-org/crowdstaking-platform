@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 import toast from 'react-hot-toast'
+import { deployToken } from '@/lib/contracts/deployToken'
 
 export interface LaunchMissionData {
   projectName: string
@@ -26,12 +27,12 @@ export interface LaunchResult {
  * 
  * Flow:
  * 1. Create project in database
- * 2. Deploy token via backend (automatic - no user interaction needed!)
+ * 2. Deploy token via Smart Account (SPONSORED GAS - user pays $0!)
  * 3. Update project with token info
  * 4. Create initial mission
  * 
- * NO blockchain confirmations required from user!
- * Backend handles all gas fees via server wallet.
+ * User signs transactions but pays NO GAS!
+ * ThirdWeb Paymaster sponsors all gas fees via Smart Account.
  */
 export function useLaunchMission() {
   const [isLaunching, setIsLaunching] = useState(false)
@@ -81,49 +82,38 @@ export function useLaunchMission() {
       const project = responseData.data.project
       projectId = project.id
       
-      // Phase 2: Deploy Token via Backend (automatic, no user confirmations!)
-      setCurrentPhase('🚀 Deploying token & distributing ownership...')
-      toast('Deploying token via CrowdStaking infrastructure... This takes ~30 seconds.', {
+      // Phase 2: Deploy Token via Smart Account (SPONSORED GAS!)
+      setCurrentPhase('🚀 Deploying token...')
+      toast('Deploying token - gas is sponsored by CrowdStaking! You pay $0!', {
         icon: '⚡',
-        duration: 10000,
+        duration: 8000,
       })
       
-      // Deploy token via backend API
-      try {
-        const deployResponse = await fetch('/api/tokens/deploy-backend', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-wallet-address': account.address,
-          },
-          body: JSON.stringify({
-            tokenName: data.tokenName,
-            tokenSymbol: data.tokenSymbol,
-            projectName: data.projectName,
-          }),
-        })
-        
-        if (!deployResponse.ok) {
-          const errorData = await deployResponse.json()
-          throw new Error(errorData.error || 'Token deployment failed')
-        }
-        
-        const { tokenAddress: deployedAddress, gasMode } = await deployResponse.json()
-        tokenAddress = deployedAddress
-        
-        const shortAddress = `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`
-        toast.success(
-          `${data.tokenSymbol} deployed! 98% in your wallet, 2% to DAO. Check console for Basescan link.`,
-          { duration: 15000 }
-        )
-        console.log('\n🎉 Token Deployment Success!')
-        console.log('Token Address:', tokenAddress)
-        console.log('Token Symbol:', data.tokenSymbol)
-        console.log('Basescan:', `https://sepolia.basescan.org/address/${tokenAddress}`)
-        console.log('Gas paid via:', gasMode)
-      } catch (error: any) {
-        throw new Error(error.message || 'Token deployment failed')
+      // Deploy token via frontend with Smart Account + Sponsored Gas
+      const deployResult = await deployToken({
+        tokenName: data.tokenName,
+        tokenSymbol: data.tokenSymbol,
+        projectName: data.projectName,
+        userAccount: account, // Smart Account with sponsorGas: true!
+        onStatusUpdate: setCurrentPhase,
+      })
+      
+      if (!deployResult.success || !deployResult.tokenAddress) {
+        throw new Error(deployResult.error || 'Token deployment failed')
       }
+      
+      tokenAddress = deployResult.tokenAddress
+      
+      const shortAddress = `${tokenAddress.slice(0, 6)}...${tokenAddress.slice(-4)}`
+      toast.success(
+        `${data.tokenSymbol} deployed at ${shortAddress}! Gas was sponsored - you paid $0!`,
+        { duration: 15000 }
+      )
+      console.log('\n🎉 Token Deployment Success!')
+      console.log('Token Address:', tokenAddress)
+      console.log('Token Symbol:', data.tokenSymbol)
+      console.log('Basescan:', `https://sepolia.basescan.org/address/${tokenAddress}`)
+      console.log('💰 Gas: SPONSORED by ThirdWeb - User paid $0!')
       
       // Phase 3: Update Project with Token Info
       setCurrentPhase('Finalizing project setup...')

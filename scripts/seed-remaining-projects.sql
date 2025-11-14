@@ -32,3 +32,6 @@ INSERT INTO projects (founder_wallet_address, name, description, token_name, tok
 
 
 
+
+
+
