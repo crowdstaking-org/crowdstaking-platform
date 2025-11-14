@@ -1,5 +1,7 @@
 # Phase 5 Completion Summary
 
+> **Modell 4.0 Hinweis:** Dieses Dokument fasst die Ergebnisse des Liquiditätsmodells (v3.0) zusammen. Seit November 2025 gilt das Digitale Partnerschafts-Protokoll (Soulbound Tokens + Dividendenvaults). Alle folgenden Abschnitte sind als Legacy-Referenz gedacht. Für die aktuelle Architektur siehe `dev-docs/VISION.md` und `dev-docs/MVP_FEATURES.md`.
+
 **Datum:** 2025-11-09  
 **Status:** ✅ Vollständig implementiert  
 **Getestet:** Ja (ohne deployed Smart Contracts)
@@ -383,18 +385,24 @@ FOUNDATION_WALLET_PRIVATE_KEY=0x...  # NEVER COMMIT!
 
 ## Next Steps (Post Phase 5)
 
-### Immediate (Required for Production)
-1. ⚠️ Deploy $CSTAKE Token to Base Sepolia
-2. ⚠️ Deploy VestingContract to Base Sepolia
-3. ⚠️ Configure environment variables
-4. ⚠️ Approve VestingContract to spend tokens
-5. ⚠️ Test complete flow on testnet
+### Immediate (Legacy Regression Tests)
+1. Deploy $CSTAKE Token (Base Sepolia) – **nur für Referenz**
+2. Deploy VestingContract (Base Sepolia) – **Legacy Escrow**
+3. Set Environment Variables (`CSTAKE_*`, `VESTING_*`)
+4. Approve VestingContract + run smoke test
 
-### Phase 6 (Dashboard Enhancements)
-- Token price display
-- Wallet balance integration
-- Portfolio analytics
-- Governance features
+### Modell 4.0 Rollout (Aktiv)
+1. Deploy `PartnerSBT` Factory (Soulbound)
+2. Deploy `DividendVaultRegistry` + initial vaults (Gewinn & Kapital)
+3. Provision Honest Foundation Oracle + Honesty-Bond Treasury
+4. Update env (`PARTNER_SBT_ADDRESS`, `DIVIDEND_VAULT_REGISTRY_ADDRESS`, `HONEST_FOUNDATION_ORACLE_URL`)
+5. Migrate backend flows (MVP-003/004) auf neue Verträge
+
+### Phase 6+ (Bewegung & Produkt)
+- Dashboard Module: Partner Shares, Dividend Vault, Tasks
+- Oracle Compliance UX für Kapital-Partner
+- Stiftung / Open-Banking Integration
+- DAO-Voting & Dividend-Distribution UI
 
 ### Phase 7 (Admin Dashboard)
 - Analytics und Metrics
@@ -459,9 +467,24 @@ All Phase 5 success criteria met:
 
 ---
 
+## Transition zu Modell 4.0
+
+| Phase-5 Ergebnis | Status | Modell-4.0 Ersatz |
+|------------------|--------|-------------------|
+| `$CSTAKE` Token  | Legacy | PartnerSBT (non-transferable shares) |
+| `VestingContract` | Legacy | DividendVaultRegistry + Vault Contracts |
+| `createAgreement/releaseAgreement` Flow | Legacy | `registerPartnerShare`, `markWorkDelivered`, `activateCapitalShare`, `claim` |
+| Token Price Display (Phase 6) | Entfernt | Dividend-Vault Dashboard (Earned Dividend) |
+
+- **Code Impact:** `src/lib/contracts/vestingService.ts` bleibt für Regressionstests, neue Services (`partnerShareService`, `dividendVaultService`) ersetzen es.  
+- **DB Impact:** `contract_*` Felder bleiben, werden aber ergänzt um `partner_share_id`, `sbt_token_id`, `oracle_status`.  
+- **Documentation:** Verweise in README/Deployment verweisen auf Partner-SBT/Dividendenmodell; dieses Dokument dient als historische Referenz.
+
+---
+
 ## Conclusion
 
-Phase 5 ist **vollständig und production-ready**. Alle geplanten Features sind implementiert, der Code ist sauber, gut dokumentiert und fehlerbehandelt. Die einzige verbleibende Aufgabe ist das manuelle Deployment der Smart Contracts via ThirdWeb Dashboard.
+Phase 5 ist **vollständig und production-ready** – als Legacy-Referenz. Alle geplanten Features sind implementiert, der Code ist sauber, gut dokumentiert und fehlerbehandelt. Für das aktuelle Digitale Partnerschafts-Protokoll erfolgt das Deployment jedoch via PartnerSBT + Dividendenvault (siehe Modell-4.0 Roadmap).
 
 Die Implementierung folgt Best Practices:
 - ✅ Clean Architecture

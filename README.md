@@ -2,13 +2,13 @@
 
 [![Deploy to DigitalOcean](https://github.com/crowdstaking-org/crowdstaking-platform/actions/workflows/deploy.yml/badge.svg)](https://github.com/crowdstaking-org/crowdstaking-platform/actions/workflows/deploy.yml)
 
-**Decentralized Venture Studio for the AI Era**
+**Digital Partnership Protocol for the AI Era**
 
-CrowdStaking transforms creative initiative into liquid ownership. Contributors become co-founders, not contractors.
+CrowdStaking is a proof-of-work protocol that converts creative initiative into non-tradable partner stakes (Soulbound Tokens) with earned-dividend rights. Shares can never be bought - they are earned through work or approved capital-partner contributions.
 
 🌐 **Live:** https://crowdstaking.org  
-📖 **Vision:** [VISION.md](./VISION.md)  
-🚀 **MVP Features:** [MVP_FEATURES.md](./MVP_FEATURES.md)
+📖 **Vision (Model 4.0):** [dev-docs/VISION.md](./dev-docs/VISION.md)  
+🚀 **MVP Features:** [dev-docs/MVP_FEATURES.md](./dev-docs/MVP_FEATURES.md)
 
 ---
 
@@ -17,7 +17,7 @@ CrowdStaking transforms creative initiative into liquid ownership. Contributors 
 - **Framework:** Next.js 16 with App Router
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS v4
-- **Web3:** ThirdWeb SDK (Wallets, Smart Contracts)
+- **Web3:** ThirdWeb SDK (Wallets, smart contracts for SBTs & vaults)
 - **Deployment:** DigitalOcean App Platform
 - **Region:** Frankfurt (EU)
 

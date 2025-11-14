@@ -54,7 +54,175 @@
 
 ---
 
-## Main User Flow Overview
+## Modell 4.0 – Digitales Partnerschafts-Protokoll (NEU)
+
+```
+[HOME /] 
+   │
+   │ (Click "Join the Movement" / "Make a Proposal")
+   ▼
+[DASHBOARD /dashboard]  — CTA "Submit Partner Proposal"
+   │
+   ├─ Work Proposal (Proof-of-Work)
+   │    ▼
+   │  [ADMIN PANEL] (Double Handshake)
+   │    ▼
+   │  registerPartnerShare()
+   │    ▼
+   │  PartnerSBT Mint + DividendVault Entry
+   │    ▼
+   │  (Pioneer delivers work)
+   │    ▼
+   │  markWorkDelivered() ~~> [!GAP!] UI für Work-Bestätigung auf Dashboard
+   │    ▼
+   │  DAO Voting (Reinvest / Distribute) ~~> [!GAP!] Voting UI
+   │    ▼
+   │  claim() → USDC Dividend Payout
+   │
+   └─ Capital Proposal (Proof-of-Capital)
+        ▼
+     [ADMIN PANEL] (Partner DAO Vote)
+        ▼
+     registerPartnerShare(requires_oracle = true)
+        ▼
+     PartnerSBT Mint (Status: pending_capital)
+        ▼
+     Capital Deposit (USDC → Vault) + Honesty Bond
+        ▼
+     Oracle Confirmation ~~> [!GAP!] "Upload Bank Proof" Flow
+        ▼
+     activateCapitalShare()
+        ▼
+     claim() sobald Dividenden freigegeben
+```
+
+> ⚠️ Alle Schritte nach `registerPartnerShare()` ersetzen den alten `$CSTAKE`-Vesting-Flow. Legacy-Abschnitte bleiben unten zur Referenz markiert.
+
+---
+
+## 0. Zwei-Spur-Strategie (Bewegung vs Produkt)
+
+```
+[Track 1: Bewegung / Testnet]               [Track 2: Produkt / Mainnet]
+   │                                              │
+   │ Build-in-Public (CrowdStaking on itself)     │ Seed-Funding via Kapital-Partner
+   │ Earn $CROWDSTAKING-SBT (Testnet)             │ Honest Foundation + Oracle Build
+   │ 1:1 Upgrade → Mainnet                        │ Pragmatiker ("Sarah") Onboarding
+   │                                              │
+   └─ [!GAP!] UI Toggle (Movement vs Product) ────┘
+```
+
+---
+
+## 1. Work-Partner Journey (Model 4.0)
+
+```
+[DASHBOARD /dashboard]
+   │
+   │ (Click "Make a Proposal")
+   ▼
+[PROPOSAL FORM /dashboard/propose]
+   ├─ Title, Mission Impact, Deliverable
+   ├─ Requested Partner Share (%)
+   ├─ Contribution Type = work
+   └─ Proof Links (Optional)
+       │
+       └─ (Submit) ──> Status `pending_review`
+            │
+            ▼
+        [ADMIN PANEL]
+            ├─ Accept / Counter / Reject
+            └─ If accepted → `foundation_approved`
+                  │
+                  ▼
+          (Contributor Accepts) → `pioneer_approved`
+                  │
+                  └─ Auto job: `registerPartnerShare` + `mintPartnerSBT`
+                               │
+                               ▼
+                      Share Status = `pending_work`
+                               │
+                               └─ (Contributor delivers work)
+                                       │
+                                       ├─ (Click "Work Completed")
+                                       │     ~~> [!GAP!] Dashboard CTA wired to API
+                                       │
+                                       └─ Admin verifies → `markWorkDelivered`
+                                                │
+                                                ▼
+                                       Share Status = `active`
+                                                │
+                                                └─ DAO Vote → Distribution
+                                                │     ~~> [!GAP!] Voting UI
+                                                ▼
+                                        (Contributor clicks Claim)
+                                                │
+                                                └─ `claim()` transfers USDC
+```
+
+---
+
+## 2. Kapital-Partner Journey (Model 4.0)
+
+```
+[DASHBOARD /dashboard]
+   │
+   │ (Submit proposal with Contribution Type = capital)
+   ▼
+[ADMIN PANEL]
+   │
+   ├─ Collect capital amount, intended use, honesty bond
+   └─ Vote + Accept → `foundation_approved`
+          │
+          ▼
+(Contributor Accepts) → `pioneer_approved`
+          │
+          └─ registerPartnerShare(requires_oracle = true)
+                   │
+                   ▼
+          SBT minted (status: pending_capital)
+                   │
+                   └─ Contributor deposits USDC (on-chain) **or**
+                      uploads bank proof ~~> [!GAP!] "Bank Proof Upload" UI
+                           │
+                           ▼
+                Oracle Webhook → `activateCapitalShare`
+                           │
+                           └─ share status = active
+                                   │
+                                   └─ DAO decides → Dividend payout
+                                           │
+                                           └─ Contributor claims from vault
+```
+
+---
+
+## 3. Dividend Claim Flow (Model 4.0)
+
+```
+[DAO Vote Passed]
+   │
+   │ (Set distribution amount in vault)
+   ▼
+[PARTNER DASHBOARD]
+   │
+   ├─ Module "Dividend Vault" shows claimable amount
+   ├─ (Click "Claim")
+   │     └─ `POST /api/dividends/claim/:proposalId`
+   │           ├─ Verifies share belongs to caller
+   │           ├─ Calls `claim()` on vault
+   │           └─ Stores tx hash + updates UI
+   │
+   └─ [!GAP!] DAO Vote history component
+```
+
+---
+
+> **Legacy Hinweis:** Die folgenden Abschnitte beziehen sich auf das alte `$CSTAKE`-basierte Modell. Sie bleiben bis zur vollständigen Migration erhalten und sind entsprechend gekennzeichnet.
+
+---
+
+## Main User Flow Overview (Legacy Reference)
 
 ```
                                     ┌─────────────────┐
@@ -72,7 +240,7 @@
 
 ---
 
-## 1. FOUNDER JOURNEY (Complete Mission Creation & Management)
+## 1. FOUNDER JOURNEY (Legacy v3.0 – Mission Creation & Tokens)
 
 ```
 [HOME PAGE]
@@ -180,7 +348,7 @@
 
 ---
 
-## 2. ADMIN JOURNEY (Review & Negotiate Proposals) ✅ NEW (Phase 4)
+## 2. ADMIN JOURNEY (Legacy v3.0 – Review & Negotiate Proposals) ✅ (Phase 4)
 
 ```
 [ADMIN LOGIN]
@@ -263,7 +431,7 @@
 
 ---
 
-## 3. CO-FOUNDER JOURNEY (Discover & Contribute)
+## 3. CO-FOUNDER JOURNEY (Legacy v3.0 – Discover & Contribute)
 
 ```
 [HOME PAGE]

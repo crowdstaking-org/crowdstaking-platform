@@ -1,5 +1,12 @@
 # Phase 5 Deployment - COMPLETE ✅
 
+> **Model 4.0 Status (November 2025):**  
+> Dieses Dokument beschreibt den Legacy-$CSTAKE-Rollout (Liquiditätsmodell v3.0).  
+> Mit dem Pivot zum Digitalen Partnerschafts-Protokoll (v4.0) dient es nur noch als Referenz für Testnet-Artefakte.  
+> **Neue Infrastruktur:** PartnerSBT, DividendVaultRegistry, Honest-Foundation-Orakel.  
+> **Legacy Artefakte:** `$CSTAKE` ERC20 + `VestingContract` werden durch die oben genannten Komponenten ersetzt.  
+> Siehe `dev-docs/VISION.md` & `dev-docs/MVP_FEATURES.md` für die aktuelle Architektur.
+
 **Deployment Date:** November 9, 2025  
 **Network:** Base Sepolia (Chain ID: 84532)  
 **Status:** ✅ **FULLY DEPLOYED & CONFIGURED**
@@ -8,7 +15,7 @@
 
 ## 🎯 Deployed Contracts
 
-### 1. $CSTAKE Token (ERC20)
+### Legacy Asset: $CSTAKE Token (ERC20)
 - **Address:** `0xa746381E05aE069846726Eb053788D4879B458DA`
 - **Name:** CrowdStaking Test Token
 - **Symbol:** CSTAKE
@@ -24,7 +31,7 @@
 
 ---
 
-### 2. VestingContract
+### Legacy Contract: VestingContract
 - **Address:** `0x417cba6236848dcaf3cfeb83146c74ae7768c812`
 - **Constructor Parameters:**
   - `_cstakeToken`: `0xa746381E05aE069846726Eb053788D4879B458DA`
@@ -273,6 +280,20 @@ Phase 5 is **100% COMPLETE** with:
 - **VestingContract:** https://sepolia.basescan.org/address/0x417cba6236848dcaf3cfeb83146c74ae7768c812
 - **Foundation Wallet:** https://sepolia.basescan.org/address/0x252825B2DD9d4ea3489070C09Be63ea18879E5ab
 - **ThirdWeb Dashboard:** https://thirdweb.com/dashboard
+
+---
+
+## 🔄 Übergang zu Modell 4.0
+
+| Legacy Asset (Phase 5) | Modell 4.0 Ersatz | Status |
+|------------------------|-------------------|--------|
+| `$CSTAKE` ERC20 Token  | Soulbound Partner Tokens (SBT) | **Legacy** – nur noch Testnet-Referenz |
+| `VestingContract` Escrow | `DividendVaultRegistry` + `PartnerSBT` | **Austausch geplant** |
+| Token Approval / Vesting Service | Honest-Foundation Orakel + Honesty-Bond | **Austausch geplant** |
+
+- **Deployment Impact:** Neue Deployments verwenden nur noch SBT + Vault Verträge. `$CSTAKE_TOKEN_ADDRESS_*` und `VESTING_CONTRACT_ADDRESS_*` werden durch `PARTNER_SBT_ADDRESS`, `DIVIDEND_VAULT_REGISTRY_ADDRESS`, `HONEST_FOUNDATION_ORACLE_URL` ersetzt.  
+- **Compliance:** Kapital-Partner müssen Oracle-konforme Konten hinterlegen; Vesting flows dienen lediglich als Regression-Test für alte MVPs.  
+- **Recommended Action:** Behalte diese Datei im Archiv, verlinke in zukünftigen Runbooks auf `dev-docs/VISION.md` und `dev-docs/MVP_FEATURES.md` (MVP-004/MVP-005) für aktuelle Steps.
 
 ---
 

@@ -1,5 +1,9 @@
 # Phase 5 Environment Variables
 
+> **Legacy Hinweis:** Diese Datei dokumentiert die `$CSTAKE` + `VestingContract` Umgebung aus Modell v3.0.  
+> Für das Digitale Partnerschafts-Protokoll (v4.0) gelten neue Variablen (PartnerSBT, DividendVault, Oracle).  
+> Belasse diese Werte nur für Regressionstests; produktive Deployments nutzen die unten ergänzten v4.0-Keys.
+
 ## Smart Contract Integration (Optional)
 
 Diese Umgebungsvariablen werden für die Smart Contract Integration benötigt. Wenn sie nicht gesetzt sind, funktioniert die Anwendung normal, aber ohne Blockchain-Features.
@@ -35,6 +39,20 @@ CSTAKE_TOKEN_ADDRESS=0x...
 # Foundation Wallet Private Key (NIEMALS COMMITTEN!)
 FOUNDATION_WALLET_PRIVATE_KEY=0x...
 ```
+
+## Modell 4.0 Environment Additions
+
+| Zweck | Variable | Beschreibung |
+|-------|----------|--------------|
+| Soulbound Token Factory | `PARTNER_SBT_ADDRESS[_TESTNET]` | Adresse des PartnerSBT (ERC-5192, nicht transferierbar) |
+| Dividendenvault Registry | `DIVIDEND_VAULT_REGISTRY_ADDRESS[_TESTNET]` | Registry für Share-Registration und Aktivierung |
+| Vault RPC (optional) | `DIVIDEND_VAULT_RPC_URL` | Dedizierter RPC für Vault-Interaktionen (falls nicht Base) |
+| Oracle Endpoint | `HONEST_FOUNDATION_ORACLE_URL` | HTTPS Endpoint für Open-Banking Events |
+| Oracle Auth | `HONEST_FOUNDATION_WEBHOOK_SECRET` | Secret zur Signaturprüfung der Oracle-Calls |
+| Honesty Bond Treasury | `HONESTY_BOND_TREASURY_ADDRESS` | Multisig, das Ehrlichkeits-Bonds verwaltet |
+| Provider Auswahl | `OPEN_BANKING_PROVIDER` | `tink`, `finicity`, `plaid`, ... |
+
+> ⚠️ **Migration:** Legacy-Variablen (`CSTAKE_*`, `VESTING_CONTRACT_*`) beibehalten nur für Regressionstests. Neue Deployments nutzen ausschließlich die Modell-4.0-Variablen.
 
 ## Deployment Steps (Manual via ThirdWeb)
 

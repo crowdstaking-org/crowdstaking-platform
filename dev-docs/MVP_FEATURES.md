@@ -84,27 +84,45 @@ MVP-002
 Die "Vorschlags-Engine" (Der Input-Kanal)
 
 ### Context & Goal (The "Why")
-This is the "permissionless" input channel [cf. Vision 26]. Here pioneers submit their own ideas [cf. Vision 31] to build the platform. The process must be frictionless and securely store data in our backend.
+This is the "permissionless" input channel [cf. Vision §2-3]. Hier reichen Pioniere eigeninitiierte Partner-Vorschläge ein – entweder rein operativ (Proof-of-Work) oder als Kapital-Partner (Proof-of-Capital + Governance). Jeder Vorschlag muss eindeutig festhalten, welchen Partneranteil (SBT) der Contributor beantragt und ob Open-Banking-Nachweise (Oracle) erforderlich sind.
 
 ### User Story (The "What")
-"As a connected pioneer, I want to fill out a clear form to submit my proposal (my idea, my deliverable, and my $CSTAKE request) to the foundation."
+"As a connected pioneer, I want to submit my proposal (idea, deliverable, and requested partner share %) to the foundation."
 
 ### Acceptance Criteria (ACs) (The "Target")
 
 **AC1: Proposal Form Display**
 - **GIVEN** I am on the dashboard and have connected my wallet
-- **WHEN** I click "Make a Proposal" (e.g., on URL `/dashboard/propose`)
+- **WHEN** I click "Make a Proposal" (e.g., `/dashboard/propose`)
 - **THEN** I see a form with the following fields:
-  1. Title (text field, max 100 characters)
-  2. Description (textarea, Markdown-capable, "What is your idea and how does it advance the mission?")
-  3. Deliverable (textarea, Markdown-capable, "What is the concrete result? e.g., link to GitHub PR")
-  4. Requested $CSTAKE Tokens (number field, > 0)
+  1. Title (text, max 100 chars)
+  2. Mission Impact Description (Markdown textarea, "How does this advance the posted mission?")
+  3. Deliverable Definition (Markdown textarea, "What tangible outcome will exist?")
+  4. Requested Partner Share (%) – numeric slider/field (0.1–10%) with helper copy "Shares are soulbound; no resale"
+  5. Contribution Type (radio):
+     - `work` (default)
+     - `capital`
+  6. (Conditional for `capital`) Capital Amount (USDC) + Intended Use (textarea)
+  7. Proof Inputs:
+     - Links to past work OR banking statement reference if offline revenue is involved
+     - Checkbox `requires_offchain_oracle` (triggers compliance flow)
 
 **AC2: Proposal Submission**
-- **GIVEN** I fill out the form and click "Submit Proposal"
-- **WHEN** the submission is successful
-- **THEN** the form data is saved in the backend database together with my wallet address and status `pending_review`
-- **AND** I am redirected to my Dashboard (Feature MVP-005) where I see my new proposal in the list
+- **GIVEN** the contributor completes required fields
+- **WHEN** they click "Submit Proposal"
+- **THEN** the backend stores:
+  - wallet address verified via SIWE
+  - requested_partner_share_percent
+  - contribution_type
+  - capital_amount_usdc (nullable)
+  - requires_offchain_oracle boolean
+  - status `pending_review`
+- **AND** they see the proposal inside MVP-005 with clear badge (`Work Proposal` or `Capital Proposal`)
+
+**AC3: Validation & Messaging**
+- Partner share must be between 0.1% and 10%
+- Capital proposals must include a capital amount >= 1000 USDC and intended use
+- If `requires_offchain_oracle` is checked, the UI shows a banner explaining the Open-Banking oracle & honesty-bond requirement (links to docs)
 
 ### Technical Specifications (The "How")
 
@@ -114,7 +132,7 @@ This is the "permissionless" input channel [cf. Vision 26]. Here pioneers submit
 
 **Data Model (Schema):**
 
-Create a `proposals` table in the database:
+Create / extend the `proposals` table:
 
 ```sql
 CREATE TABLE proposals (
@@ -122,13 +140,16 @@ CREATE TABLE proposals (
   created_at TIMESTAMPTZ DEFAULT now(),
   creator_wallet_address TEXT NOT NULL,
   title TEXT NOT NULL,
-  description TEXT NOT NULL,
+  mission_impact TEXT NOT NULL,
   deliverable TEXT NOT NULL,
-  requested_cstake_amount NUMERIC NOT NULL,
+  requested_partner_share_percent NUMERIC NOT NULL CHECK (requested_partner_share_percent > 0 AND requested_partner_share_percent <= 10),
+  contribution_type TEXT NOT NULL CHECK (contribution_type IN ('work','capital')),
+  capital_amount_usdc NUMERIC,
+  capital_intended_use TEXT,
+  requires_offchain_oracle BOOLEAN DEFAULT false,
   status TEXT NOT NULL DEFAULT 'pending_review',
-  -- Status values: 'pending_review', 'counter_offer_pending', 'foundation_approved', 
-  --                'pioneer_approved', 'work_in_progress', 'completed', 'rejected'
-  foundation_offer_cstake_amount NUMERIC,
+  foundation_offer_share_percent NUMERIC,
+  foundation_offer_capital_usdc NUMERIC,
   foundation_notes TEXT
 );
 ```
@@ -137,9 +158,11 @@ CREATE TABLE proposals (
 
 - `POST /api/proposals`
   - Accepts form data
-  - Performs server-side signature verification (to prove wallet ownership)
+  - Performs SIWE signature verification
+  - Validates partner share % rules + capital constraints
+  - Flags `requires_offchain_oracle` proposals for compliance review
   - Saves proposal to `proposals` table
-  - Returns created proposal object
+  - Returns created record with derived fields (e.g., `proposal_reference_code`)
 
 **Routes:**
 - `/dashboard/propose` - Proposal submission form
@@ -162,7 +185,7 @@ MVP-003
 Der "Manuelle-Mediator & Doppelte Handschlag" (Das Kernstück)
 
 ### Context & Goal (The "Why")
-This is the "Wizard of Oz" part [cf. Vision 32]. We (the foundation) act as the AI mediator. This feature is an admin panel for us and an action center for the pioneer to execute the "Double Handshake" [cf. Vision 35, 36].
+This is the "Wizard of Oz" part [cf. Vision 3]. Die Stiftung agiert als menschlicher Mediator bis die vollautomatische KI-Version live ist. Hier entsteht der doppelte Handschlag: Admins prüfen, ob der beantragte Partneranteil (Proof-of-Work oder Kapital) sowie ggf. Open-Banking-Nachweise korrekt sind, bevor der SBT gemintet und der Dividendenvault getriggert wird.
 
 ### User Story (Admin)
 "As a foundation admin, I want to see all proposals with status `pending_review` in a protected area and react to them (reject, make counter-offer, or accept)."
@@ -173,25 +196,33 @@ This is the "Wizard of Oz" part [cf. Vision 32]. We (the foundation) act as the 
 ### Acceptance Criteria (ACs) (The "Target")
 
 **AC1: Admin Actions**
-- **GIVEN** an admin is in the admin panel
+- **GIVEN** an admin is in the panel
 - **WHEN** they open a proposal with status `pending_review`
-- **THEN** they have three actions:
-  1. **[Reject]**: Adds a justification (`foundation_notes`). Sets status to `rejected`.
-  2. **[Counter-Offer]**: Enters a new amount (`foundation_offer_cstake_amount`) and a note (`foundation_notes`). Sets status to `counter_offer_pending`.
-  3. **[Accept]**: Accepts `requested_cstake_amount`. Sets status to `foundation_approved`.
+- **THEN** they can:
+  1. **Reject** – add `foundation_notes`, set status `rejected`.
+  2. **Counter Offer** – edit `foundation_offer_share_percent` (and `foundation_offer_capital_usdc` if contribution type `capital`), add reasoning, set status `counter_offer_pending`.
+  3. **Accept** – confirm the requested partner share (and capital) as-is, set status `foundation_approved`.
 
-**AC2: Pioneer Response to Counter-Offer**
-- **GIVEN** a pioneer opens their dashboard and sees a proposal with status `counter_offer_pending`
-- **WHEN** they open the proposal
-- **THEN** they see the counter-offer and note. They have two actions:
-  1. **[Reject]**: Sets status to `rejected`.
-  2. **[Accept]**: Sets status to `pioneer_approved`. **This triggers the call to Feature MVP-004.**
+**AC2: Capital Compliance Hook**
+- **GIVEN** a proposal is of type `capital` or `requires_offchain_oracle == true`
+- **WHEN** an admin attempts to accept it
+- **THEN** the UI forces entry of:
+  - Honesty bond amount (USDC) that will be locked until oracle confirms deposits
+  - Open-Banking provider selection + account reference
+  - Target vault (capital vs gain vault)
+- **AND** the status moves to `foundation_approved` only after compliance metadata is stored.
 
-**AC3: Pioneer Acceptance of Foundation Approval**
-- **GIVEN** a pioneer sees a proposal with status `foundation_approved`
-- **WHEN** they open the proposal
-- **THEN** they have one action:
-  1. **[Accept & Start]**: Sets status to `pioneer_approved`. **This triggers the call to Feature MVP-004.**
+**AC3: Pioneer Response to Counter-Offer**
+- **GIVEN** a pioneer views a proposal with `counter_offer_pending`
+- **WHEN** they open details
+- **THEN** they see the counter share %, optional capital amount, and governance note. They may:
+  1. Reject – status `rejected`
+  2. Accept – status `pioneer_approved` which triggers MVP-004 (vault allocation + SBT mint preparation)
+
+**AC4: Pioneer Acceptance of Foundation Approval**
+- **GIVEN** a proposal status is `foundation_approved`
+- **WHEN** the pioneer clicks "Accept & Start"
+- **THEN** status becomes `pioneer_approved`, storing timestamp + wallet signature and triggering MVP-004.
 
 ### Technical Specifications (The "How")
 
@@ -200,8 +231,10 @@ This is the "Wizard of Oz" part [cf. Vision 32]. We (the foundation) act as the 
 - Frontend: Admin UI & Pioneer UI
 
 **Data Model (Schema):**
-- Uses the `proposals` table from Feature MVP-002
-- Status transitions are central here
+- Uses the extended `proposals` table (see MVP-002)
+- Additional columns:
+  - `compliance_metadata JSONB` (oracle provider, honesty bond amount, bank_account_reference)
+  - `status_history` (optional table) for traceability
 
 **Status State Machine:**
 ```
@@ -226,209 +259,153 @@ work_in_progress
 
 **API Endpoints:**
 
-- `GET /api/proposals/admin`
-  - **Auth**: Admin only
-  - Returns all proposals
-
+- `GET /api/proposals/admin` – unchanged
 - `PUT /api/proposals/admin/:id`
-  - **Auth**: Admin only
-  - Updates a proposal (admin actions: reject, counter-offer, accept)
-  - Body: `{ action: 'reject' | 'counter_offer' | 'accept', foundation_offer_cstake_amount?: number, foundation_notes?: string }`
-
+  - Body:
+    ```json
+    {
+      "action": "reject" | "counter_offer" | "accept",
+      "foundation_offer_share_percent": number,
+      "foundation_offer_capital_usdc": number,
+      "honesty_bond_usdc": number,
+      "oracle_provider": "tink" | "finicity" | null,
+      "bank_account_reference": "string",
+      "foundation_notes": "string"
+    }
+    ```
+  - Validations enforce honesty bond + oracle fields when `requires_offchain_oracle == true` or contribution_type `capital`.
 - `PUT /api/proposals/respond/:id`
-  - **Auth**: Authenticated as pioneer (must be proposal creator)
-  - Updates a proposal (pioneer actions: accept/reject offer)
-  - Body: `{ action: 'accept' | 'reject' }`
-  - If action is 'accept' and current status is `counter_offer_pending` or `foundation_approved`:
-    - Set status to `pioneer_approved`
-    - Trigger smart contract call (MVP-004 createAgreement)
+  - Pioneer-only (must match `creator_wallet_address`)
+  - Body: `{ "action": "accept" | "reject" }`
+  - Accept triggers:
+    - `pioneer_signature` capture (SIWE)
+    - Status `pioneer_approved`
+    - Event for MVP-004: `{ proposal_id, partner_share_percent, contribution_type, capital_amount_usdc, requires_offchain_oracle }`
 
 **Routes:**
 - `/admin/proposals` - Admin panel
 - `/dashboard/proposals/:id` - Proposal detail view for pioneer
 
 ### AI Notes
-- This is a critical workflow. Build a state machine for status transitions to prevent invalid states.
-- Use middleware to enforce proper authentication and authorization.
-- The `PUT /api/proposals/respond/:id` endpoint must be the trigger for the smart contract call (Feature MVP-004) after setting the status to `pioneer_approved` in the DB.
-- Log all status changes with timestamps for audit trail.
-- Consider adding a `status_history` table for tracking all transitions.
+- State-machine enforcement is mandatory; encode allowed transitions in a shared module.
+- All share percentages must be rounded to 2 decimals before storage to avoid drift between UI and vault calculations.
+- When `requires_offchain_oracle` is true, automatically spawn a compliance task (queue) that pings the oracle microservice; MVP-004 must wait for that task before releasing dividends.
+- Log `pioneer_signature` hash for audit; never store raw SIWE message beyond retention policy.
 
 ---
 
-## MVP-004: Der "Vesting & Transfer" Contract (Die Treuhand-Bank)
+## MVP-004: Der "Dividend Vault & SBT Mint" Contract (Die Treuhand-Bank)
 
 ### Feature-ID
 MVP-004
 
 ### Feature-Name
-Der "Vesting & Transfer" Contract (Die Treuhand-Bank)
+Der "Dividend Vault & SBT Mint" Contract (Die Treuhand-Bank)
 
 ### Context & Goal (The "Why")
-This is the "escrow bank" that creates trust [cf. Vision 38]. Once the "Double Handshake" (MVP-003) is complete, the agreed $CSTAKE tokens must be demonstrably reserved (locked) for the pioneer. They are released when the work is confirmed by both parties [cf. Vision 39].
+Nach dem doppelten Handschlag existiert ein rechtsverbindlicher Partneranteil. MVP-004 automatisiert:
+1. Registrierung des Anteils inkl. SBT
+2. Zuordnung zu Dividendenvault(s) (Gewinn- und Kapitaltranche)
+3. Aktivierung nach Work-Delivery oder Kapital-Deposit
+4. claim()-Schnittstelle für Ausschüttungen [cf. Vision §5].
 
 ### User Story (System)
-"As a system, I want to lock the agreed amount of $CSTAKE in a smart contract after a `pioneer_approved` event, bound to the pioneer's wallet and the proposal ID."
+"As a system, I want to mint a partner SBT and register the share inside the dividend vault the moment `pioneer_approved` fires."
 
 ### User Story (Pioneer & Foundation)
-"As a pioneer or foundation, I want to mark the work as 'done', and when both parties have done this, the tokens should be automatically released."
+"As a pioneer or capital partner, I want to confirm delivery/deposit so my share becomes active and I can claim dividends whenever the DAO decides to distribute."
 
 ### Acceptance Criteria (ACs) (The "Target")
 
-**AC1: Agreement Creation**
-- **GIVEN** the backend (Feature MVP-003) has marked a proposal as `pioneer_approved`
-- **WHEN** the `createAgreement` process is triggered
-- **THEN** the backend (as foundation wallet) calls a function in the smart contract that pulls $CSTAKE tokens from the foundation into the contract and assigns them to a new Agreement (with `proposal_id`, `contributor_address`, `amount`)
+**AC1: Partner Share Registration**
+- **GIVEN** status `pioneer_approved`
+- **WHEN** backend worker runs
+- **THEN** it:
+  - Calls `registerPartnerShare(project_id, proposal_id, contributor, share_percent, contribution_type, requires_oracle)`
+  - Calls `mintPartnerSBT(contributor, proposal_id, share_percent, contribution_type)`
+  - Persists vault references + tx hashes to DB
 
-**AC2: Pioneer Work Confirmation**
-- **GIVEN** an agreement exists in the contract
-- **WHEN** the pioneer calls the function `confirmWorkDone(proposal_id)`
-- **THEN** a flag `pioneer_confirmed` for this agreement is set to `true` in the contract
+**AC2: Work Contribution Activation**
+- **GIVEN** contribution_type `work`
+- **WHEN** pioneer presses "Work Completed" and foundation confirms
+- **THEN** backend signs `markWorkDelivered(proposal_id)` which flips share status to `active` and sets proposal DB status `work_in_progress` → `completed`.
 
-**AC3: Foundation Release**
-- **GIVEN** an agreement exists and `pioneer_confirmed == true`
-- **WHEN** the foundation (admin wallet) calls the function `releaseAgreement(proposal_id)`
-- **THEN** the contract checks if `pioneer_confirmed == true`, sets the foundation flag `foundation_confirmed` to `true`, and transfers the locked $CSTAKE tokens to the `contributor_address`
-- **AND** the proposal DB status is set to `completed`
+**AC3: Capital Contribution Activation**
+- **GIVEN** contribution_type `capital`
+- **WHEN** oracle microservice confirms deposit (or on-chain transfer arrives)
+- **THEN** backend calls `activateCapitalShare(proposal_id, capital_amount_usdc, oracle_proof_hash)`:
+  - Honesty bond escrow is released/redistributed according to compliance outcome
+  - Share transitions from `pending_capital` to `active`
+
+**AC4: Dividend Claim Interface**
+- **GIVEN** DAO votes to distribute profits
+- **WHEN** contributor calls `claim(proposal_id)`
+- **THEN** vault calculates `payout = share_percent * distributable_amount`, transfers USDC, emits `DividendClaimed`, and backend logs the claim.
 
 ### Technical Specifications (The "How")
 
 **Stack:**
-- Smart Contract: Solidity
-- Backend: For calling `createAgreement`
+- Smart Contracts: PartnerSBT (ERC-5192 style) + DividendVaultRegistry (custom)
+- Backend: Secure signer service triggered by queue after MVP-003 events + oracle callbacks
 
-**Contract Functions (VestingContract):**
+**Key Contract Interfaces:**
 
 ```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+enum ContributionType { Work, Capital }
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+interface IPartnerSBT {
+  function mintPartnerSBT(
+    address contributor,
+    uint256 proposalId,
+    uint256 sharePercentBps,
+    ContributionType cType
+  ) external;
+}
 
-contract VestingContract is Ownable {
-    // Struct for the agreement
-    struct Agreement {
-        address contributor;
-        uint256 amount;
-        bool pioneer_confirmed;
-        bool foundation_confirmed;
-        bool exists;
-    }
+interface IDividendVaultRegistry {
+  function registerPartnerShare(
+    uint256 projectId,
+    uint256 proposalId,
+    address contributor,
+    uint256 sharePercentBps,
+    ContributionType cType,
+    bool requiresOracle
+  ) external returns (address dividendVault);
 
-    // Mapping from proposal_id to Agreement
-    mapping(uint256 => Agreement) public agreements;
+  function markWorkDelivered(uint256 proposalId, address confirmer) external;
 
-    // Address of the $CSTAKE (ERC20) token
-    IERC20 public cstakeToken;
+  function activateCapitalShare(
+    uint256 proposalId,
+    uint256 capitalAmountUsdc,
+    bytes32 oracleEvidenceHash
+  ) external;
+}
 
-    // Address of the foundation (allowed to create agreements)
-    address public foundation_wallet;
-
-    // Events
-    event AgreementCreated(uint256 indexed proposal_id, address indexed contributor, uint256 amount);
-    event PioneerConfirmed(uint256 indexed proposal_id);
-    event AgreementReleased(uint256 indexed proposal_id, address indexed contributor, uint256 amount);
-
-    constructor(address _cstakeToken, address _foundation_wallet) {
-        cstakeToken = IERC20(_cstakeToken);
-        foundation_wallet = _foundation_wallet;
-    }
-
-    modifier onlyFoundation() {
-        require(msg.sender == foundation_wallet, "Not foundation");
-        _;
-    }
-
-    // Foundation function: Creates and locks tokens
-    function createAgreement(uint256 _proposal_id, address _contributor, uint256 _amount) external onlyFoundation {
-        require(!agreements[_proposal_id].exists, "Agreement exists");
-        require(_contributor != address(0), "Invalid contributor");
-        require(_amount > 0, "Amount must be > 0");
-        
-        // Pull tokens from foundation into this contract
-        cstakeToken.transferFrom(msg.sender, address(this), _amount);
-        
-        agreements[_proposal_id] = Agreement(_contributor, _amount, false, false, true);
-        emit AgreementCreated(_proposal_id, _contributor, _amount);
-    }
-
-    // Pioneer function: Confirms work
-    function confirmWorkDone(uint256 _proposal_id) external {
-        Agreement storage agreement = agreements[_proposal_id];
-        require(agreement.exists, "No agreement");
-        require(msg.sender == agreement.contributor, "Not contributor");
-        require(!agreement.pioneer_confirmed, "Already confirmed");
-        
-        agreement.pioneer_confirmed = true;
-        emit PioneerConfirmed(_proposal_id);
-    }
-
-    // Foundation function: Confirms & releases
-    function releaseAgreement(uint256 _proposal_id) external onlyFoundation {
-        Agreement storage agreement = agreements[_proposal_id];
-        require(agreement.exists, "No agreement");
-        require(agreement.pioneer_confirmed, "Pioneer not confirmed");
-        require(!agreement.foundation_confirmed, "Already released");
-
-        agreement.foundation_confirmed = true;
-        uint256 amount = agreement.amount;
-
-        // Release tokens
-        cstakeToken.transfer(agreement.contributor, amount);
-        emit AgreementReleased(_proposal_id, agreement.contributor, amount);
-
-        // Clean up (saves gas)
-        delete agreements[_proposal_id];
-    }
-
-    // View function: Get agreement details
-    function getAgreement(uint256 _proposal_id) external view returns (Agreement memory) {
-        return agreements[_proposal_id];
-    }
-
-    // Admin function: Update foundation wallet
-    function setFoundationWallet(address _newFoundation) external onlyOwner {
-        require(_newFoundation != address(0), "Invalid address");
-        foundation_wallet = _newFoundation;
-    }
+interface IDividendVault {
+  function claim(uint256 proposalId, address claimer) external returns (uint256 payout);
 }
 ```
 
-**Backend Integration:**
-
-After setting status to `pioneer_approved` in the database:
-
-1. Convert UUID proposal ID to uint256 (e.g., using keccak256 hash of UUID string)
-2. Get agreed amount (use `foundation_offer_cstake_amount` if exists, else `requested_cstake_amount`)
-3. Call `createAgreement(proposal_id_uint256, contributor_address, amount)` from foundation wallet
-4. Update proposal status to `work_in_progress`
+**Backend Flow:**
+1. `pioneer_approved` event enqueues `RegisterPartnerShareJob`.
+2. Worker fetches agreement data, signs `registerPartnerShare` + `mintPartnerSBT`.
+3. Pioneer clicks "Work Completed" → API `POST /api/partners/work-complete/:id` triggers `markWorkDelivered`.
+4. Oracle service posts to `/api/oracle/capital-confirmation` which signs `activateCapitalShare`.
+5. Distribution cycle (future feature) calls `vault.distribute(amount)`; partners call `claim()` via MVP-005.
 
 **API Endpoints:**
-
-- `POST /api/contracts/create-agreement`
-  - **Auth**: Internal/system only
-  - Triggered automatically when proposal status becomes `pioneer_approved`
-  - Calls smart contract `createAgreement` function
-
-- `POST /api/contracts/confirm-work/:proposalId`
-  - **Auth**: Authenticated pioneer (must be proposal creator)
-  - Calls smart contract `confirmWorkDone` function from pioneer's wallet
-
-- `POST /api/contracts/release-agreement/:proposalId`
-  - **Auth**: Admin only
-  - Calls smart contract `releaseAgreement` function from foundation wallet
-  - Updates DB status to `completed`
+- `POST /api/contracts/register-partner-share` (internal queue consumer)
+- `POST /api/proposals/confirm-work/:id` (pioneer) → triggers `markWorkDelivered`
+- `POST /api/proposals/approve-work/:id` (admin) → batch job to set DB + call registry if both confirmed
+- `POST /api/oracle/capital-confirmation` (signed webhook) → triggers `activateCapitalShare`
+- `POST /api/dividends/claim/:proposalId` (pioneer) → wraps vault `claim` call and returns receipt
 
 ### AI Notes
-- **SECURITY CRITICAL**: Use OpenZeppelin libraries (IERC20, Ownable or AccessControl for `onlyFoundation`)
-- The `createAgreement` call must be triggered by a secure backend worker that manages the foundation wallet
-- The proposal UUID from DB must be converted to uint256 to serve as a key in the contract (consider using keccak256(abi.encodePacked(uuid_string)))
-- Consider implementing pausable functionality for emergency situations
-- Thoroughly test all state transitions and edge cases
-- Implement proper error handling for failed transactions
-- Consider gas optimization for frequently called functions
-- Add re-entrancy guards if needed (though OpenZeppelin ERC20 is safe)
+- Map UUID → uint256 via `uint256(keccak256(bytes(uuid)))` for contract IDs.
+- Use AccessControl roles (`ROLE_REGISTER`, `ROLE_VAULT`) instead of single owner to support multi-sig foundation.
+- For oracle proofs, store hashed payload on-chain; raw payload stays off-chain but auditable.
+- Add pausable + circuit-breaker for vault operations.
+- Unit-test SBT non-transferability (ERC-5192) and ensure revocation is impossible once active.
 
 ---
 
@@ -441,36 +418,38 @@ MVP-005
 Das "Miteigentümer-Dashboard" (Die Belohnungsschleife)
 
 ### Context & Goal (The "Why")
-This is the pioneer's "home". It makes co-ownership tangible by displaying the real, liquid market value of the $CSTAKE balance [cf. Vision 47] and serves as the action center for all proposals.
+Dies ist das Zuhause der Partner. Statt spekulativen Tokenpreisen zeigt das Dashboard Soulbound-Anteile, deren Dividendenvault-Status und alle To-Dos rund um Work- oder Kapital-Beiträge. Es verbindet Governance (Voting/Liquidität) mit Compliance (Oracle, Ehrlichkeits-Bond).
 
 ### User Story (The "What")
-"As a pioneer, I want to see a dashboard after connecting my wallet that displays my current $CSTAKE balance, its live market value in USD, and a list of all my proposals (with status and next actions)."
+"As a partner, I want to see all my shares (SBTs), their dividend readiness, outstanding compliance tasks, and be able to confirm work, upload capital proofs, or claim payouts."
 
 ### Acceptance Criteria (ACs) (The "Target")
 
 **AC1: Dashboard Display**
 - **GIVEN** I connect my wallet
-- **WHEN** I load the dashboard page (`/dashboard`)
+- **WHEN** I load `/dashboard`
 - **THEN** I see:
 
-  1. **Module 1: My Wallet**
-     - My $CSTAKE balance (read from wallet via Wagmi/Ethers.js)
-     - Current $CSTAKE price (read from backend API endpoint that fetches DEX price [cf. Vision 47])
-     - Total USD value (balance * price)
+  1. **Module 1: Partner Shares**
+     - Table listing each project share (SBT) with columns: Share %, Contribution Type, Status (`pending`, `active`, `claimable`, `needs_oracle`, `on_hold`)
+     - Badge if honesty bond/oracle proof outstanding
 
-  2. **Module 2: My Proposals**
-     - A list of all my proposals (read from DB via `GET /api/proposals/me`)
-     - Each entry shows: Title, Status, Requested/Agreed Amount
-     - If a proposal requires action (e.g., status `counter_offer_pending`), an "Action Required" button is displayed that leads to proposal details (Feature MVP-003)
+  2. **Module 2: Dividend Vault**
+     - Shows current distributable amount per project (if DAO approved)
+     - Claim button is enabled per share when `claimable == true`
 
-  3. **Module 3: My Actions (Context-sensitive)**
-     - If I have a proposal with status `work_in_progress`, I see a "Work Completed" button (that triggers `confirmWorkDone` from Feature MVP-004)
+  3. **Module 3: Proposals**
+     - List from `GET /api/proposals/me`
+     - Each entry shows Title, Status, Requested Share %, pending action CTA linking to MVP-003 detail
+
+  4. **Module 4: Tasks**
+     - Dynamically surfaces: "Confirm Work Completed", "Upload Capital Proof", "Acknowledge Distribution Vote"
 
 ### Technical Specifications (The "How")
 
 **Stack:**
-- Frontend: React, Wagmi/Ethers.js
-- Backend: For price API
+- Frontend: React, Wagmi/Viem for contract reads (SBT + vault)
+- Backend: Partner share API, dividend claim handler, oracle status sync
 
 **Data Model (Schema):**
 - Uses existing `proposals` table
@@ -478,20 +457,20 @@ This is the pioneer's "home". It makes co-ownership tangible by displaying the r
 **API Endpoints:**
 
 - `GET /api/proposals/me`
-  - **Auth**: Authenticated user
-  - Returns all proposals from `proposals` table where `creator_wallet_address` equals connected wallet
-  - Response: Array of proposal objects with all fields
+  - Auth: wallet session
+  - Returns proposals with derived fields (`requested_partner_share_percent`, `status`, `pending_action`)
 
-- `GET /api/cstake-price`
-  - **Auth**: Public or authenticated
-  - Returns current $CSTAKE token price from DEX
-  - **IMPORTANT**: This price must be cached server-side (e.g., for 60 seconds) to avoid excessive RPC calls and rate limiting
-  - Response: `{ price: number, currency: 'USD', timestamp: string }`
+- `GET /api/partners/shares`
+  - Auth: wallet session
+  - Aggregates on-chain SBT + vault info (share %, activation status, pending claimable amount)
 
 - `POST /api/proposals/confirm-work/:id`
-  - **Auth**: Authenticated pioneer (must be proposal creator)
-  - Triggers `confirmWorkDone` smart contract call (Feature MVP-004) for specified proposal
-  - Updates proposal status tracking
+  - Auth: proposal creator
+  - Triggers `markWorkDelivered` flow (MVP-004)
+
+- `POST /api/dividends/claim/:proposalId`
+  - Auth: partner wallet tied to SBT
+  - Wraps vault `claim()` and records payout
 
 **Routes:**
 - `/dashboard` - Main dashboard
@@ -499,69 +478,42 @@ This is the pioneer's "home". It makes co-ownership tangible by displaying the r
 - `/dashboard/proposals/:id` - Proposal detail view
 
 **Frontend Components:**
+- `PartnerSharesModule` – renders SBT cards, status pills, and compliance badges
+- `DividendVaultModule` – shows distributable balances + claim buttons
+- `ProposalsModule` – proposals list with CTAs (view, respond, upload proof)
+- `ActionCenter` – context-sensitive actions (confirm work, upload oracle docs)
+
+**Dividend Sync Implementation:**
 
 ```typescript
-// Dashboard structure
-- Dashboard
-  ├─ WalletModule
-  │  ├─ BalanceDisplay (reads from contract)
-  │  ├─ PriceDisplay (reads from /api/cstake-price)
-  │  └─ ValueDisplay (calculated: balance * price)
-  ├─ ProposalsModule
-  │  ├─ ProposalsList (reads from /api/proposals/me)
-  │  └─ ProposalCard (shows status, amount, actions)
-  └─ ActionsModule
-     └─ ConfirmWorkButton (context-sensitive)
-```
+// Backend: services/dividendService.ts
+import { getPartnerShares } from './partnerShareRepo'
+import { readVaultState, claimDividend } from './vaultClient'
 
-**Price Fetching Implementation:**
+export async function listPartnerShares(wallet: string) {
+  const shares = await getPartnerShares(wallet)
+  return Promise.all(
+    shares.map(async (share) => {
+      const vaultState = await readVaultState(share.proposalId)
+      return { ...share, vaultState }
+    })
+  )
+}
 
-Server-side price fetching service:
-
-```typescript
-// Backend: services/priceService.ts
-import { ethers } from 'ethers';
-
-let cachedPrice: { price: number; timestamp: number } | null = null;
-const CACHE_DURATION = 60000; // 60 seconds
-
-export async function getCSTAKEPrice(): Promise<number> {
-  const now = Date.now();
-  
-  // Return cached price if still valid
-  if (cachedPrice && (now - cachedPrice.timestamp) < CACHE_DURATION) {
-    return cachedPrice.price;
-  }
-
-  // Fetch from Uniswap V2/V3 pool
-  const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
-  const poolAddress = process.env.CSTAKE_POOL_ADDRESS;
-  
-  // Uniswap V2 example (adjust for V3 if needed)
-  const poolABI = ['function getReserves() view returns (uint112, uint112, uint32)'];
-  const poolContract = new ethers.Contract(poolAddress, poolABI, provider);
-  
-  const [reserve0, reserve1] = await poolContract.getReserves();
-  const price = Number(reserve1) / Number(reserve0); // Adjust based on token order
-  
-  // Cache the result
-  cachedPrice = { price, timestamp: now };
-  
-  return price;
+export async function claimDividendForShare(wallet: string, proposalId: string) {
+  // permission checks omitted for brevity
+  const txHash = await claimDividend({ wallet, proposalId })
+  await auditLog({ type: 'DIVIDEND_CLAIM', wallet, proposalId, txHash })
+  return txHash
 }
 ```
 
 ### AI Notes
-- **Price querying (`/api/cstake-price`) must NEVER be done client-side**
-- Build a robust backend service (e.g., with Ethers.js) that queries the Uniswap pool contract to determine price, and caches it
-- The dashboard frontend must be reactive and automatically update when wallet status or proposal status changes
-- Use Wagmi hooks for wallet connection and balance reading
-- Implement error states for when wallet is not connected, price fetch fails, etc.
-- Consider using React Query or SWR for data fetching with automatic revalidation
-- Display loading states during data fetching
-- Make the dashboard the main entry point after wallet connection
-- Implement proper wallet connection flow (connect button, account display, disconnect option)
-- Consider adding a "Connect Wallet" wall if user tries to access dashboard without connection
+- Fetch partner shares + vault data server-side; never rely solely on client reads.
+- Provide optimistic UI updates for claim() but poll until transaction confirmed.
+- Integrate oracle status (capital deposits) by subscribing to queue events; dashboard should show human-readable "Awaiting bank sync (~24h)" states.
+- Keep dashboard reactive using React Query/SWR with focus revalidation.
+- Enforce wallet wall for `/dashboard`; no data for anonymous visitors.
 
 ---
 
@@ -573,10 +525,10 @@ export async function getCSTAKEPrice(): Promise<number> {
 
 ### Phase 2: Core Logic
 3. **MVP-003** (Manual Mediator) - Depends on: MVP-002, admin auth
-4. **MVP-004** (Vesting Contract) - Depends on: MVP-003, $CSTAKE token deployment
+4. **MVP-004** (Dividend Vault & SBT Mint) - Depends on: MVP-003, PartnerSBT + Vault contracts, Oracle service
 
 ### Phase 3: User Experience
-5. **MVP-005** (Dashboard) - Depends on: MVP-002, MVP-004, DEX pool setup
+5. **MVP-005** (Dashboard) - Depends on: MVP-002, MVP-004, Oracle status feed
 
 ### Critical Path
 ```
@@ -662,8 +614,8 @@ Database Setup → Wallet Auth → MVP-002 → MVP-003 → MVP-004
 1. Proposals submitted (count, rate)
 2. Proposals accepted vs. rejected (%)
 3. Average time from submission to approval
-4. $CSTAKE tokens locked in vesting
-5. $CSTAKE price (tracked over time)
+4. Active partner share %
+5. Total dividends distributed (USDC)
 6. Active pioneers (unique wallets)
 7. Smart contract events (creation, confirmation, release)
 

@@ -1,23 +1,23 @@
 import { Layout } from '@/components/Layout'
 import { WhitepaperHero } from '@/components/whitepaper/WhitepaperHero'
 import { WhitepaperSection } from '@/components/whitepaper/WhitepaperSection'
-import { OpenSourceComparison } from '@/components/whitepaper/OpenSourceComparison'
 import { WhitepaperCTA } from '@/components/whitepaper/WhitepaperCTA'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Investment Thesis v3.0 | CrowdStaking',
-  description: 'The complete CrowdStaking investment thesis: From the economy of ideas to the decentralized venture studio that transforms creative initiative into liquid assets.',
-  keywords: ['investment thesis', 'decentralized venture', 'tokenomics', 'legal tech', 'AI mediator', 'flywheel effect'],
+  title: 'Digital Partnership Protocol | CrowdStaking',
+  description:
+    'CrowdStaking v4.0: The proof-of-work protocol that converts creative initiative into earned, non-tradable dividend rights via Soulbound Tokens.',
+  keywords: ['digital partnership', 'proof-of-work protocol', 'soulbound tokens', 'earned dividend', 'legal tech'],
   openGraph: {
-    title: 'Investment Thesis v3.0 | CrowdStaking',
-    description: 'The complete CrowdStaking investment thesis.',
+    title: 'Digital Partnership Protocol | CrowdStaking',
+    description: 'The definitive thesis for the CrowdStaking partnership protocol.',
     url: 'https://crowdstaking.com/whitepaper',
   },
 }
 
 /**
- * Whitepaper page - Complete investment thesis v3.0
+ * Whitepaper page - Digital partnership protocol thesis (v4.0)
  */
 export default function WhitepaperPage() {
   return (
@@ -33,7 +33,7 @@ export default function WhitepaperPage() {
             <>
               <p className="mb-4">
                 We stand at a fundamental turning point. Artificial intelligence
-                will surpass us in almost every "mechanical" activity – from
+                will surpass us in almost every "mechanical" activity - from
                 writing code to creating images. The last, irreplaceable bastion
                 of humanity is the idea itself: the pure, unpredictable, creative
                 execution of a vision.
@@ -59,23 +59,23 @@ export default function WhitepaperPage() {
         {/* Section 2: What is CrowdStaking */}
         <WhitepaperSection
           number="2"
-          title="What is CrowdStaking? The Machine That Builds Ideas"
+          title="What is CrowdStaking? The Digital Partnership Protocol"
           content={
             <>
               <p className="mb-4">
-                CrowdStaking is a decentralized venture studio that turns the
-                traditional model on its head.
+                CrowdStaking is a digital partnership protocol. It prioritizes
+                creative initiative over capital and rewrites how ownership is
+                allocated.
               </p>
               <p className="mb-4">
-                It's a global platform where creative initiative – not just
-                mechanical work – is directly converted into real, tradable
-                ownership (tokens).
+                It is a global platform where founders publish missions rather
+                than task lists, and contributors proactively pitch how to move
+                those missions forward.
               </p>
               <p>
-                We create a marketplace where founders don't post "tasks" but a
-                "mission". They invite the world to proactively propose how this
-                mission can best be achieved. It's a place where "co-founders"
-                meet, not "freelancers".
+                Ownership is granted as Soulbound Tokens (SBTs) - non-tradable
+                partner certificates. Shares can never be bought. They must be
+                earned through work or an approved capital partnership.
               </p>
             </>
           }
@@ -131,12 +131,10 @@ export default function WhitepaperPage() {
                   </ul>
                 </li>
                 <li>
-                  <span className="font-semibold">
-                    The Transfer (The Result):
-                  </span>{' '}
-                  The contributor completes the work. The owners confirm "work
-                  completed". The protocol transfers the 0.5% (the 10,000 project
-                  tokens) to the contributor.
+                  <span className="font-semibold">The SBT Mint (Result):</span>{' '}
+                  The contributor completes the work. Owners confirm it. The
+                  protocol mints a Soulbound Token that records the 0.5% partner
+                  share.
                 </li>
               </ol>
               <p className="font-semibold">
@@ -147,70 +145,96 @@ export default function WhitepaperPage() {
           }
         />
 
-        {/* Section 4: The Game Changer */}
+        {/* Section 4: Capital Partners */}
         <WhitepaperSection
           number="4"
-          title='The "Game Changer": Liquidity from Day 1'
+          title="The Capital Partner Model: The Only Allowed Exception"
           content={
             <>
               <p className="mb-4">
-                The "flywheel" is driven by the strongest incentive of all:
-                immediate liquidity.
+                Projects still need capital for LLMs, servers, and hardware. Our
+                protocol forbids buying shares, but it allows capital partners to
+                join as co-builders through governance.
               </p>
-              <p className="mb-4">
-                <span className="font-semibold">
-                  The Problem ("The 10-Year Prison"):
-                </span>{' '}
-                Traditional "sweat equity" is an illiquid 10-year promise trapped
-                in a filing cabinet.
-              </p>
-              <p className="mb-4">
-                <span className="font-semibold">
-                  The CrowdStaking Solution ("The Real-Time Market"):
-                </span>{' '}
-                Once a founder sets up a liquidity pool on a decentralized
-                exchange (DEX), there's a free market price.
-              </p>
-              <p className="mb-4">
-                A contributor who has earned tokens for their work now has a
-                choice:
-              </p>
-              <ul className="list-disc ml-8 mb-4 space-y-2">
+              <ol className="list-decimal ml-6 space-y-4 mb-4">
                 <li>
-                  Do they believe in the project? They hold (HODL) their tokens as
-                  a long-term investment.
+                  <span className="font-semibold">Capital Proposal:</span> "I
+                  contribute 20,000 USDC for year-one hosting in exchange for a
+                  3% partner share."
                 </li>
                 <li>
-                  Do they need to pay bills? They sell some of their tokens
-                  immediately on the market.
+                  <span className="font-semibold">Partner Vote:</span> Existing
+                  SBT holders decide whether those 20,000 USDC are worth 3% of
+                  future dividends.
                 </li>
-              </ul>
+                <li>
+                  <span className="font-semibold">Deposit & Mint:</span> Upon
+                  approval, the capital flows into the capital vault and the
+                  protocol mints a 3% SBT. The investor becomes an active partner
+                  with full governance rights.
+                </li>
+              </ol>
               <p>
-                They don't have to wait for the "exit". The 10-year fund cycle is
-                replaced by a real-time market.
+                This keeps us outside the SEC Howey definition of a passive
+                security while still enabling projects to fund critical
+                infrastructure.
               </p>
             </>
           }
         />
 
-        {/* Section 5: The Flywheel */}
+        {/* Section 5: Earned Dividend */}
         <WhitepaperSection
           number="5"
-          title='The Machine: The "Flywheel" of Decentralized Growth'
+          title='The Game Changer: The Earned Dividend Model'
+          content={
+            <>
+              <p className="mb-4">
+                We replace speculation with real-time cash flow. Partners earn
+                dividends precisely when the product earns revenue.
+              </p>
+              <ul className="list-disc ml-8 mb-4 space-y-2">
+                <li>
+                  <span className="font-semibold">Revenue Capture:</span> All
+                  on-chain earnings flow into a transparent dividend vault.
+                </li>
+                <li>
+                  <span className="font-semibold">Partner Governance:</span> SBT
+                  holders vote to reinvest or distribute funds.
+                </li>
+                <li>
+                  <span className="font-semibold">Claim Function:</span> When a
+                  payout is approved, each partner calls `claim()`. The contract
+                  checks their share (e.g., 0.5%) and transfers the exact USDC
+                  amount.
+                </li>
+              </ul>
+              <p>
+                Contributors don't wait for a distant exit. They receive earned
+                dividends for the work (or capital) they put in.
+              </p>
+            </>
+          }
+        />
+
+        {/* Section 6: Platform Flywheel */}
+        <WhitepaperSection
+          number="6"
+          title="The Platform Flywheel: How CrowdStaking Funds Itself"
           content={
             <>
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-600 dark:border-yellow-400 p-4 mb-6">
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  IMPORTANT DISTINCTION: There are two token types:
+                  IMPORTANT DISTINCTION: There are no tradable platform tokens.
                 </p>
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li>
-                    $CSTAKE: The platform token. You only earn it for
-                    contributions to the CrowdStaking platform itself.
+                    Project SBTs: Earned per project mission and bound to that
+                    project's dividend vault.
                   </li>
                   <li>
-                    $PROJECT-A: A project token. You only earn it for
-                    contributions to "Project A".
+                    $CROWDSTAKING SBTs: Earned by contributors who build the
+                    platform itself and unlock the main vault.
                   </li>
                 </ul>
               </div>
@@ -218,186 +242,135 @@ export default function WhitepaperPage() {
               <p className="mb-4 font-semibold">The Cycle:</p>
               <ol className="space-y-4 list-decimal ml-6">
                 <li>
-                  <span className="font-semibold">
-                    Ignition (Work on the Platform):
-                  </span>{' '}
-                  Pioneers build the platform itself and earn the first $CSTAKE
-                  tokens.
+                  <span className="font-semibold">Ignition:</span> Pioneers build
+                  CrowdStaking and earn $CROWDSTAKING SBTs.
                 </li>
                 <li>
-                  <span className="font-semibold">
-                    Traction (The Platform Becomes Useful):
-                  </span>{' '}
-                  The platform becomes robust.
+                  <span className="font-semibold">Launch:</span> Founders post
+                  missions and onboard partners.
                 </li>
                 <li>
-                  <span className="font-semibold">
-                    Network Effect 1 (Founders Come):
-                  </span>{' '}
-                  A founder launches their "Project A" on CrowdStaking.
+                  <span className="font-semibold">Partner Fee:</span> Each
+                  project mints 1-2% of its SBT supply to the CrowdStaking
+                  foundation; cash from those shares flows into the main vault.
                 </li>
                 <li>
-                  <span className="font-semibold">
-                    Network Effect 2 (Talent Follows):
-                  </span>{' '}
-                  The developer community can now choose: work on the platform
-                  (for $CSTAKE) or on "Project A" (for $PROJECT-A tokens).
+                  <span className="font-semibold">Dividends:</span> Platform
+                  contributors claim their share of the main vault through their
+                  SBTs.
                 </li>
                 <li>
-                  <span className="font-semibold">
-                    The "Index Effect" (The Business Model):
-                  </span>{' '}
-                  Here's the brilliant core: When "Project A" launched, the
-                  protocol automatically transferred 1-2% of all its $PROJECT-A
-                  tokens to the CrowdStaking DAO treasury ("treasure chest").
-                </li>
-                <li>
-                  <span className="font-semibold">
-                    Acceleration (Value Increase):
-                  </span>{' '}
-                  The DAO treasury now holds stakes in 1,000 different startups.
-                  The $CSTAKE token, which controls this treasury, is now backed
-                  by a real, diversified portfolio. It becomes a "startup index
-                  fund".
-                </li>
-                <li>
-                  <span className="font-semibold">
-                    Singularity (The "Black Hole"):
-                  </span>{' '}
-                  The value of $CSTAKE has risen massively. The rewards for
-                  contributions to the core platform become so valuable that they
-                  attract the best engineers. A better platform attracts... even
-                  better founders. Which... makes the treasure chest even more
-                  valuable.
+                  <span className="font-semibold">Reinforcement:</span> The more
+                  projects succeed, the more attractive it is to work on the
+                  platform - and vice versa.
                 </li>
               </ol>
               <p className="mt-4 font-semibold text-lg">
-                The system is now unstoppable.
+                The system becomes self-financing and self-reinforcing.
               </p>
             </>
           }
         />
 
-        {/* Section 6: The Start */}
-        <WhitepaperSection
-          number="6"
-          title="The Start: The First 365 Days (The Proof)"
-          content={
-            <>
-              <p className="mb-4">
-                How do you start such a movement? By applying the "Satoshi
-                Principle": The code and the idea are the star, not the founders.
-              </p>
-              <p className="mb-4">
-                The go-to-market strategy is this "dogfooding" approach. The story
-                – "CrowdStaking builds the platform for decentralized building by
-                building it decentrally" – is the living proof of the thesis.
-              </p>
-              <ul className="list-disc ml-8 mb-4 space-y-2">
-                <li>
-                  <span className="font-semibold">It's authentic:</span>{' '}
-                  CrowdStaking proves the thesis live.
-                </li>
-                <li>
-                  <span className="font-semibold">It's a filter:</span> It
-                  attracts exactly the pioneers – the "1000 True Fans".
-                </li>
-                <li>
-                  <span className="font-semibold">It's a movement:</span> People
-                  aren't joining a 'company'. They're joining a movement to
-                  revolutionize the venture model.
-                </li>
-              </ul>
-              <p className="mb-4">
-                This is the Bitcoin parallel. Bitcoin had no marketing budget. The
-                protocol itself was the marketing. The incentive (the token) was
-                the acquisition budget.
-              </p>
-              <p className="font-semibold">
-                The protocol is the marketing. The token ($CSTAKE) is the
-                acquisition budget.
-              </p>
-            </>
-          }
-        />
-
-        {/* Section 7: The Moat */}
+        {/* Section 7: Regulatory Moat */}
         <WhitepaperSection
           number="7"
-          title='The "Moat": Why Open Source 3.0 Wins'
+          title="The Moat: Regulatory Clarity as Product"
           content={
             <>
-              <OpenSourceComparison />
-              <p className="mt-6 mb-4">
-                This combination is unbeatable. The second "moat" is the
-                community. Anyone can replicate the code. But no one can copy the
-                thousands of decentralized owners who already have an economic
-                self-interest in the success of the original.
+              <p className="mb-4">
+                Our biggest moat is legal clarity. CrowdStaking is engineered to
+                stay outside the SEC Howey Test and MiCA definitions of regulated
+                financial instruments.
               </p>
-            </>
-          }
-        />
-
-        {/* Section 8: Legal Fortress */}
-        <WhitepaperSection
-          number="8"
-          title='The Legal Fortress: The "Legal-Tech" Bridge'
-          content={
-            <>
-              <p className="mb-6">
-                A visionary idea needs a legally unassailable structure.
-              </p>
-
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-700">
                   <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    Part 1: The "Honest Foundation" (Switzerland/Liechtenstein)
+                    Proof-of-Work Admissions
                   </h4>
-                  <p className="mb-3">Our solution is the "Honest Foundation".</p>
                   <ul className="list-disc ml-6 space-y-2">
+                    <li>No "investment of money" path - work earns ownership.</li>
                     <li>
-                      The Foundation Council is staffed professionally and
-                      independently (e.g., by lawyers).
+                      Capital partners become active governors, not passive
+                      investors.
                     </li>
-                    <li>It's not a slave to the DAO, but a legal firewall.</li>
                     <li>
-                      It reviews DAO decisions exclusively for legality and
-                      compliance with the foundation's purpose. It's a "benevolent
-                      overseer" that protects the protocol.
+                      Soulbound Tokens eliminate secondary-market obligations.
+                    </li>
+                  </ul>
+                </div>
+                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700">
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    The Honest Foundation
+                  </h4>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>Independent Swiss/Liechtenstein firewall.</li>
+                    <li>
+                      Reviews DAO decisions solely for legality and purpose
+                      alignment.
+                    </li>
+                    <li>
+                      Provides the legal wrapper mirroring on-chain splits in the
+                      real world.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <p className="font-semibold">
+                CrowdStaking is SaaS for partnership governance, financing, and
+                dividend accounting - not an exchange.
+              </p>
+            </>
+          }
+        />
+
+        {/* Section 8: Two-Track Launch */}
+        <WhitepaperSection
+          number="8"
+          title="The Two-Track Launch Strategy"
+          content={
+            <>
+              <p className="mb-6">
+                We launch on two parallel tracks to win both ideologues and
+                pragmatists.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-700">
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
+                    Track 1: The Movement (Testnet)
+                  </h4>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>Public build-in-public testnet run.</li>
+                    <li>Dogfood the protocol by building CrowdStaking on CrowdStaking.</li>
+                    <li>
+                      Promise: All $CROWDSTAKING testnet SBTs convert 1:1 to
+                      mainnet SBTs.
                     </li>
                   </ul>
                 </div>
 
-                <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6 border-2 border-green-200 dark:border-green-700">
+                <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-6 border-2 border-orange-200 dark:border-orange-700">
                   <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-3">
-                    Part 2: The "Legal-Tech" Problem (Enforcing the 1-2%)
+                    Track 2: The Product (Mainnet)
                   </h4>
-                  <p className="mb-3">
-                    How is the 1-2% "index share" from "Project A" enforced?
-                  </p>
-                  <p className="mb-2">
-                    <span className="font-semibold">Technically (The Hook):</span>{' '}
-                    To use the platform, a founder must deploy their token through
-                    our "Factory Smart Contract". This contract programs the 1-2%
-                    allocation to the CrowdStaking DAO treasury from the start.
-                  </p>
-                  <p>
-                    <span className="font-semibold">Legally (The Bridge):</span>{' '}
-                    The CrowdStaking Foundation offers a
-                    "Legal-Wrapper-as-a-Service". To use this service, Founder A
-                    signs a legal contract that mirrors the on-chain split (the
-                    1-2%) in the real world.
-                  </p>
+                  <ul className="list-disc ml-6 space-y-2">
+                    <li>Use the capital-partner model to raise seed funding.</li>
+                    <li>
+                      Establish the Honest Foundation and build the offline
+                      banking oracle with honesty bonds.
+                    </li>
+                    <li>
+                      Deliver a compliant product for pragmatic teams like "Sarah".
+                    </li>
+                  </ul>
                 </div>
               </div>
 
-              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6 border-l-4 border-gray-600 dark:border-gray-400">
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  The 1-2% isn't just a "protocol tax". It's the price for using
-                  the entire technical and legal infrastructure. This is an
-                  unbeatable offer.
-                </p>
-              </div>
+              <p className="font-semibold">
+                The protocol is the marketing. Traction from both tracks becomes
+                fundraising leverage.
+              </p>
             </>
           }
         />
@@ -405,20 +378,17 @@ export default function WhitepaperPage() {
         {/* Section 9: The Conclusion */}
         <WhitepaperSection
           number="9"
-          title="The Conclusion: The Factory"
+          title="The Conclusion: The Digital Partnership Protocol"
           content={
             <>
               <p className="mb-4">
-                The hard-cap model (1 billion tokens) ensures that value is based
-                on scarcity and – analogous to Bitcoin – exponentially rewards the
-                risk of early adopters.
-              </p>
-              <p className="mb-4">
-                Authenticity is the strongest "growth hack". CrowdStaking doesn't
-                ask for trust in an idea. It proves the idea live in the market.
+                Authenticity remains the strongest growth loop. CrowdStaking does
+                not ask for trust in a pitch deck - it proves the thesis live by
+                operating its own partnership protocol.
               </p>
               <p className="text-xl font-bold">
-                CrowdStaking is the factory for the next generation of unicorns.
+                CrowdStaking is the digital partnership protocol that turns ideas
+                into earned dividend rights.
               </p>
             </>
           }
