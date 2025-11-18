@@ -54,49 +54,78 @@
 
 ---
 
-## Modell 4.0 – Digitales Partnerschafts-Protokoll (NEU)
+## Modell 4.0 – Digitales Partnerschafts-Protokoll (✅ IMPLEMENTIERT)
 
 ```
 [HOME /] 
    │
-   │ (Click "Join the Movement" / "Make a Proposal")
+   │ (Click "Start Mission" → /wizard/v4)
    ▼
-[DASHBOARD /dashboard]  — CTA "Submit Partner Proposal"
+[V4 PROJECT WIZARD] /wizard/v4
+   │
+   │ Step 1: Welcome
+   │ Step 2: Project Details (Name, Slug, Mission)
+   │ Step 3: Review & Deploy
+   │
+   │ (Project Created + Contracts Deployed)
+   │
+   ▼
+[PROJECT DETAILS] /projects/[projectId]
+   │
+   │ (Click "Create v4 Proposal" in Founder Dashboard)
+   ▼
+[V4 PROPOSAL CREATION] /projects/[projectId]/proposals/v4/new
+   │
+   │ Select Proposal Type: WORK | CAPITAL | PAYOUT | REVOKE
+   │ Fill Proposal Form
+   │ Submit Proposal
+   │
+   ▼
+[V4 GOVERNANCE UI] /projects/[projectId]/proposals/v4/[proposalId]
+   │
+   │ View Proposal Details
+   │ Cast Vote (YES/NO) → On-chain Voting
+   │ Execute Proposal (if approved) → On-chain Execution
    │
    ├─ Work Proposal (Proof-of-Work)
    │    ▼
-   │  [ADMIN PANEL] (Double Handshake)
+   │  Proposal Accepted → registerPartnerShare() Job
    │    ▼
-   │  registerPartnerShare()
-   │    ▼
-   │  PartnerSBT Mint + DividendVault Entry
+   │  PartnerSBT Mint + DividendVault Entry ✅
    │    ▼
    │  (Pioneer delivers work)
    │    ▼
-   │  markWorkDelivered() ~~> [!GAP!] UI für Work-Bestätigung auf Dashboard
+   │  markWorkDelivered() ✅ (Queue Job)
    │    ▼
-   │  DAO Voting (Reinvest / Distribute) ~~> [!GAP!] Voting UI
+   │  DAO Voting (Reinvest / Distribute) ✅ (Voting UI implementiert)
    │    ▼
-   │  claim() → USDC Dividend Payout
+   │  PAYOUT Proposal → startDistribution() ✅
+   │    ▼
+   │  claim() → USDC Dividend Payout ✅ (Frontend Transaction Signing)
    │
    └─ Capital Proposal (Proof-of-Capital)
         ▼
-     [ADMIN PANEL] (Partner DAO Vote)
+     Proposal Accepted → registerPartnerShare() Job
         ▼
-     registerPartnerShare(requires_oracle = true)
-        ▼
-     PartnerSBT Mint (Status: pending_capital)
+     PartnerSBT Mint (Status: pending_capital) ✅
         ▼
      Capital Deposit (USDC → Vault) + Honesty Bond
         ▼
-     Oracle Confirmation ~~> [!GAP!] "Upload Bank Proof" Flow
+     Oracle Confirmation ✅ (Oracle Webhook mit HMAC)
         ▼
-     activateCapitalShare()
+     activateCapitalShare() ✅ (Queue Job)
         ▼
-     claim() sobald Dividenden freigegeben
+     claim() sobald Dividenden freigegeben ✅
+
+[PARTNER DASHBOARD] /dashboard/v4/partner
+   │
+   │ View Partner Shares ✅
+   │ View SBTs ✅
+   │ View Dividend Claims ✅
+   │ Claim Dividends ✅ (Frontend Transaction Signing)
 ```
 
-> ⚠️ Alle Schritte nach `registerPartnerShare()` ersetzen den alten `$CSTAKE`-Vesting-Flow. Legacy-Abschnitte bleiben unten zur Referenz markiert.
+> ✅ **Status:** Alle v4.0 User Flows sind vollständig implementiert. Legacy-Abschnitte bleiben unten zur Referenz markiert.
 
 ---
 

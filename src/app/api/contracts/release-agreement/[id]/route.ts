@@ -9,8 +9,9 @@ import { NextRequest } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { jsonResponse, errorResponse } from '@/lib/api'
 import { requireAdmin } from '@/lib/auth'
-import { getVestingService, isVestingServiceAvailable } from '@/lib/contracts/vestingService'
+import { getVestingService, isVestingServiceAvailable } from '@/lib/legacy/vestingService'
 import type { Proposal } from '@/types/proposal'
+import { ENABLE_LEGACY_PROTOCOL } from '@/lib/features'
 
 /**
  * POST /api/contracts/release-agreement/:id
@@ -32,6 +33,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!ENABLE_LEGACY_PROTOCOL) {
+    return errorResponse('Legacy protocol disabled', 503)
+  }
+
   try {
     // Await params (Next.js 16 change)
     const { id } = await params

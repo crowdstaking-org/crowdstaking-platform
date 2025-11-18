@@ -8,6 +8,7 @@ import { MyContributionsTab } from '@/components/cofounder/MyContributionsTab'
 import { ContextSwitcher } from '@/components/dashboard/ContextSwitcher'
 import { WalletModule } from '@/components/dashboard/WalletModule'
 import { ProposalsModule } from '@/components/dashboard/ProposalsModule'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 import { useRouter } from 'next/navigation'
 
 /**
@@ -25,7 +26,7 @@ export default function CofounderDashboardPage() {
     if (context === 'cofounder') {
       // Already here, do nothing
     } else if (context === 'new-project') {
-      router.push('/wizard')
+      router.push(ENABLE_V4_PROTOCOL ? '/wizard/v4' : '/wizard')
     } else {
       // Switch to project-specific founder dashboard
       router.push('/dashboard')

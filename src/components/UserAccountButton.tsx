@@ -250,6 +250,16 @@ export function UserAccountButton() {
               <LayoutDashboard className="w-4 h-4" />
               <span>Dashboard</span>
             </Link>
+            {ENABLE_V4_PROTOCOL && (
+              <Link
+                href="/dashboard/v4/partner"
+                onClick={() => setIsOpen(false)}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center space-x-2 transition-colors cursor-pointer"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Partner Dashboard (v4)</span>
+              </Link>
+            )}
             <Link
               href={`/profiles/${account.address}`}
               onClick={() => setIsOpen(false)}

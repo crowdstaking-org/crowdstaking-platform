@@ -6,6 +6,7 @@ import { Rocket, Code } from 'lucide-react'
 import { ScrollReveal } from './ScrollReveal'
 import { HeroBackground } from './backgrounds/HeroBackground'
 import { useInViewport } from '../hooks/useInViewport'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
 interface HeroSectionProps {
   theme: 'light' | 'dark'
@@ -49,7 +50,7 @@ export function HeroSection({ theme }: HeroSectionProps) {
 
         <ScrollReveal direction="up" delay={200} duration={800}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/wizard" className="group flex items-center space-x-3 bg-blue-600 dark:bg-blue-500 text-white px-8 py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-lg font-semibold w-full sm:w-auto justify-center btn-hover-lift btn-primary-glow ripple">
+            <Link href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"} className="group flex items-center space-x-3 bg-blue-600 dark:bg-blue-500 text-white px-8 py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-lg font-semibold w-full sm:w-auto justify-center btn-hover-lift btn-primary-glow ripple cursor-pointer">
               <Rocket className="w-5 h-5 icon-slide" />
               <span>Start Mission</span>
             </Link>

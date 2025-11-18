@@ -51,6 +51,8 @@ FOUNDATION_WALLET_PRIVATE_KEY=0x...
 | Oracle Auth | `HONEST_FOUNDATION_WEBHOOK_SECRET` | Secret zur Signaturprüfung der Oracle-Calls |
 | Honesty Bond Treasury | `HONESTY_BOND_TREASURY_ADDRESS` | Multisig, das Ehrlichkeits-Bonds verwaltet |
 | Provider Auswahl | `OPEN_BANKING_PROVIDER` | `tink`, `finicity`, `plaid`, ... |
+| Feature Flag | `ENABLE_V4_PROTOCOL` | `true` aktiviert das Digitale Partnerschafts-Protokoll (Standard: `false`) |
+| Legacy Flag | `ENABLE_LEGACY_PROTOCOL` | `true` lässt Legacy-$CSTAKE-Routen aktiv (Standard: `true`) |
 
 > ⚠️ **Migration:** Legacy-Variablen (`CSTAKE_*`, `VESTING_CONTRACT_*`) beibehalten nur für Regressionstests. Neue Deployments nutzen ausschließlich die Modell-4.0-Variablen.
 

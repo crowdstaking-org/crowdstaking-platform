@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { HeroBackground } from './backgrounds/HeroBackground'
 import { useAuth } from '@/hooks/useAuth'
 import { useFounderProjects } from '@/hooks/useProject'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
 interface NewHeroSectionProps {
   theme: 'light' | 'dark'
@@ -84,8 +85,8 @@ export function NewHeroSection({ theme }: NewHeroSectionProps) {
             ) : (
               // Default: Start new mission
               <Link
-                href="/wizard"
-                className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift btn-primary-glow mt-auto"
+                href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"}
+                className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift btn-primary-glow mt-auto cursor-pointer"
               >
                 <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>Start Your Mission</span>

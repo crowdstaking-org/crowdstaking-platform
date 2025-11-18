@@ -8,6 +8,7 @@ import { client, wallets, defaultChain } from "@/lib/thirdweb"
 import { base } from "thirdweb/chains"
 import { useAuth } from "@/hooks/useAuth"
 import { UserAccountButton } from "./UserAccountButton"
+import { ENABLE_V4_PROTOCOL } from "@/lib/features"
 
 interface NavigationProps {
   theme: 'light' | 'dark'
@@ -125,7 +126,10 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
             </div>
 
             {/* Start Mission Button - Hidden on small screens to save space */}
-            <Link href="/wizard" className="hidden sm:flex group items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors btn-hover-lift btn-primary-glow ripple">
+            <Link 
+              href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"} 
+              className="hidden sm:flex group items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors btn-hover-lift btn-primary-glow ripple cursor-pointer"
+            >
               <Rocket className="w-4 h-4 icon-slide" />
               <span>Start Mission</span>
             </Link>
@@ -187,9 +191,9 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               </Link>
               
               <Link
-                href="/wizard"
+                href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"}
                 onClick={closeMobileMenu}
-                className="flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold"
+                className="flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
               >
                 <Rocket className="w-5 h-5" />
                 <span>Start Mission</span>

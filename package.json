@@ -8,6 +8,14 @@
     "build:analyze": "ANALYZE=true npm run build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:contracts": "hardhat test hardhat/test/*.ts",
+    "deploy:v4": "hardhat run hardhat/scripts/deploy-all.ts",
+    "deploy:v4:treasury": "hardhat run hardhat/scripts/deploy-treasury.ts",
+    "deploy:v4:factory": "hardhat run hardhat/scripts/deploy-factory.ts",
+    "deploy:v4:tokens": "hardhat run hardhat/scripts/deploy-mock-tokens.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -39,16 +47,21 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.0.1",
+    "@nomicfoundation/hardhat-toolbox": "^6.0.0",
     "@openzeppelin/contracts": "^5.4.0",
     "@playwright/test": "^1.56.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitest/ui": "^4.0.9",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
+    "hardhat": "^2.26.1",
     "solc": "^0.8.30",
+    "ts-node": "^10.9.2",
     "tsx": "^4.20.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.9"
   }
 }

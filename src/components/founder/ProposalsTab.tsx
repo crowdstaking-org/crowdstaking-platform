@@ -3,6 +3,9 @@
 import React, { useState, useEffect } from 'react'
 import { ProposalCard } from '../dashboard/ProposalCard'
 import { UserProfileLink } from '@/components/profile/UserProfileLink'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
+import { Plus } from 'lucide-react'
+import Link from 'next/link'
 import type { Proposal } from '@/types/proposal'
 
 interface ProposalsTabProps {
@@ -91,6 +94,20 @@ export function ProposalsTab({ projectId }: ProposalsTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Header with v4 Proposal Link */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Proposals</h2>
+        {ENABLE_V4_PROTOCOL && projectId && (
+          <Link
+            href={`/projects/${projectId}/proposals/v4/new`}
+            className="inline-flex items-center space-x-2 bg-purple-600 dark:bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors font-semibold cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create v4 Proposal</span>
+          </Link>
+        )}
+      </div>
+
       {/* Sub-tabs */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
         <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">

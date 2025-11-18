@@ -26,6 +26,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useFounderProjects } from '@/hooks/useProject'
 import { useAuth } from '@/hooks/useAuth'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 import type { Project, ProjectStats } from '@/types/project'
 
 /**
@@ -82,7 +83,7 @@ function DashboardInner() {
     if (context === 'cofounder') {
       router.push('/cofounder-dashboard')
     } else if (context === 'new-project') {
-      router.push('/wizard')
+      router.push(ENABLE_V4_PROTOCOL ? '/wizard/v4' : '/wizard')
     }
     // Stay on current page for project switches
   }
@@ -213,7 +214,7 @@ function DashboardInner() {
                   You don't have any projects yet. Create your first project to get started!
                 </p>
                 <button
-                  onClick={() => router.push('/wizard')}
+                  onClick={() => router.push(ENABLE_V4_PROTOCOL ? '/wizard/v4' : '/wizard')}
                   className="inline-flex items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
                 >
                   <Plus className="w-5 h-5" />
