@@ -57,3 +57,4 @@ export async function getSBTTokenId(projectId: string, walletAddress: string): P
   }
 }
 
+

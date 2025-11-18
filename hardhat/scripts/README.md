@@ -153,3 +153,4 @@ npx hardhat verify --network baseSepolia <CONTRACT_ADDRESS> <CONSTRUCTOR_ARGS>
 - Das Skript erkennt bereits deployed Contracts und überspringt sie
 - Um neu zu deployen, lösche den Eintrag aus `deployments.json` oder deploye auf einem anderen Netzwerk
 
+

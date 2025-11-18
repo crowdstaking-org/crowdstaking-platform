@@ -43,3 +43,4 @@ export async function castVoteOnChain(projectId: string, proposalId: bigint | nu
   return { txHash: receipt?.hash }
 }
 
+
