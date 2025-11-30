@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
@@ -11,6 +11,7 @@ import { SetupStep } from '@/components/wizard/SetupStep'
 import { DealStep } from '@/components/wizard/DealStep'
 import { ReviewStep } from '@/components/wizard/ReviewStep'
 import { SuccessStep } from '@/components/wizard/SuccessStep'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
 interface MissionData {
   projectName: string
@@ -26,10 +27,23 @@ interface MissionData {
  * Mission Setup Wizard page
  * Client Component - manages wizard state flow
  * NO Navigation/Footer - full-screen wizard experience
+ * Redirects to v4 wizard if ENABLE_V4_PROTOCOL is true
  */
 export default function WizardPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
+
+  // Redirect to v4 wizard if v4 is enabled
+  useEffect(() => {
+    if (ENABLE_V4_PROTOCOL) {
+      router.replace('/wizard/v4')
+    }
+  }, [router])
+
+  // Don't render if v4 is enabled
+  if (ENABLE_V4_PROTOCOL) {
+    return null
+  }
   const [missionData, setMissionData] = useState<MissionData>({
     projectName: '',
     mission: '',
