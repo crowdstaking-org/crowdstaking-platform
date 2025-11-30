@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useActiveAccount } from 'thirdweb/react'
@@ -33,9 +33,15 @@ export default function V4WizardPage() {
     mission: null,
   })
 
-  // Redirect if v4 is disabled
+  // Redirect if v4 is disabled - use useEffect to avoid rendering issues
+  useEffect(() => {
+    if (!ENABLE_V4_PROTOCOL) {
+      router.push('/wizard')
+    }
+  }, [router])
+
+  // Don't render if v4 is disabled
   if (!ENABLE_V4_PROTOCOL) {
-    router.push('/wizard')
     return null
   }
 
