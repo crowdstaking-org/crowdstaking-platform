@@ -52,10 +52,49 @@ async function getBaseUrl(): Promise<string> {
 
 /**
  * Fetch project data (server-side)
+ * Tries v4 first, then falls back to legacy
  */
 async function fetchProject(projectId: string): Promise<Project | null> {
   try {
     const baseUrl = await getBaseUrl()
+    const enableV4 = process.env.ENABLE_V4_PROTOCOL === 'true'
+    
+    // Try v4 first if enabled
+    if (enableV4) {
+      try {
+        const v4Response = await fetch(`${baseUrl}/api/v4/projects/${projectId}`, {
+          cache: 'no-store'
+        })
+        
+        if (v4Response.ok) {
+          const v4Result = await v4Response.json()
+          if (v4Result.project) {
+            // Transform v4 project to legacy format for compatibility
+            const v4Project = v4Result.project
+            return {
+              id: v4Project.id,
+              name: v4Project.name,
+              slug: v4Project.slug,
+              description: v4Project.mission || null,
+              founder_wallet_address: '', // v4 doesn't store founder wallet in project table
+              token_name: `Partner ${v4Project.name}`,
+              token_symbol: `SBT-${v4Project.slug}`,
+              total_supply: 0, // v4 doesn't use total_supply
+              token_status: v4Project.status === 'active' ? 'live' : 'pending',
+              status: v4Project.status === 'active' ? 'active' : 'paused',
+              tags: [],
+              created_at: v4Project.created_at,
+              updated_at: v4Project.updated_at,
+            } as Project
+          }
+        }
+      } catch (v4Error) {
+        // Fall through to legacy
+        console.log('v4 project not found, trying legacy:', v4Error)
+      }
+    }
+    
+    // Fallback to legacy projects
     const response = await fetch(`${baseUrl}/api/projects/${projectId}`, {
       cache: 'no-store'
     })

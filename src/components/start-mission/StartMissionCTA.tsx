@@ -1,10 +1,13 @@
+'use client'
+
 import Link from 'next/link'
 import { Rocket } from 'lucide-react'
 import { ScrollReveal } from '../ScrollReveal'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
 /**
  * Final CTA section for Start Mission page
- * Server Component
+ * Client Component (needs ENABLE_V4_PROTOCOL)
  */
 export function StartMissionCTA() {
   return (
@@ -17,7 +20,7 @@ export function StartMissionCTA() {
         </ScrollReveal>
 
         <ScrollReveal direction="up" delay={200} duration={800} scale={true}>
-          <Link href="/wizard" className="group inline-flex items-center space-x-3 bg-blue-600 dark:bg-blue-500 text-white px-10 py-5 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-xl font-semibold btn-hover-lift btn-primary-glow ripple">
+          <Link href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"} className="group inline-flex items-center space-x-3 bg-blue-600 dark:bg-blue-500 text-white px-10 py-5 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-xl font-semibold btn-hover-lift btn-primary-glow ripple cursor-pointer">
             <Rocket className="w-6 h-6 icon-slide" />
             <span>Start Mission Setup Wizard</span>
           </Link>
