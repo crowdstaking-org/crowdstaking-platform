@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 
 /**
@@ -10,11 +10,16 @@ import { useRouter } from 'next/navigation'
  */
 export default function WizardPage() {
   const router = useRouter()
+  const hasRedirected = useRef(false)
 
   useEffect(() => {
-    // Immediately redirect to v4 wizard
-    router.replace('/wizard/v4')
-  }, [router])
+    // Only redirect once
+    if (!hasRedirected.current) {
+      hasRedirected.current = true
+      router.replace('/wizard/v4')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Empty dependency array - only run once on mount
 
   // Return null to prevent any rendering
   return null
