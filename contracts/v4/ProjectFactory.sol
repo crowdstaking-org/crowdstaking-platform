@@ -2,7 +2,6 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "./PartnerRegister.sol";
 import "./GovernanceModule.sol";
@@ -30,7 +29,10 @@ contract ProjectFactory is Ownable {
     event ProjectCreated(
         bytes32 indexed projectId,
         address indexed founder,
-        ProjectContracts contractsDeployed
+        address partnerRegister,
+        address governanceModule,
+        address profitVault,
+        address capitalVault
     );
 
     constructor(
@@ -39,8 +41,8 @@ contract ProjectFactory is Ownable {
         address _payoutToken,
         address _capitalToken
     ) Ownable(msg.sender) {
-        require(_treasury != address(0), "Invalid treasury");
-        require(_feeBps <= 1000, "Fee too high");
+        require(_treasury != address(0));
+        require(_feeBps <= 1000);
         treasury = _treasury;
         feeBps = _feeBps;
         payoutToken = _payoutToken;
@@ -56,9 +58,15 @@ contract ProjectFactory is Ownable {
         string calldata slug,
         address founder
     ) external onlyOwner returns (bytes32) {
-        require(founder != address(0), "Invalid founder");
+        require(founder != address(0));
         bytes32 projectId = keccak256(abi.encodePacked(blockhash(block.number - 1), slug, founder));
-        require(projects[projectId].partnerRegister == address(0), "Project exists");
+        require(projects[projectId].partnerRegister == address(0));
+
+        address reg;
+        address gov;
+        address profit;
+        address capital;
+        address ownerAddr = owner();
 
         PartnerRegister register = new PartnerRegister(
             projectId,
@@ -66,30 +74,35 @@ contract ProjectFactory is Ownable {
             string.concat("SBT-", slug),
             founder
         );
-        GovernanceModule governance = new GovernanceModule(address(register));
-        register.setController(address(governance));
-        register.transferOwnership(owner());
+        reg = address(register);
+        
+        GovernanceModule governance = new GovernanceModule(reg);
+        gov = address(governance);
+        register.setController(gov);
+        register.transferOwnership(ownerAddr);
 
         ProfitVault profitVault = new ProfitVault(
             payoutToken,
             treasury,
             feeBps,
-            address(governance),
-            address(register)
+            gov,
+            reg
         );
-        profitVault.transferOwnership(owner());
+        profit = address(profitVault);
+        profitVault.transferOwnership(ownerAddr);
 
-        CapitalVault capitalVault = new CapitalVault(capitalToken, address(governance));
-        capitalVault.transferOwnership(owner());
+        CapitalVault capitalVault = new CapitalVault(capitalToken, gov);
+        capital = address(capitalVault);
+        capitalVault.transferOwnership(ownerAddr);
 
         projects[projectId] = ProjectContracts({
-            partnerRegister: address(register),
-            governanceModule: address(governance),
-            profitVault: address(profitVault),
-            capitalVault: address(capitalVault)
+            partnerRegister: reg,
+            governanceModule: gov,
+            profitVault: profit,
+            capitalVault: capital
         });
 
-        emit ProjectCreated(projectId, founder, projects[projectId]);
+        emit ProjectCreated(projectId, founder, reg, gov, profit, capital);
         return projectId;
     }
 }

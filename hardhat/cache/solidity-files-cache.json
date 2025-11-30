@@ -12,6 +12,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -50,6 +51,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -86,6 +88,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -124,6 +127,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -165,6 +169,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -201,6 +206,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -239,6 +245,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -278,6 +285,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -314,6 +322,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -347,6 +356,45 @@
         "ERC721"
       ]
     },
+    "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
+      "lastModificationDate": 1762731006497,
+      "contentHash": "f62e11dbd302e17a5621a1438f4e054c",
+      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "../../utils/introspection/IERC165.sol"
+      ],
+      "versionPragmas": [
+        ">=0.6.2"
+      ],
+      "artifacts": [
+        "IERC721"
+      ]
+    },
     "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/utils/Strings.sol": {
       "lastModificationDate": 1762731006807,
       "contentHash": "d8f70caf0e0c77dc908176ed44812fb7",
@@ -358,6 +406,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -387,44 +436,6 @@
         "Strings"
       ]
     },
-    "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/token/ERC721/IERC721.sol": {
-      "lastModificationDate": 1762731006497,
-      "contentHash": "f62e11dbd302e17a5621a1438f4e054c",
-      "sourceName": "@openzeppelin/contracts/token/ERC721/IERC721.sol",
-      "solcConfig": {
-        "version": "0.8.20",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "../../utils/introspection/IERC165.sol"
-      ],
-      "versionPragmas": [
-        ">=0.6.2"
-      ],
-      "artifacts": [
-        "IERC721"
-      ]
-    },
     "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/utils/introspection/ERC165.sol": {
       "lastModificationDate": 1762731006062,
       "contentHash": "0906d06dca25210d4696dcef6dad2909",
@@ -436,6 +447,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -474,6 +486,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -501,6 +514,43 @@
         "IERC721Metadata"
       ]
     },
+    "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
+      "lastModificationDate": 1762731006429,
+      "contentHash": "7074c93b1ea0a122063f26ddd1db1032",
+      "sourceName": "@openzeppelin/contracts/utils/introspection/IERC165.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        ">=0.4.16"
+      ],
+      "artifacts": [
+        "IERC165"
+      ]
+    },
     "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/utils/math/SafeCast.sol": {
       "lastModificationDate": 1762731006703,
       "contentHash": "2adca1150f58fc6f3d1f0a0f22ee7cca",
@@ -512,6 +562,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -548,6 +599,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -587,6 +639,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -625,6 +678,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -650,42 +704,6 @@
         "Panic"
       ]
     },
-    "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/utils/introspection/IERC165.sol": {
-      "lastModificationDate": 1762731006429,
-      "contentHash": "7074c93b1ea0a122063f26ddd1db1032",
-      "sourceName": "@openzeppelin/contracts/utils/introspection/IERC165.sol",
-      "solcConfig": {
-        "version": "0.8.20",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "evmVersion": "paris",
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        ">=0.4.16"
-      ],
-      "artifacts": [
-        "IERC165"
-      ]
-    },
     "/Users/thomashuhn/Code/CS/node_modules/@openzeppelin/contracts/access/Ownable.sol": {
       "lastModificationDate": 1762731006612,
       "contentHash": "d3c790edc9ccf808a17c5a6cd13614fd",
@@ -697,6 +715,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -725,8 +744,8 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/ProjectFactory.sol": {
-      "lastModificationDate": 1763238719982,
-      "contentHash": "f68228bddfa9e376b87e6a0510c5f2d2",
+      "lastModificationDate": 1764413653100,
+      "contentHash": "22bdf1a5f60ebdbca88a8d98a8fd5501",
       "sourceName": "contracts/v4/ProjectFactory.sol",
       "solcConfig": {
         "version": "0.8.20",
@@ -735,6 +754,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -754,7 +774,6 @@
       },
       "imports": [
         "@openzeppelin/contracts/access/Ownable.sol",
-        "@openzeppelin/contracts/utils/Strings.sol",
         "./PartnerRegister.sol",
         "./GovernanceModule.sol",
         "./ProfitVault.sol",
@@ -768,7 +787,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/PartnerRegister.sol": {
-      "lastModificationDate": 1763238614957,
+      "lastModificationDate": 1763238719982,
       "contentHash": "1f98f1372e96c016c2f06554e6e882c9",
       "sourceName": "contracts/v4/PartnerRegister.sol",
       "solcConfig": {
@@ -778,6 +797,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -807,7 +827,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/GovernanceModule.sol": {
-      "lastModificationDate": 1763238602368,
+      "lastModificationDate": 1763238720021,
       "contentHash": "944c792a1836ba75240a42c345602c66",
       "sourceName": "contracts/v4/GovernanceModule.sol",
       "solcConfig": {
@@ -817,6 +837,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -846,7 +867,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/ProfitVault.sol": {
-      "lastModificationDate": 1763285397162,
+      "lastModificationDate": 1763285513728,
       "contentHash": "b794a5bf0d1534d076c5ad5b552dc2bf",
       "sourceName": "contracts/v4/ProfitVault.sol",
       "solcConfig": {
@@ -856,6 +877,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -886,7 +908,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/CapitalVault.sol": {
-      "lastModificationDate": 1763238596586,
+      "lastModificationDate": 1763238719982,
       "contentHash": "e6fa827be0d6ab3f5200ec182be6c42f",
       "sourceName": "contracts/v4/CapitalVault.sol",
       "solcConfig": {
@@ -896,6 +918,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -925,7 +948,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/v4/CrowdStakingTreasury.sol": {
-      "lastModificationDate": 1763238580366,
+      "lastModificationDate": 1763238719982,
       "contentHash": "5eab85cfea374fb614b974f057586a52",
       "sourceName": "contracts/v4/CrowdStakingTreasury.sol",
       "solcConfig": {
@@ -935,6 +958,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {
@@ -964,7 +988,7 @@
       ]
     },
     "/Users/thomashuhn/Code/CS/contracts/mocks/MockERC20.sol": {
-      "lastModificationDate": 1763238330663,
+      "lastModificationDate": 1763238719982,
       "contentHash": "5fee25b79a53d8856538be596a7957df",
       "sourceName": "contracts/mocks/MockERC20.sol",
       "solcConfig": {
@@ -974,6 +998,7 @@
             "enabled": true,
             "runs": 200
           },
+          "viaIR": true,
           "evmVersion": "paris",
           "outputSelection": {
             "*": {

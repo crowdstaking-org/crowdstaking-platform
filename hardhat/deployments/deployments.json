@@ -1,34 +1,34 @@
 {
   "CrowdStakingTreasury": {
-    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-    "chainId": 31337,
-    "network": "hardhat",
-    "deployedAt": "2025-11-16T21:22:33.891Z",
-    "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    "address": "0x2ca13F0c12fDdC9f9b5452c55d5d40858b91aE27",
+    "chainId": 84532,
+    "network": "baseSepolia",
+    "deployedAt": "2025-11-29T10:21:19.136Z",
+    "owner": "0xA79021eC2Bf5F6041065fF511EC43F9103dB6F2D"
   },
   "MockERC20_Payout": {
-    "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "chainId": 31337,
-    "network": "hardhat",
-    "deployedAt": "2025-11-16T21:22:33.898Z",
+    "address": "0xD3853D3526bD977268489CCe9136AADeb2c33438",
+    "chainId": 84532,
+    "network": "baseSepolia",
+    "deployedAt": "2025-11-29T10:25:33.256Z",
     "type": "payout"
   },
   "MockERC20_Capital": {
-    "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-    "chainId": 31337,
-    "network": "hardhat",
-    "deployedAt": "2025-11-16T21:22:33.898Z",
+    "address": "0x927aC6159502a07e1dbF98B02dAd7079f1cDB49a",
+    "chainId": 84532,
+    "network": "baseSepolia",
+    "deployedAt": "2025-11-29T10:25:33.493Z",
     "type": "capital"
   },
   "ProjectFactory": {
-    "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-    "chainId": 31337,
-    "network": "hardhat",
-    "deployedAt": "2025-11-16T21:22:33.908Z",
-    "treasury": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "address": "0x318Be50910845103d7EcB1566B817219c33AF0ca",
+    "chainId": 84532,
+    "network": "baseSepolia",
+    "deployedAt": "2025-11-29T10:55:47.018Z",
+    "treasury": "0x2ca13F0c12fDdC9f9b5452c55d5d40858b91aE27",
     "feeBps": 200,
-    "payoutToken": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-    "capitalToken": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-    "owner": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+    "payoutToken": "0x0000000000000000000000000000000000000000",
+    "capitalToken": "0x0000000000000000000000000000000000000000",
+    "owner": "0xA79021eC2Bf5F6041065fF511EC43F9103dB6F2D"
   }
 }

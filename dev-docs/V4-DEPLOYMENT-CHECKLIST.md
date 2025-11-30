@@ -351,6 +351,7 @@ vercel --prod
 
 ## 📚 Weitere Ressourcen
 
+- **DigitalOcean Deployment Guide:** `dev-docs/V4-DIGITALOCEAN-DEPLOYMENT.md` ⭐ **NEU**
 - **Implementierungsplan:** `dev-docs/V4-IMPLEMENTATION-PLAN.md`
 - **Implementierungs-Zusammenfassung:** `dev-docs/V4-IMPLEMENTATION-SUMMARY.md`
 - **Finaler Status:** `dev-docs/V4-FINAL-STATUS.md`

@@ -73,6 +73,7 @@ See `.env.example` for all available environment variables.
      ```
    - Contracts liegen unter `contracts/v4/`, Tests unter `hardhat/test/*.ts`
    - **📋 Vollständige Deployment-Anleitung:** [dev-docs/V4-DEPLOYMENT-CHECKLIST.md](./dev-docs/V4-DEPLOYMENT-CHECKLIST.md)
+   - **🌐 DigitalOcean Deployment:** [dev-docs/V4-DIGITALOCEAN-DEPLOYMENT.md](./dev-docs/V4-DIGITALOCEAN-DEPLOYMENT.md) ⭐ **NEU**
 
 ### Available Scripts
 

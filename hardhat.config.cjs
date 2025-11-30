@@ -9,8 +9,9 @@ const config = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
+        runs: 200, // Lower runs = smaller bytecode size (optimize for size, not gas)
       },
+      viaIR: true, // Enable IR-based code generation for better optimization
     },
   },
   paths: {
