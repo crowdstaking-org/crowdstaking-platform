@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     const { data: share, error: shareError } = await supabaseAdmin
-      .from<PartnerShare>('partner_shares')
+      .from('partner_shares')
       .select('*')
       .eq('id', partnerShareId)
       .eq('project_id', projectId)

@@ -11,7 +11,7 @@ interface RegisterSharePayload {
 
 export async function registerPartnerShare(payload: RegisterSharePayload) {
   const { data, error } = await supabaseAdmin
-    .from<PartnerShare>('partner_shares')
+    .from('partner_shares')
     .upsert({
       project_id: payload.projectId,
       proposal_id: payload.proposalId ?? null,
@@ -29,7 +29,7 @@ export async function registerPartnerShare(payload: RegisterSharePayload) {
 
 export async function markWorkDelivered(shareId: string) {
   const { data, error } = await supabaseAdmin
-    .from<PartnerShare>('partner_shares')
+    .from('partner_shares')
     .update({
       status: 'active',
       activated_at: new Date().toISOString(),

@@ -12,7 +12,7 @@ interface CreateProjectInput {
 export async function createV4Project(input: CreateProjectInput) {
   const slug = input.slug.trim().toLowerCase()
   const { data: existing } = await supabaseAdmin
-    .from<V4Project>('projects_v4')
+    .from('projects_v4')
     .select('id')
     .eq('slug', slug)
     .maybeSingle()
@@ -22,7 +22,7 @@ export async function createV4Project(input: CreateProjectInput) {
   }
 
   const { data, error } = await supabaseAdmin
-    .from<V4Project>('projects_v4')
+    .from('projects_v4')
     .insert({
       name: input.name,
       slug,
@@ -52,7 +52,7 @@ export async function saveProjectContracts(
   }))
 
   const { data, error } = await supabaseAdmin
-    .from<V4ProjectContract>('project_contracts')
+    .from('project_contracts')
     .insert(payload)
     .select('*')
 
@@ -64,12 +64,12 @@ export async function saveProjectContracts(
 }
 
 export async function deleteV4Project(projectId: string) {
-  await supabaseAdmin.from<V4Project>('projects_v4').delete().eq('id', projectId)
+  await supabaseAdmin.from('projects_v4').delete().eq('id', projectId)
 }
 
 export async function updateV4ProjectStatus(projectId: string, status: V4ProjectStatus) {
   const { error } = await supabaseAdmin
-    .from<V4Project>('projects_v4')
+    .from('projects_v4')
     .update({ status })
     .eq('id', projectId)
   if (error) throw error

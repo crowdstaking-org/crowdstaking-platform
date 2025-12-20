@@ -11,16 +11,20 @@ interface Params {
  * GET /api/v4/projects/[projectId]
  * Retrieves a single v4 project by ID
  */
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ projectId: string }> }
+) {
+  const { projectId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
 
   try {
     const { data: project, error } = await supabaseAdmin
-      .from<V4Project>('projects_v4')
+      .from('projects_v4')
       .select('*')
-      .eq('id', params.projectId)
+      .eq('id', projectId)
       .single()
 
     if (error) {
@@ -36,5 +40,6 @@ export async function GET(_request: Request, { params }: Params) {
     return NextResponse.json({ error: error.message ?? 'Internal error' }, { status: 500 })
   }
 }
+
 
 

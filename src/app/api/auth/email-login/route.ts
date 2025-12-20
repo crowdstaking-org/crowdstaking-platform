@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
           profile = newProfile
           
           // Also create profile_stats entry
-          await supabase
+          const { error: statsError } = await supabase
             .from('profile_stats')
             .insert({
               wallet_address: address.toLowerCase(),
@@ -88,10 +88,11 @@ export async function POST(request: NextRequest) {
               projects_contributed: 0,
               reputation_score: 0,
             })
-            .catch(err => console.error('Failed to create profile_stats:', err))
+          
+          if (statsError) console.error('Failed to create profile_stats:', statsError)
           
           // Create privacy settings
-          await supabase
+          const { error: privacyError } = await supabase
             .from('profile_privacy')
             .insert({
               wallet_address: address.toLowerCase(),
@@ -103,7 +104,8 @@ export async function POST(request: NextRequest) {
               allow_follows: true,
               allow_endorsements: true,
             })
-            .catch(err => console.error('Failed to create privacy settings:', err))
+          
+          if (privacyError) console.error('Failed to create privacy settings:', privacyError)
         }
       } else if (email && !existingProfile.email) {
         // Update profile with email if it doesn't have one

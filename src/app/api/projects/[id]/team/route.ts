@@ -23,10 +23,10 @@ import { successResponse, errorResponse } from '@/lib/api'
  */
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ projectId: string }> }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { projectId } = await context.params
+    const { id: projectId } = await context.params
     
     // NOTE: Current proposals table does not have project_id field
     // For now, we fetch ALL accepted/completed proposals

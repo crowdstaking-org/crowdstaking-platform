@@ -564,7 +564,7 @@ export default function NewV4ProposalPage() {
             </button>
             <LoadingButton
               onClick={handleSubmit}
-              loading={isSubmitting}
+              isLoading={isSubmitting}
               disabled={!account || !validateForm() || isSubmitting}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >

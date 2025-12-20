@@ -93,17 +93,23 @@ async function getContributorsLeaderboard(period: string, limit: number) {
   const { data, error } = await query
   
   // Flatten the nested profile data
-  const flattenedData = data?.map(item => ({
-    wallet_address: item.wallet_address,
-    missions_completed: item.missions_completed,
-    proposals_completed: item.proposals_completed,
-    completion_rate: item.completion_rate,
-    last_active_at: item.last_active_at,
-    display_name: item.profiles?.display_name,
-    avatar_url: item.profiles?.avatar_url,
-    bio: item.profiles?.bio,
-    trust_score: item.profiles?.trust_score,
-  }))
+  // Flatten the nested profile data
+  const flattenedData = data?.map(item => {
+    // Handle Supabase relation returning array or single object
+    const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+    
+    return {
+      wallet_address: item.wallet_address,
+      missions_completed: item.missions_completed,
+      proposals_completed: item.proposals_completed,
+      completion_rate: item.completion_rate,
+      last_active_at: item.last_active_at,
+      display_name: profile?.display_name,
+      avatar_url: profile?.avatar_url,
+      bio: profile?.bio,
+      trust_score: profile?.trust_score,
+    }
+  })
 
   return { data: flattenedData, error }
 }
@@ -148,18 +154,24 @@ async function getFoundersLeaderboard(period: string, limit: number) {
   const { data, error } = await query
   
   // Flatten the nested profile data
-  const flattenedData = data?.map(item => ({
-    wallet_address: item.wallet_address,
-    projects_created: item.projects_created,
-    projects_live: item.projects_live,
-    missions_created: item.missions_created,
-    total_missions_payout: item.total_missions_payout,
-    last_active_at: item.last_active_at,
-    display_name: item.profiles?.display_name,
-    avatar_url: item.profiles?.avatar_url,
-    bio: item.profiles?.bio,
-    trust_score: item.profiles?.trust_score,
-  }))
+  // Flatten the nested profile data
+  const flattenedData = data?.map(item => {
+    // Handle Supabase relation returning array or single object
+    const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+    
+    return {
+      wallet_address: item.wallet_address,
+      projects_created: item.projects_created,
+      projects_live: item.projects_live,
+      missions_created: item.missions_created,
+      total_missions_payout: item.total_missions_payout,
+      last_active_at: item.last_active_at,
+      display_name: profile?.display_name,
+      avatar_url: profile?.avatar_url,
+      bio: profile?.bio,
+      trust_score: profile?.trust_score,
+    }
+  })
 
   return { data: flattenedData, error }
 }

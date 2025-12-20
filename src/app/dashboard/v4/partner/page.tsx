@@ -445,7 +445,7 @@ export default function V4PartnerDashboardPage() {
                                     <LoadingButton
                                       key={period}
                                       onClick={() => handleClaimDividend(share, period)}
-                                      loading={claiming[claimKey] || false}
+                                      isLoading={claiming[claimKey] || false}
                                       disabled={alreadyClaimed || claiming[claimKey]}
                                       className="px-3 py-1 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                                     >

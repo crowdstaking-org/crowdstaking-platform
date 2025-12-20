@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+
   /**
    * Image Configuration
    * Allow external images from trusted sources
@@ -39,6 +34,8 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
   },
+
+  serverExternalPackages: ['pino', 'pino-pretty', 'thread-stream'],
   
   /**
    * Security Headers

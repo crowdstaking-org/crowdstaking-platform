@@ -6,7 +6,11 @@ interface Params {
   params: { proposalId: string }
 }
 
-export async function POST(request: Request, { params }: Params) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ proposalId: string }> }
+) {
+  const { proposalId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -19,7 +23,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const vote = await castProposalVote({
-      proposalId: params.proposalId,
+      proposalId: proposalId,
       voter,
       support,
       votingPowerBps: Number(votingPowerBps ?? 0)

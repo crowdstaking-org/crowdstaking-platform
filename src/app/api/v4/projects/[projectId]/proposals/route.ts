@@ -7,7 +7,11 @@ interface Params {
   params: { projectId: string }
 }
 
-export async function POST(request: Request, { params }: Params) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ projectId: string }> }
+) {
+  const { projectId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -20,7 +24,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     const proposal = await createProposal({
-      projectId: params.projectId,
+      projectId: projectId,
       createdBy,
       type: type as ProposalType,
       payload,

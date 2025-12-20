@@ -391,7 +391,7 @@ export default function V4ProposalDetailPage() {
                   <div className="flex gap-4">
                     <LoadingButton
                       onClick={() => handleVote(true)}
-                      loading={isVoting}
+                      isLoading={isVoting}
                       disabled={isVoting}
                       className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
@@ -400,7 +400,7 @@ export default function V4ProposalDetailPage() {
                     </LoadingButton>
                     <LoadingButton
                       onClick={() => handleVote(false)}
-                      loading={isVoting}
+                      isLoading={isVoting}
                       disabled={isVoting}
                       className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
                     >
@@ -438,7 +438,7 @@ export default function V4ProposalDetailPage() {
             <div className="mb-6">
               <LoadingButton
                 onClick={handleExecute}
-                loading={isExecuting}
+                isLoading={isExecuting}
                 disabled={isExecuting}
                 className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >

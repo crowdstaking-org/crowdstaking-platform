@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     // First, get all partner shares for this wallet
     let sharesQuery = supabaseAdmin
-      .from<PartnerShare>('partner_shares')
+      .from('partner_shares')
       .select('id, project_id')
       .eq('wallet_address', walletAddress.toLowerCase())
       .eq('status', 'active')
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
     // Fetch dividend claims for these shares
     const { data: claims, error: claimsError } = await supabaseAdmin
-      .from<DividendClaim>('dividend_claims')
+      .from('dividend_claims')
       .select('*')
       .in('partner_share_id', shareIds)
       .order('claimed_at', { ascending: false })

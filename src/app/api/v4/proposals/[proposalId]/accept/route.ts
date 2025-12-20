@@ -3,11 +3,11 @@ import { markProposalStatus } from '@/lib/v4/governance'
 import { dispatchJob } from '@/lib/v4/jobs'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
-interface Params {
-  params: { proposalId: string }
-}
-
-export async function POST(request: Request, { params }: Params) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ proposalId: string }> }
+) {
+  const { proposalId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -19,11 +19,11 @@ export async function POST(request: Request, { params }: Params) {
       return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
     }
 
-    const proposal = await markProposalStatus(params.proposalId, 'approved', payload ?? null)
+    const proposal = await markProposalStatus(proposalId, 'approved', payload ?? null)
 
     // Fire-and-forget job (register share, etc.)
     await dispatchJob('registerPartnerShare', {
-      proposalId: params.proposalId,
+      proposalId: proposalId,
       projectId: proposal.project_id,
       walletAddress,
       shareBps,

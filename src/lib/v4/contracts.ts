@@ -3,7 +3,7 @@ import type { V4ProjectContract, V4Project } from '@/types/v4'
 
 export async function getProjectBySlug(slug: string) {
   const { data, error } = await supabaseAdmin
-    .from<V4Project>('projects_v4')
+    .from('projects_v4')
     .select('*')
     .eq('slug', slug)
     .maybeSingle()
@@ -13,7 +13,7 @@ export async function getProjectBySlug(slug: string) {
 
 export async function getProjectContracts(projectId: string) {
   const { data, error } = await supabaseAdmin
-    .from<V4ProjectContract>('project_contracts')
+    .from('project_contracts')
     .select('*')
     .eq('project_id', projectId)
   if (error) throw error
@@ -25,7 +25,7 @@ export async function upsertProjectContract(
   contract: Omit<V4ProjectContract, 'id' | 'project_id' | 'deployed_at'>
 ) {
   const { data, error } = await supabaseAdmin
-    .from<V4ProjectContract>('project_contracts')
+    .from('project_contracts')
     .upsert({
       ...contract,
       project_id: projectId

@@ -152,7 +152,7 @@ export function useLaunchMission() {
       
       return {
         success: true,
-        projectId,
+        projectId: projectId ?? undefined,
         tokenAddress: tokenAddress!,
         projectWalletAddress: account.address,
       }

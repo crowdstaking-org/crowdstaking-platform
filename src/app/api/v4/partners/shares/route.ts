@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
     // Fetch partner shares with project info
     const { data: shares, error: sharesError } = await supabaseAdmin
-      .from<PartnerShare>('partner_shares')
+      .from('partner_shares')
       .select(`
         *,
         project:projects_v4!inner (

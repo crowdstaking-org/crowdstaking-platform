@@ -20,7 +20,7 @@ export async function recordCapitalEvent(
   signature?: string
 ) {
   const { data, error } = await supabaseAdmin
-    .from<CapitalEvent>('capital_events')
+    .from('capital_events')
     .insert({
       payload,
       verified,

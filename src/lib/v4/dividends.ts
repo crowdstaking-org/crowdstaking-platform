@@ -11,7 +11,7 @@ interface RecordClaimInput {
 
 export async function recordDividendClaim(input: RecordClaimInput) {
   const { data, error } = await supabaseAdmin
-    .from<DividendClaim>('dividend_claims')
+    .from('dividend_claims')
     .insert({
       project_id: input.projectId,
       partner_share_id: input.partnerShareId,
@@ -29,7 +29,7 @@ export async function recordDividendClaim(input: RecordClaimInput) {
 
 export async function listClaimsForShare(partnerShareId: string) {
   const { data, error } = await supabaseAdmin
-    .from<DividendClaim>('dividend_claims')
+    .from('dividend_claims')
     .select('*')
     .eq('partner_share_id', partnerShareId)
     .order('claimed_at', { ascending: false })

@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/v4/supabaseAdmin'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
-interface Params {
-  params: { projectId: string }
-}
-
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ projectId: string }> }
+) {
+  const { projectId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -16,7 +16,7 @@ export async function GET(_request: Request, { params }: Params) {
     const { data: claims, error } = await supabaseAdmin
       .from('dividend_claims')
       .select('vault_period')
-      .eq('project_id', params.projectId)
+      .eq('project_id', projectId)
 
     if (error) throw error
 

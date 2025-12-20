@@ -15,7 +15,7 @@ interface ProposalInput {
 
 export async function createProposal(input: ProposalInput) {
   const { data, error } = await supabaseAdmin
-    .from<GovernanceProposal>('governance_proposals')
+    .from('governance_proposals')
     .insert({
       project_id: input.projectId,
       created_by: input.createdBy,
@@ -40,7 +40,7 @@ interface VoteInput {
 
 export async function castProposalVote(input: VoteInput) {
   const { data: existing } = await supabaseAdmin
-    .from<GovernanceVote>('governance_votes')
+    .from('governance_votes')
     .select('id')
     .eq('proposal_id', input.proposalId)
     .eq('voter_address', input.voter)
@@ -51,7 +51,7 @@ export async function castProposalVote(input: VoteInput) {
   }
 
   const { data, error } = await supabaseAdmin
-    .from<GovernanceVote>('governance_votes')
+    .from('governance_votes')
     .insert({
       proposal_id: input.proposalId,
       voter_address: input.voter,
@@ -71,7 +71,7 @@ export async function markProposalStatus(
   result?: Record<string, unknown>
 ) {
   const { data, error } = await supabaseAdmin
-    .from<GovernanceProposal>('governance_proposals')
+    .from('governance_proposals')
     .update({
       status,
       result: result ?? null

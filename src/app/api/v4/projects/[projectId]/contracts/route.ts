@@ -3,11 +3,11 @@ import { supabaseAdmin } from '@/lib/v4/supabaseAdmin'
 import type { V4ProjectContract } from '@/types/v4'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
-interface Params {
-  params: { projectId: string }
-}
-
-export async function GET(request: Request, { params }: Params) {
+export async function GET(
+  request: Request,
+  context: { params: Promise<{ projectId: string }> }
+) {
+  const { projectId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -17,9 +17,9 @@ export async function GET(request: Request, { params }: Params) {
     const type = searchParams.get('type') as V4ProjectContract['contract_type'] | null
 
     let query = supabaseAdmin
-      .from<V4ProjectContract>('project_contracts')
+      .from('project_contracts')
       .select('*')
-      .eq('project_id', params.projectId)
+      .eq('project_id', projectId)
 
     if (type) {
       query = query.eq('contract_type', type)

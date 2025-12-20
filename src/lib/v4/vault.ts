@@ -18,7 +18,7 @@ const CAPITAL_VAULT_ABI = [
 
 async function getContractAddress(projectId: string, type: V4ProjectContract['contract_type']) {
   const { data, error } = await supabaseAdmin
-    .from<V4ProjectContract>('project_contracts')
+    .from('project_contracts')
     .select('address, contract_type')
     .eq('project_id', projectId)
     .eq('contract_type', type)

@@ -7,16 +7,20 @@ interface Params {
   params: { proposalId: string }
 }
 
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ proposalId: string }> }
+) {
+  const { proposalId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
 
   try {
     const { data, error } = await supabaseAdmin
-      .from<GovernanceVote>('governance_votes')
+      .from('governance_votes')
       .select('*')
-      .eq('proposal_id', params.proposalId)
+      .eq('proposal_id', proposalId)
       .order('created_at', { ascending: false })
 
     if (error) throw error

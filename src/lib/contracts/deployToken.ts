@@ -5,7 +5,7 @@
  * Gas is SPONSORED by ThirdWeb - user needs NO ETH!
  */
 
-import { deployContract } from 'thirdweb/deploys'
+import { deployERC20Contract } from 'thirdweb/deploys'
 import { sendTransaction, prepareContractCall, getContract } from 'thirdweb'
 import { baseSepolia } from 'thirdweb/chains'
 import { client } from '@/lib/thirdweb'
@@ -64,7 +64,7 @@ export async function deployToken(params: DeployTokenParams): Promise<DeployToke
     
     // Step 1: Deploy ERC20 token contract
     // Gas is SPONSORED - user pays nothing!
-    const tokenAddress = await deployContract({
+    const tokenAddress = await deployERC20Contract({
       client,
       chain: baseSepolia,
       account: userAccount, // Smart Account with sponsorGas: true
@@ -72,7 +72,6 @@ export async function deployToken(params: DeployTokenParams): Promise<DeployToke
       params: {
         name: tokenName,
         symbol: tokenSymbol,
-        primarySaleRecipient: userAccount.address,
       },
     })
 

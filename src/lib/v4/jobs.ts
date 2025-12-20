@@ -4,6 +4,7 @@ export type JobName =
   | 'registerPartnerShare'
   | 'markWorkDelivered'
   | 'activateCapitalShare'
+  | 'startDistribution'
 
 export async function dispatchJob(
   name: JobName,

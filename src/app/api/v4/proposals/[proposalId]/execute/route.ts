@@ -5,11 +5,11 @@ import { markProposalStatus } from '@/lib/v4/governance'
 import type { GovernanceProposal } from '@/types/v4'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
-interface Params {
-  params: { proposalId: string }
-}
-
-export async function POST(request: Request, { params }: Params) {
+export async function POST(
+  request: Request,
+  context: { params: Promise<{ proposalId: string }> }
+) {
+  const { proposalId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
@@ -24,9 +24,9 @@ export async function POST(request: Request, { params }: Params) {
 
     // Get proposal to verify it exists and get projectId
     const { data: proposal, error: proposalError } = await supabaseAdmin
-      .from<GovernanceProposal>('governance_proposals')
+      .from('governance_proposals')
       .select('*')
-      .eq('id', params.proposalId)
+      .eq('id', proposalId)
       .single()
 
     if (proposalError || !proposal) {
@@ -42,7 +42,7 @@ export async function POST(request: Request, { params }: Params) {
     }
 
     // Execute on-chain
-    const proposalIdNum = parseInt(params.proposalId, 10)
+    const proposalIdNum = parseInt(proposalId, 10)
     if (isNaN(proposalIdNum)) {
       return NextResponse.json({ error: 'Invalid proposal ID format' }, { status: 400 })
     }
@@ -50,7 +50,7 @@ export async function POST(request: Request, { params }: Params) {
     const { txHash } = await executeProposal(projectId, proposalIdNum)
 
     // Update proposal status
-    await markProposalStatus(params.proposalId, 'executed', { txHash })
+    await markProposalStatus(proposalId, 'executed', { txHash })
 
     return NextResponse.json({ success: true, txHash })
   } catch (error: any) {

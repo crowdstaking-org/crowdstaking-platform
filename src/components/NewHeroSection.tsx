@@ -20,8 +20,14 @@ interface NewHeroSectionProps {
  */
 export function NewHeroSection({ theme }: NewHeroSectionProps) {
   const [isHeroVisible, setIsHeroVisible] = useState(true)
+  const [wizardHref, setWizardHref] = useState("/wizard") // Default to avoid hydration mismatch
   const { wallet, isAuthenticated } = useAuth()
   const { projects, loading: projectsLoading } = useFounderProjects(wallet || undefined)
+
+  // Set wizard href client-side to avoid hydration mismatch
+  useEffect(() => {
+    setWizardHref(ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard")
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -85,7 +91,7 @@ export function NewHeroSection({ theme }: NewHeroSectionProps) {
             ) : (
               // Default: Start new mission
               <Link
-                href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"}
+                href={wizardHref}
                 className="w-full flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-base sm:text-lg font-bold btn-hover-lift btn-primary-glow mt-auto cursor-pointer"
               >
                 <Rocket className="w-4 h-4 sm:w-5 sm:h-5" />

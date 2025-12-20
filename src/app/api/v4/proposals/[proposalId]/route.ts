@@ -3,20 +3,20 @@ import { supabaseAdmin } from '@/lib/v4/supabaseAdmin'
 import type { GovernanceProposal } from '@/types/v4'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 
-interface Params {
-  params: { proposalId: string }
-}
-
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ proposalId: string }> }
+) {
+  const { proposalId } = await context.params
   if (!ENABLE_V4_PROTOCOL) {
     return NextResponse.json({ error: 'V4 protocol disabled' }, { status: 503 })
   }
 
   try {
     const { data, error } = await supabaseAdmin
-      .from<GovernanceProposal>('governance_proposals')
+      .from('governance_proposals')
       .select('*')
-      .eq('id', params.proposalId)
+      .eq('id', proposalId)
       .single()
 
     if (error) {

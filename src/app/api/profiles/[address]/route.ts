@@ -32,8 +32,8 @@ export async function GET(
       .from('profiles')
       .update({ profile_views: supabase.rpc('increment', { x: 1 }) as any })
       .eq('wallet_address', normalizedAddress)
-      .then(() => {})
-      .catch(() => {}) as any
+      .eq('wallet_address', normalizedAddress)
+      .then(() => {}, () => {}) as any
 
     // Fetch profile
     const { data: profile, error: profileError } = await supabase

@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useActiveAccount, useDisconnect } from 'thirdweb/react'
 import { ChevronDown, User, LogOut, Wallet, Mail, Bookmark, UserCircle, Settings, LayoutDashboard } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { ENABLE_V4_PROTOCOL } from '@/lib/features'
 import Link from 'next/link'
 
 export function UserAccountButton() {
@@ -116,9 +117,11 @@ export function UserAccountButton() {
       // This will set account to null and trigger useAuth cleanup
       console.log('🔴 LOGOUT: Disconnecting wallet...')
       if (wallet) {
-        await disconnect(wallet).catch(error => {
+        try {
+          await disconnect(wallet)
+        } catch (error) {
           console.error('Wallet disconnect failed:', error)
-        })
+        }
       }
       
       console.log('🔴 LOGOUT: Complete! Redirecting to homepage...')

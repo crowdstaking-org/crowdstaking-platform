@@ -1,16 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useActiveAccount } from 'thirdweb/react'
-import { ConnectButton } from 'thirdweb/react'
-import { client, wallets } from '@/lib/thirdweb'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
 import { WizardProgress } from '@/components/wizard/WizardProgress'
 import { LoadingButton } from '@/components/ui/LoadingButton'
 import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
+
 
 interface V4ProjectData {
   name: string
@@ -46,11 +47,7 @@ export default function V4WizardPage() {
   }
 
   const handleClose = () => {
-    if (window.history.length > 1) {
-      router.back()
-    } else {
-      router.push('/')
-    }
+    router.push('/')
   }
 
   const updateProjectData = (updates: Partial<V4ProjectData>) => {
@@ -168,13 +165,17 @@ export default function V4WizardPage() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 relative">
       {currentStep < 2 && (
-        <button
-          onClick={handleClose}
-          className="fixed top-6 right-6 z-50 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
+        <Link
+          href="/"
+          className="fixed top-6 right-6 z-[100] p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 group cursor-pointer"
           aria-label="Close wizard"
+          onClick={(e) => {
+            e.preventDefault()
+            router.push('/')
+          }}
         >
           <X className="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors" />
-        </button>
+        </Link>
       )}
 
       {currentStep < 2 && (
@@ -197,7 +198,7 @@ export default function V4WizardPage() {
   )
 }
 
-// Welcome Step
+// Welcome Step Component
 function WelcomeStep({
   onNext,
   account,
@@ -205,6 +206,10 @@ function WelcomeStep({
   onNext: () => void
   account: any
 }) {
+  // Calculate render conditions
+  const hasAccount = !!account && !!account.address
+  const showButton = !hasAccount
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12">
@@ -255,19 +260,29 @@ function WelcomeStep({
           </div>
         </div>
 
-        {!account && (
+        {showButton && (
           <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
             <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
-              Please connect your wallet to continue
+              Please log in first or create an account
             </p>
-            <ConnectButton client={client} wallets={wallets} />
+            <div className="flex justify-center">
+              <Link 
+                href="/?login=true&returnUrl=/wizard/v4"
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer inline-flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Login / Register
+              </Link>
+            </div>
           </div>
         )}
 
         <div className="flex justify-end">
           <button
             onClick={onNext}
-            disabled={!account}
+            disabled={!account || !account.address}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Get Started
@@ -429,7 +444,7 @@ function ReviewStep({
           </button>
           <LoadingButton
             onClick={onSubmit}
-            loading={isSubmitting}
+            isLoading={isSubmitting}
             disabled={!account || isSubmitting}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >

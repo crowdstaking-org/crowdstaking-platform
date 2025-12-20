@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Rocket, Sun, Moon, Menu, X } from 'lucide-react'
 import { ConnectButton, useActiveAccount } from "thirdweb/react"
@@ -24,6 +24,14 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
   const { wallet, isAuthenticated, login } = useAuth()
   const account = useActiveAccount()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [wizardHref, setWizardHref] = useState("/wizard") // Default to avoid hydration mismatch
+  const [mounted, setMounted] = useState(false) // Track if component is mounted
+
+  // Set wizard href client-side to avoid hydration mismatch
+  useEffect(() => {
+    setWizardHref(ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard")
+    setMounted(true) // Mark as mounted after first render
+  }, [])
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen)
   const closeMobileMenu = () => setMobileMenuOpen(false)
@@ -84,10 +92,15 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               aria-label="Toggle theme"
             >
               <div className="theme-icon theme-icon-rotate">
-                {theme === 'light' ? (
-                  <Moon className="w-5 h-5 icon-rotate" />
+                {mounted ? (
+                  theme === 'light' ? (
+                    <Moon className="w-5 h-5 icon-rotate" />
+                  ) : (
+                    <Sun className="w-5 h-5 icon-rotate" />
+                  )
                 ) : (
-                  <Sun className="w-5 h-5 icon-rotate" />
+                  // Placeholder during SSR to avoid hydration mismatch
+                  <div className="w-5 h-5" />
                 )}
               </div>
             </button>
@@ -127,7 +140,7 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
 
             {/* Start Mission Button - Hidden on small screens to save space */}
             <Link 
-              href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"} 
+              href={wizardHref} 
               className="hidden sm:flex group items-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors btn-hover-lift btn-primary-glow ripple cursor-pointer"
             >
               <Rocket className="w-4 h-4 icon-slide" />
@@ -191,7 +204,7 @@ export function Navigation({ theme, onToggleTheme }: NavigationProps) {
               </Link>
               
               <Link
-                href={ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard"}
+                href={wizardHref}
                 onClick={closeMobileMenu}
                 className="flex items-center justify-center space-x-2 bg-blue-600 dark:bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-semibold cursor-pointer"
               >
