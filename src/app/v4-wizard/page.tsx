@@ -1,7 +1,7 @@
 import { Metadata } from 'next'
 import { V4WizardClient } from '@/components/wizard/V4WizardClient'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Create v4 Project | CrowdStaking',
