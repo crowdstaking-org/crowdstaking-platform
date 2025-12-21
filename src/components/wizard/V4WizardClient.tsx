@@ -160,7 +160,7 @@ export function V4WizardClient() {
         <div className="max-w-4xl mx-auto px-4 mb-6">
           <Breadcrumbs
             items={[
-              { label: 'Create v4 Project', href: '/wizard/v4', icon: 'sparkles' },
+              { label: 'Create v4 Project', href: '/v4-wizard', icon: 'sparkles' },
               { label: `Step ${currentStep + 1}: ${currentStep === 0 ? 'Welcome' : 'Project Details'}` },
             ]}
           />
