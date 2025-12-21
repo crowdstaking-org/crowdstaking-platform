@@ -26,7 +26,7 @@ export function NewHeroSection({ theme }: NewHeroSectionProps) {
 
   // Set wizard href client-side to avoid hydration mismatch
   useEffect(() => {
-    setWizardHref(ENABLE_V4_PROTOCOL ? "/wizard/v4" : "/wizard")
+    setWizardHref(ENABLE_V4_PROTOCOL ? "/v4-wizard" : "/wizard")
   }, [])
 
   useEffect(() => {
