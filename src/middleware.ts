@@ -8,10 +8,16 @@ import type { NextRequest } from 'next/server'
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Redirect /wizard to /wizard/v4 (but not /wizard/v4 itself)
+  // Redirect /wizard to /wizard/v4 (but only if V4 is enabled)
   if (pathname === '/wizard') {
     const url = request.nextUrl.clone()
-    url.pathname = '/wizard/v4'
+    const isV4Enabled = (process.env.ENABLE_V4_PROTOCOL ?? '').toLowerCase() === 'true'
+    
+    if (isV4Enabled) {
+      url.pathname = '/wizard/v4'
+    } else {
+      url.pathname = '/'
+    }
     return NextResponse.redirect(url)
   }
 

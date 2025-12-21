@@ -30,7 +30,7 @@ export function V4WizardClient() {
 
   useEffect(() => {
     if (!ENABLE_V4_PROTOCOL) {
-      router.push('/wizard')
+      router.push('/')
     }
   }, [router])
 
