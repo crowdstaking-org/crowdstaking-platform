@@ -43,17 +43,20 @@ export function errorResponse(
     })
   }
   
-  // Sanitize error message for production
+  // Sanitize error message for production (TEMPORARILY DISABLED FOR DEBUGGING)
+  const sanitizedMessage = message
+  /*
   const isProduction = process.env.NODE_ENV === 'production'
   const sanitizedMessage = isProduction && status === 500 
     ? 'An internal error occurred' 
     : message
+  */
   
   return jsonResponse({ 
     error: sanitizedMessage,
     success: false,
-    // Only include details in development
-    ...(process.env.NODE_ENV === 'development' && details ? { details } : {})
+    // Include details even in production for debugging
+    ...(details ? { details } : {})
   }, status)
 }
 
