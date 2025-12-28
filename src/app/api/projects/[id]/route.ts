@@ -28,8 +28,8 @@ export async function GET(
       return errorResponse('Invalid project ID format', 400)
     }
     
-    const { data: project, error } = await supabase
-      .from('projects')
+    const { data: projectData, error } = await supabase
+      .from('projects_v4')
       .select('*')
       .eq('id', id)
       .single()
@@ -41,9 +41,25 @@ export async function GET(
       console.error('Database error:', error)
       return errorResponse('Failed to fetch project', 500)
     }
+
+    // Map V4 project to legacy Project type
+    const project: Project = {
+      id: projectData.id,
+      created_at: projectData.created_at,
+      updated_at: projectData.created_at,
+      founder_wallet_address: projectData.created_by || '',
+      name: projectData.name,
+      description: projectData.mission || '',
+      token_name: projectData.name,
+      // Dynamic token symbol: SBT-<Slug> or V4-PROJECT
+      token_symbol: `SBT-${(projectData.slug || projectData.name).toUpperCase().substring(0, 10)}`, 
+      total_supply: 1000000,
+      token_status: 'illiquid',
+      status: projectData.status === 'active' ? 'active' : 'paused'
+    }
     
     return successResponse({
-      project: project as Project,
+      project,
     })
     
   } catch (error) {

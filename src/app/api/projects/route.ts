@@ -43,7 +43,6 @@ export async function GET(request: NextRequest) {
       return errorResponse('Failed to fetch projects', 500)
     }
     
-    // Map V4 projects to legacy Project type to avoid breaking frontend
     const mappedProjects = (data || []).map((p: any) => ({
       id: p.id,
       created_at: p.created_at,
@@ -52,7 +51,8 @@ export async function GET(request: NextRequest) {
       name: p.name,
       description: p.mission || '',
       token_name: p.name,
-      token_symbol: 'V4',
+      // Dynamic token symbol: SBT-<Slug> or V4-PROJECT
+      token_symbol: `SBT-${(p.slug || p.name).toUpperCase().substring(0, 10)}`,
       total_supply: 1000000,
       token_status: 'illiquid',
       status: p.status === 'active' ? 'active' : 'paused'

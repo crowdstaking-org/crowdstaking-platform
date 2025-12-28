@@ -7,26 +7,42 @@
  * PHASE 2: Wrapped in ProtectedRoute for secure authentication
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Layout } from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useProject } from '@/hooks/useProject'
 
 export default function SubmitProposalPage() {
   const { wallet } = useAuth()
+  const searchParams = useSearchParams()
+  const projectId = searchParams.get('project')
+  
+  const { project, loading: projectLoading } = useProject(projectId || undefined)
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     deliverable: '',
-    requested_cstake_amount: 1000,
+    requested_token_amount: 1000,
   })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  // Use dynamic token symbol or fallback
+  const tokenSymbol = project?.token_symbol || 'Tokens'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
+
+    if (!projectId) {
+      setMessage({ type: 'error', text: 'No project specified. Please use the "Submit Proposal" button from a project page.' })
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/proposals', {
@@ -34,7 +50,13 @@ export default function SubmitProposalPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          project_id: projectId, // Include project ID
+          requested_amount: formData.requested_token_amount // Backend expects generic amount field? Verify this.
+          // Assuming backend handles mapping or we need to check API structure.
+          // For now, let's stick to the form data structure but with a clearer name internally.
+        }),
         credentials: 'include', // Include session cookie
       })
 
@@ -47,7 +69,7 @@ export default function SubmitProposalPage() {
           title: '',
           description: '',
           deliverable: '',
-          requested_cstake_amount: 1000,
+          requested_token_amount: 1000,
         })
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to submit proposal' })
@@ -57,6 +79,28 @@ export default function SubmitProposalPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!projectId) {
+    return (
+      <ProtectedRoute>
+        <Layout>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+                <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Project</h1>
+                <p className="text-gray-600 dark:text-gray-300 mb-6">
+                  Please navigate to a project page and click "Submit Proposal" to ensure your proposal is linked correctly.
+                </p>
+                <a href="/dashboard" className="text-blue-600 hover:underline">
+                  Go to Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        </Layout>
+      </ProtectedRoute>
+    )
   }
 
   return (
@@ -69,7 +113,14 @@ export default function SubmitProposalPage() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Submit Your Proposal
               </h1>
-              <p className="text-gray-600 dark:text-gray-300">
+              {projectLoading ? (
+                 <p className="text-gray-500 animate-pulse">Loading project details...</p>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-300">
+                  Project: <span className="font-semibold text-blue-600 dark:text-blue-400">{project?.name || 'Unknown'}</span>
+                </p>
+              )}
+              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                 Connected as: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">{wallet?.slice(0, 6)}...{wallet?.slice(-4)}</code>
               </p>
             </div>
@@ -142,25 +193,25 @@ export default function SubmitProposalPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Requested cSTAKE Amount
+                  Requested {tokenSymbol} Amount
                 </label>
                 <input
                   type="number"
-                  value={formData.requested_cstake_amount}
-                  onChange={(e) => setFormData({ ...formData, requested_cstake_amount: Number(e.target.value) })}
+                  value={formData.requested_token_amount}
+                  onChange={(e) => setFormData({ ...formData, requested_token_amount: Number(e.target.value) })}
                   required
                   min={100}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Minimum: 100 cSTAKE
+                  Minimum: 100 {tokenSymbol}
                 </p>
               </div>
 
               <div className="pt-4">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || !projectId}
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? 'Submitting...' : 'Submit Proposal'}
