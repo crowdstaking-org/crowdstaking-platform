@@ -1,5 +1,5 @@
 export const ENABLE_V4_PROTOCOL =
-  (process.env.ENABLE_V4_PROTOCOL ?? '').toLowerCase() === 'true'
+  (process.env.NEXT_PUBLIC_ENABLE_V4_PROTOCOL || process.env.ENABLE_V4_PROTOCOL || '').toLowerCase() === 'true'
 
 export const ENABLE_LEGACY_PROTOCOL =
   (process.env.ENABLE_LEGACY_PROTOCOL ?? 'true').toLowerCase() !== 'false'

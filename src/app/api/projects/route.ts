@@ -27,13 +27,13 @@ export async function GET(request: NextRequest) {
     const founderAddress = searchParams.get('founder')
     
     let query = supabase
-      .from('projects')
+      .from('projects_v4')
       .select('*')
       .order('created_at', { ascending: false })
     
     // Filter by founder if provided
     if (founderAddress) {
-      query = query.eq('founder_wallet_address', founderAddress.toLowerCase())
+      query = query.eq('created_by', founderAddress.toLowerCase())
     }
     
     const { data, error } = await query
@@ -43,9 +43,24 @@ export async function GET(request: NextRequest) {
       return errorResponse('Failed to fetch projects', 500)
     }
     
+    // Map V4 projects to legacy Project type to avoid breaking frontend
+    const mappedProjects = (data || []).map((p: any) => ({
+      id: p.id,
+      created_at: p.created_at,
+      updated_at: p.created_at,
+      founder_wallet_address: p.created_by || '',
+      name: p.name,
+      description: p.mission || '',
+      token_name: p.name,
+      token_symbol: 'V4',
+      total_supply: 1000000,
+      token_status: 'illiquid',
+      status: p.status === 'active' ? 'active' : 'paused'
+    }))
+
     return successResponse({
-      projects: data as Project[],
-      count: data.length,
+      projects: mappedProjects as Project[],
+      count: mappedProjects.length,
     })
     
   } catch (error) {
@@ -99,16 +114,13 @@ export async function POST(request: NextRequest) {
     
     // Insert into database
     const { data: project, error } = await supabase
-      .from('projects')
+      .from('projects_v4')
       .insert({
-        founder_wallet_address: wallet.toLowerCase(),
+        created_by: wallet.toLowerCase(),
         name: body.name.trim(),
-        description: body.description?.trim() || null,
-        token_name: body.token_name.trim(),
-        token_symbol: body.token_symbol.trim().toUpperCase(),
-        total_supply: body.total_supply || 1000000000,
-        token_status: 'illiquid',
+        mission: body.description?.trim() || null,
         status: 'active',
+        slug: body.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
       })
       .select()
       .single()

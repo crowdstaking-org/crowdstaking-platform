@@ -36,8 +36,8 @@ export async function GET(
     
     // Verify project exists
     const { data: project, error: projectError } = await supabase
-      .from('projects')
-      .select('id, total_supply')
+      .from('projects_v4')
+      .select('id')
       .eq('id', id)
       .single()
     
@@ -118,9 +118,10 @@ export async function GET(
       return sum + amount
     }, 0) || 0
     
+    const totalSupply = 1000000 // Fallback for V4
     const distributedPercentage =
-      project.total_supply > 0
-        ? (totalDistributed / project.total_supply) * 100
+      totalSupply > 0
+        ? (totalDistributed / totalSupply) * 100
         : 0
     
     // Build stats object
