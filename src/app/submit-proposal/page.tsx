@@ -7,14 +7,14 @@
  * PHASE 2: Wrapped in ProtectedRoute for secure authentication
  */
 
-import { useState, useEffect } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Layout } from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useProject } from '@/hooks/useProject'
 
-export default function SubmitProposalPage() {
+function SubmitProposalContent() {
   const { wallet } = useAuth()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('project')
@@ -83,155 +83,166 @@ export default function SubmitProposalPage() {
 
   if (!projectId) {
     return (
-      <ProtectedRoute>
-        <Layout>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-                <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Project</h1>
-                <p className="text-gray-600 dark:text-gray-300 mb-6">
-                  Please navigate to a project page and click "Submit Proposal" to ensure your proposal is linked correctly.
-                </p>
-                <a href="/dashboard" className="text-blue-600 hover:underline">
-                  Go to Dashboard
-                </a>
-              </div>
-            </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Project</h1>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Please navigate to a project page and click "Submit Proposal" to ensure your proposal is linked correctly.
+            </p>
+            <a href="/dashboard" className="text-blue-600 hover:underline">
+              Go to Dashboard
+            </a>
           </div>
-        </Layout>
-      </ProtectedRoute>
+        </div>
+      </div>
     )
   }
 
   return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Submit Your Proposal
+          </h1>
+          {projectLoading ? (
+             <p className="text-gray-500 animate-pulse">Loading project details...</p>
+          ) : (
+            <p className="text-gray-600 dark:text-gray-300">
+              Project: <span className="font-semibold text-blue-600 dark:text-blue-400">{project?.name || 'Unknown'}</span>
+            </p>
+          )}
+          <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
+            Connected as: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">{wallet?.slice(0, 6)}...{wallet?.slice(-4)}</code>
+          </p>
+        </div>
+
+        {message && (
+          <div className={`mb-6 p-4 rounded-lg ${
+            message.type === 'success'
+              ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+              : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+          }`}>
+            {message.text}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Proposal Title
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+              minLength={5}
+              maxLength={200}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              placeholder="e.g., AI-Powered DeFi Platform"
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Min 5, max 200 characters
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+              minLength={50}
+              rows={6}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+              placeholder="Describe your project vision, goals, and why you need funding..."
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Min 50 characters - be detailed
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Deliverable
+            </label>
+            <textarea
+              value={formData.deliverable}
+              onChange={(e) => setFormData({ ...formData, deliverable: e.target.value })}
+              required
+              minLength={20}
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
+              placeholder="What will you deliver? Be specific about timelines and outcomes..."
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Min 20 characters - describe what you will deliver
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Requested {tokenSymbol} Amount
+            </label>
+            <input
+              type="number"
+              value={formData.requested_token_amount}
+              onChange={(e) => setFormData({ ...formData, requested_token_amount: Number(e.target.value) })}
+              required
+              min={100}
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Minimum: 100 {tokenSymbol}
+            </p>
+          </div>
+
+          <div className="pt-4">
+            <button
+              type="submit"
+              disabled={loading || !projectId}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Submitting...' : 'Submit Proposal'}
+            </button>
+          </div>
+        </form>
+
+        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
+            ℹ️ What happens next?
+          </h3>
+          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+            <li>• Your proposal will be reviewed by the community</li>
+            <li>• Admin can approve or reject your proposal</li>
+            <li>• Approved proposals get published for co-founder matching</li>
+          </ul>
+        </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function SubmitProposalPage() {
+  return (
     <ProtectedRoute>
       <Layout>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Submit Your Proposal
-              </h1>
-              {projectLoading ? (
-                 <p className="text-gray-500 animate-pulse">Loading project details...</p>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300">
-                  Project: <span className="font-semibold text-blue-600 dark:text-blue-400">{project?.name || 'Unknown'}</span>
-                </p>
-              )}
-              <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
-                Connected as: <code className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">{wallet?.slice(0, 6)}...{wallet?.slice(-4)}</code>
-              </p>
-            </div>
-
-            {message && (
-              <div className={`mb-6 p-4 rounded-lg ${
-                message.type === 'success'
-                  ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                  : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-              }`}>
-                {message.text}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Proposal Title
-                </label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                  minLength={5}
-                  maxLength={200}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                  placeholder="e.g., AI-Powered DeFi Platform"
-                />
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Min 5, max 200 characters
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  required
-                  minLength={50}
-                  rows={6}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
-                  placeholder="Describe your project vision, goals, and why you need funding..."
-                />
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Min 50 characters - be detailed
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Deliverable
-                </label>
-                <textarea
-                  value={formData.deliverable}
-                  onChange={(e) => setFormData({ ...formData, deliverable: e.target.value })}
-                  required
-                  minLength={20}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
-                  placeholder="What will you deliver? Be specific about timelines and outcomes..."
-                />
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Min 20 characters - describe what you will deliver
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Requested {tokenSymbol} Amount
-                </label>
-                <input
-                  type="number"
-                  value={formData.requested_token_amount}
-                  onChange={(e) => setFormData({ ...formData, requested_token_amount: Number(e.target.value) })}
-                  required
-                  min={100}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                />
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Minimum: 100 {tokenSymbol}
-                </p>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={loading || !projectId}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Submitting...' : 'Submit Proposal'}
-                </button>
-              </div>
-            </form>
-
-            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
-                ℹ️ What happens next?
-              </h3>
-              <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
-                <li>• Your proposal will be reviewed by the community</li>
-                <li>• Admin can approve or reject your proposal</li>
-                <li>• Approved proposals get published for co-founder matching</li>
-              </ul>
-            </div>
+        <Suspense fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-300">Loading proposal form...</p>
             </div>
           </div>
-        </div>
+        }>
+          <SubmitProposalContent />
+        </Suspense>
       </Layout>
     </ProtectedRoute>
   )
