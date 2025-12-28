@@ -26,7 +26,8 @@ export async function POST(request: Request) {
       name,
       slug,
       mission: mission ?? null,
-      founderWallet
+      founderWallet,
+      createdBy: null // Or map to a profile ID if available
     })
 
     const deployment = await deployProjectContracts(slug, founderWallet)

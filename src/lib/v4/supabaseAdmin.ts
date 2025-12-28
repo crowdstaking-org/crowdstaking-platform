@@ -14,6 +14,6 @@ if (!serviceRoleKey) {
 
 export const supabaseAdmin = createClient(
   supabaseUrl ?? '',
-  serviceRoleKey ?? anonKey ?? ''
+  (serviceRoleKey && serviceRoleKey !== '') ? serviceRoleKey : (anonKey ?? '')
 )
 

@@ -27,6 +27,7 @@ export async function createV4Project(input: CreateProjectInput) {
       name: input.name,
       slug,
       mission: input.mission ?? null,
+      founder_wallet: input.founderWallet,
       created_by: input.createdBy ?? null,
       status: 'draft'
     })
