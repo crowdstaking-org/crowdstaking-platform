@@ -54,7 +54,7 @@ export async function GET(
       // Dynamic token symbol: SBT-<Slug> or V4-PROJECT
       token_symbol: `SBT-${(projectData.slug || projectData.name).toUpperCase().substring(0, 10)}`, 
       total_supply: 1000000,
-      token_status: 'illiquid',
+      token_status: 'live',
       status: projectData.status === 'active' ? 'active' : 'paused'
     }
     

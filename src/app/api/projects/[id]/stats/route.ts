@@ -37,7 +37,7 @@ export async function GET(
     // Verify project exists
     const { data: project, error: projectError } = await supabase
       .from('projects_v4')
-      .select('id')
+      .select('id, created_by')
       .eq('id', id)
       .single()
     
@@ -90,7 +90,7 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('project_id', id)
       .eq('status', 'completed')
-    
+
     // Calculate team members (unique wallet addresses with completed proposals)
     const { data: teamMembers } = await supabase
       .from('proposals')
@@ -101,6 +101,11 @@ export async function GET(
     const uniqueTeamMembers = new Set(
       teamMembers?.map((m) => m.creator_wallet_address) || []
     )
+
+    // ALWAYS include the founder as a team member
+    if (project.created_by) {
+      uniqueTeamMembers.add(project.created_by)
+    }
     
     // Calculate distributed tokens percentage
     // Sum of completed proposals' foundation_offer_cstake_amount
