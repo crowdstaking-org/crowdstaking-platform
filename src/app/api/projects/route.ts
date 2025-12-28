@@ -40,12 +40,7 @@ export async function GET(request: NextRequest) {
     
     if (error) {
       console.error('Database error:', error)
-      return errorResponse(`Database error: ${error.message} (Code: ${error.code})`, 500, { errorDetails: error })
-    }
-    
-    // DEBUG: Add info about protocol status if empty
-    if (!data || data.length === 0) {
-      console.log('No projects found in projects_v4')
+      return errorResponse('Failed to fetch projects', 500)
     }
     
     // Map V4 projects to legacy Project type to avoid breaking frontend
@@ -66,11 +61,6 @@ export async function GET(request: NextRequest) {
     return successResponse({
       projects: mappedProjects as Project[],
       count: mappedProjects.length,
-      _debug: {
-        ENABLE_V4_PROTOCOL: (process.env.NEXT_PUBLIC_ENABLE_V4_PROTOCOL || process.env.ENABLE_V4_PROTOCOL || '').toLowerCase() === 'true',
-        has_supabase_url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        has_supabase_key: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      }
     })
     
   } catch (error) {
