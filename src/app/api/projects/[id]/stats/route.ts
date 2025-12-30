@@ -37,7 +37,7 @@ export async function GET(
     // Verify project exists
     const { data: project, error: projectError } = await supabase
       .from('projects_v4')
-      .select('id, created_by')
+      .select('id, created_by, founder_wallet')
       .eq('id', id)
       .single()
     
