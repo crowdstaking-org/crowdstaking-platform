@@ -71,4 +71,4 @@ export async function GET(
     console.error('Project fetch error:', error)
     return errorResponse('Failed to fetch project', 500)
   }
-
+}

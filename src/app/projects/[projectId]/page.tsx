@@ -281,8 +281,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     </p>
                   </div>
                 </div>
-                </div>
-              </div>
+
 
               {/* CTA Button */}
               <div className="lg:w-64">
