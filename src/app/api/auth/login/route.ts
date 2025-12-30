@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server'
 import { verifyLoginSignature, extractAddressFromMessage } from '@/lib/auth/thirdweb-auth'
 import { createSession } from '@/lib/auth/sessions'
 import { successResponse, errorResponse } from '@/lib/api'
+import { supabase } from '@/lib/supabase'
 
 /**
  * POST /api/auth/login
