@@ -122,6 +122,51 @@ export function SettingsTab({ project }: SettingsTabProps) {
         </button>
       </div>
 
+      {/* Smart Contracts (Transparency) */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center space-x-2">
+          <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <span>Smart Contracts</span>
+        </h3>
+
+        {!project?.contracts || project.contracts.length === 0 ? (
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 text-center text-gray-500 dark:text-gray-400">
+            No contracts deployed yet.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Your project is active on the blockchain. These are your verified contract addresses.
+            </p>
+            <div className="grid gap-3">
+              {project.contracts.map((contract, index) => (
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center space-x-3 mb-2 sm:mb-0">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                        {contract.contract_type}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Chain ID: {contract.chain_id}
+                      </p>
+                    </div>
+                  </div>
+                  <code className="text-xs font-mono bg-white dark:bg-gray-800 px-3 py-1.5 rounded border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 break-all select-all">
+                    {contract.address}
+                  </code>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+              <span className="font-semibold">Tip:</span> Share these addresses with your community to prove transparency.
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Danger Zone */}
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border-2 border-red-200 dark:border-red-900">
         <h3 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4 flex items-center space-x-2">

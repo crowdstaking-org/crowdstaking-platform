@@ -78,7 +78,7 @@ export async function GET(
       .select('*', { count: 'exact', head: true })
       .eq('project_id', id)
       .in('status', ['approved', 'accepted'])
-    
+
     const { count: workInProgressCount } = await supabase
       .from('proposals')
       .select('*', { count: 'exact', head: true })
@@ -105,6 +105,10 @@ export async function GET(
     // ALWAYS include the founder as a team member
     if (project.created_by) {
       uniqueTeamMembers.add(project.created_by)
+    }
+    // Also add founder wallet if available (for V4 projects without created_by link)
+    if (project.founder_wallet) {
+      uniqueTeamMembers.add(project.founder_wallet.toLowerCase())
     }
     
     // Calculate distributed tokens percentage

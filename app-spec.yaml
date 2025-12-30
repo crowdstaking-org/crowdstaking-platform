@@ -1,0 +1,110 @@
+domains:
+  - domain: crowdstaking.org
+    type: PRIMARY
+  - domain: www.crowdstaking.org
+    type: ALIAS
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+name: crowdstaking-platform
+region: fra
+services:
+  - build_command: npm run build
+    environment_slug: node-js
+    envs:
+      - key: NODE_ENV
+        scope: RUN_AND_BUILD_TIME
+        value: production
+      - key: NEXT_PUBLIC_THIRDWEB_CLIENT_ID
+        scope: RUN_AND_BUILD_TIME
+        value: ce354da832525e0a5b35810270a39a7a
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://jfcmotoudsbuwadfosjj.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        scope: RUN_AND_BUILD_TIME
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmY21vdG91ZHNidXdhZGZvc2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0ODI4OTYsImV4cCI6MjA0ODA1ODg5Nn0.HvXtjDQ4YJk4CJyIvQVat9S1tIxwTTMtzdk7EbciPNc
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: ""
+      - key: THIRDWEB_SECRET_KEY
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+        value: EV[1:aEYpd4HYqCvTGak9iwg8+EhLNrxZw+6X:/BsEyyDMifPfLcnsG11+cj1b2FhffEO+bXTzoeihiyVhxzwFqEmyuX4Qp3XvVBJ8LVwUS3Z2cJywtfK9MiA9apQlwb+1/j9sK5c8Nux/MiUs7II7vzYCG6dWMg+zr59ZWGrOiRPg]
+      - key: THIRDWEB_GAS_MODE
+        scope: RUN_AND_BUILD_TIME
+        value: server-wallet
+      - key: NEXT_PUBLIC_DAO_WALLET_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0x252825B2DD9d4ea3489070C09Be63ea18879E5ab
+      - key: NEXT_PUBLIC_CSTAKE_TOKEN_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0xa746381E05aE069846726Eb053788D4879B458DA
+      - key: VESTING_CONTRACT_ADDRESS_TESTNET
+        scope: RUN_AND_BUILD_TIME
+        value: 0x417cba6236848dcaf3cfeb83146c74ae7768c812
+      - key: BASE_SEPOLIA_RPC_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://sepolia.base.org
+      - key: BASE_MAINNET_RPC_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://mainnet.base.org
+      - key: ADMIN_WALLET_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0x252825B2DD9d4ea3489070C09Be63ea18879E5ab
+      - key: SUPER_ADMIN_EMAILS
+        scope: RUN_AND_BUILD_TIME
+        value: admin@crowdstaking.io
+      - key: CSTAKE_MANUAL_PRICE
+        scope: RUN_AND_BUILD_TIME
+        value: "0.50"
+      - key: NEXT_PUBLIC_APP_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://crowdstaking.org
+      - key: ENABLE_V4_PROTOCOL
+        scope: RUN_AND_BUILD_TIME
+        value: "true"
+      - key: NEXT_PUBLIC_ENABLE_V4_PROTOCOL
+        scope: RUN_AND_BUILD_TIME
+        value: "true"
+      - key: ENABLE_LEGACY_PROTOCOL
+        scope: RUN_AND_BUILD_TIME
+        value: "true"
+      - key: V4_DEPLOY_RPC_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://sepolia.base.org
+      - key: V4_CHAIN_ID
+        scope: RUN_AND_BUILD_TIME
+        value: "84532"
+      - key: V4_TREASURY_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0x2ca13F0c12fDdC9f9b5452c55d5d40858b91aE27
+      - key: V4_PAYOUT_TOKEN_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0xD3853D3526bD977268489CCe9136AADeb2c33438
+      - key: V4_CAPITAL_TOKEN_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0x927aC6159502a07e1dbF98B02dAd7079f1cDB49a
+      - key: V4_FACTORY_ADDRESS
+        scope: RUN_AND_BUILD_TIME
+        value: 0x318Be50910845103d7EcB1566B817219c33AF0ca
+      - key: V4_DEPLOYER_KEY
+        scope: RUN_TIME
+        type: SECRET
+        value: EV[1:SrSINJnzqTeBy4z+iPEImG8tRJbe9p6j:kFOdDSGGnktXL9xUeZYj3WQosCnL2KDe0maDNCN52pt91HcaMzr7xHhB/lzTPyXNSHPdeJ0L2yhOnUzE5eODLqvKCM36+CNEFxU3ByANsJDkww==]
+      - key: V4_FEE_BPS
+        scope: RUN_AND_BUILD_TIME
+        value: "200"
+    git:
+      branch: main
+      repo_clone_url: https://github.com/crowdstaking-org/crowdstaking-platform.git
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    name: web
+    run_command: npm start

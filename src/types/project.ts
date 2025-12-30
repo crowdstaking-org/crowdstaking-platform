@@ -44,6 +44,13 @@ export interface Project {
   // Status
   token_status: TokenStatus
   status: ProjectStatus
+  
+  // Contracts (V4)
+  contracts?: {
+    contract_type: string
+    address: string
+    chain_id: number
+  }[]
 }
 
 /**

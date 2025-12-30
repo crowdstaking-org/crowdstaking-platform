@@ -27,14 +27,18 @@ export async function GET(
       .eq('id', projectId)
       .single()
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-      }
-      throw error
-    }
+    // Fetch contracts
+    const { data: contracts } = await supabaseAdmin
+      .from('project_contracts')
+      .select('contract_type, address, chain_id')
+      .eq('project_id', projectId)
 
-    return NextResponse.json({ project })
+    return NextResponse.json({ 
+      project: {
+        ...project,
+        contracts: contracts || []
+      } 
+    })
   } catch (error: any) {
     console.error('[GET /api/v4/projects/:id]', error)
     return NextResponse.json({ error: error.message ?? 'Internal error' }, { status: 500 })

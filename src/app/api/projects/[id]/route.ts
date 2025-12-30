@@ -27,44 +27,48 @@ export async function GET(
     if (!uuidRegex.test(id)) {
       return errorResponse('Invalid project ID format', 400)
     }
-    
-    const { data: projectData, error } = await supabase
+    // Verify project exists
+    const { data: project, error: projectError } = await supabase
       .from('projects_v4')
       .select('*')
       .eq('id', id)
       .single()
     
-    if (error) {
-      if (error.code === 'PGRST116') {
+    if (projectError) {
+      if (projectError.code === 'PGRST116') {
         return errorResponse('Project not found', 404)
       }
-      console.error('Database error:', error)
+      console.error('Database error:', projectError)
       return errorResponse('Failed to fetch project', 500)
     }
 
-    // Map V4 project to legacy Project type
-    const project: Project = {
-      id: projectData.id,
-      created_at: projectData.created_at,
-      updated_at: projectData.created_at,
-      founder_wallet_address: projectData.created_by || '',
-      name: projectData.name,
-      description: projectData.mission || '',
-      token_name: projectData.name,
+    // Fetch contracts
+    const { data: contracts } = await supabase
+      .from('project_contracts')
+      .select('contract_type, address, chain_id')
+      .eq('project_id', id)
+
+    // Map to Project type
+    const projectData = {
+      id: project.id,
+      created_at: project.created_at,
+      updated_at: project.created_at,
+      founder_wallet_address: project.created_by || project.founder_wallet || '',
+      name: project.name,
+      description: project.mission || '',
+      token_name: project.name,
       // Dynamic token symbol: SBT-<Slug> or V4-PROJECT
-      token_symbol: `SBT-${(projectData.slug || projectData.name).toUpperCase().substring(0, 10)}`, 
+      token_symbol: project.token_symbol || `SBT-${(project.slug || project.name).toUpperCase().substring(0, 10)}`,
       total_supply: 1000000,
       token_status: 'live',
-      status: projectData.status === 'active' ? 'active' : 'paused'
+      status: project.status === 'active' ? 'active' : 'paused',
+      contracts: contracts || []
     }
     
-    return successResponse({
-      project,
-    })
+    return successResponse({ project: projectData })
     
   } catch (error) {
     console.error('Project fetch error:', error)
     return errorResponse('Failed to fetch project', 500)
   }
-}
 

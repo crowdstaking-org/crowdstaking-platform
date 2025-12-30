@@ -56,9 +56,33 @@ export async function POST(request: NextRequest) {
     if (!isValid) {
       return errorResponse('Invalid signature - authentication failed', 401)
     }
+
+    // PHASE 2: Ensure profile exists and is linked to this wallet
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('wallet_address', address.toLowerCase())
+        .single()
+      
+      if (!profile) {
+        // Create basic profile for new wallet users
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            wallet_address: address.toLowerCase(),
+            display_name: `user_${address.slice(2, 8)}`,
+            bio: 'New member of CrowdStaking',
+          })
+        
+        if (createError) console.error('Failed to create profile on login:', createError)
+      }
+    } catch (error) {
+      console.error('Profile sync error on login:', error)
+    }
     
     // Create session
-    const sessionId = createSession(address)
+    const sessionId = createSession(address.toLowerCase())
     
     // Create response with session cookie
     const response = successResponse({

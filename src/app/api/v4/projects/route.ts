@@ -8,6 +8,7 @@ import {
 import { deployProjectContracts } from '@/lib/v4/factory'
 import type { V4ContractType } from '@/types/v4'
 import { ENABLE_V4_PROTOCOL } from '@/lib/features'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: Request) {
   if (!ENABLE_V4_PROTOCOL) {
@@ -22,12 +23,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Resolve profile ID from wallet address
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('wallet_address', founderWallet.toLowerCase())
+      .single()
+
     project = await createV4Project({
       name,
       slug,
       mission: mission ?? null,
       founderWallet,
-      createdBy: null // Or map to a profile ID if available
+      createdBy: profile?.id ?? null
     })
 
     const deployment = await deployProjectContracts(slug, founderWallet)
@@ -55,4 +63,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message ?? 'Internal error' }, { status: 500 })
   }
 }
-

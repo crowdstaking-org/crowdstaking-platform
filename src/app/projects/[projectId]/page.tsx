@@ -76,15 +76,16 @@ async function fetchProject(projectId: string): Promise<Project | null> {
               name: v4Project.name,
               slug: v4Project.slug,
               description: v4Project.mission || null,
-              founder_wallet_address: '', // v4 doesn't store founder wallet in project table
+              founder_wallet_address: v4Project.founder_wallet || '',
               token_name: `Partner ${v4Project.name}`,
               token_symbol: `SBT-${v4Project.slug}`,
-              total_supply: 0, // v4 doesn't use total_supply
+              total_supply: 0, 
               token_status: v4Project.status === 'active' ? 'live' : 'pending',
               status: v4Project.status === 'active' ? 'active' : 'paused',
               tags: [],
               created_at: v4Project.created_at,
               updated_at: v4Project.updated_at,
+              contracts: v4Project.contracts || []
             } as Project
           }
         }
@@ -280,6 +281,7 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                     </p>
                   </div>
                 </div>
+                </div>
               </div>
 
               {/* CTA Button */}
@@ -294,6 +296,32 @@ export default async function ProjectDetailPage({ params }: PageProps) {
                 <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
                   Join as Co-Founder and earn tokens
                 </p>
+
+                {/* Contracts Mini-List */}
+                {project.contracts && project.contracts.length > 0 && (
+                   <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                     <h4 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-3">
+                       Verified Contracts
+                     </h4>
+                     <div className="space-y-2">
+                       {project.contracts.slice(0, 3).map((contract, i) => (
+                         <div key={i} className="flex justify-between items-center text-xs">
+                           <span className="text-gray-600 dark:text-gray-400 truncate max-w-[80px]">
+                             {contract.contract_type}
+                           </span>
+                           <a 
+                             href={`https://${contract.chain_id === 137 ? 'polygonscan.com' : 'etherscan.io'}/address/${contract.address}`}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="text-purple-600 dark:text-purple-400 hover:underline font-mono truncate max-w-[120px]"
+                           >
+                             {contract.address.slice(0, 6)}...{contract.address.slice(-4)}
+                           </a>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                )}
               </div>
             </div>
           </div>

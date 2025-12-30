@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     
     // Filter by founder if provided
     if (founderAddress) {
-      query = query.eq('created_by', founderAddress.toLowerCase())
+      query = query.eq('founder_wallet', founderAddress.toLowerCase())
     }
     
     const { data, error } = await query
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       id: p.id,
       created_at: p.created_at,
       updated_at: p.created_at,
-      founder_wallet_address: p.created_by || '',
+      founder_wallet_address: p.created_by || p.founder_wallet || '',
       name: p.name,
       description: p.mission || '',
       token_name: p.name,
