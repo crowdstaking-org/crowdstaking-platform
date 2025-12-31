@@ -44,10 +44,12 @@ export function errorResponse(
   }
   
   // Sanitize error message for production
+  // TEMPORARY DEBUG: Show full error in production
   const isProduction = process.env.NODE_ENV === 'production'
-  const sanitizedMessage = isProduction && status === 500 
-    ? 'An internal error occurred' 
-    : message
+  const sanitizedMessage = message // Always show message for debugging
+    // isProduction && status === 500 
+    // ? 'An internal error occurred' 
+    // : message
   
   return jsonResponse({ 
     error: sanitizedMessage,
