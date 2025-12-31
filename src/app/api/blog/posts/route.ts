@@ -58,27 +58,37 @@ export async function GET(request: NextRequest) {
     // Manual join for authors
     let postsWithAuthors = posts as BlogPost[]
     if (posts && posts.length > 0) {
-      // Collect unique author addresses
-      const authorAddresses = Array.from(new Set(posts.map((p: any) => p.author_wallet_address)))
+      // Collect unique author IDs
+      const authorIds = Array.from(new Set(posts.map((p: any) => p.author_id).filter(id => id)))
       
-      // Fetch profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('wallet_address, display_name, avatar_url, github_username')
-        .in('wallet_address', authorAddresses)
+      // Fetch authors from blog_authors table
+      const { data: authors, error: authorsError } = await supabase
+        .from('blog_authors')
+        .select('id, name, avatar_url, slug')
+        .in('id', authorIds)
         
-      if (!profilesError && profiles) {
-        // Map profiles by address for O(1) lookup
-        const profileMap = new Map(profiles.map(p => [p.wallet_address, p]))
+      if (!authorsError && authors) {
+        // Map authors by ID for O(1) lookup
+        const authorMap = new Map(authors.map(a => [a.id, a]))
         
         // Attach author to posts
-        postsWithAuthors = posts.map((post: any) => ({
-          ...post,
-          author: profileMap.get(post.author_wallet_address) || {
-            wallet_address: post.author_wallet_address,
-            display_name: 'Unknown Author'
+        postsWithAuthors = posts.map((post: any) => {
+           const authorData = authorMap.get(post.author_id);
+           return {
+            ...post,
+            author: authorData ? {
+              display_name: authorData.name, // Map 'name' to 'display_name' for frontend compatibility
+              avatar_url: authorData.avatar_url,
+              slug: authorData.slug,
+              wallet_address: null // Blog authors might not have wallets linked here
+            } : {
+              display_name: 'Unknown Author',
+              avatar_url: null,
+              slug: null,
+              wallet_address: null
+            }
           }
-        }))
+        })
       }
     }
     
