@@ -31,7 +31,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export interface UserProfileLinkProps {
-  walletAddress: string           // Required: The user's wallet address
+  walletAddress?: string | null     // Optional: The user's wallet address (nullable for blog authors)
   displayName?: string             // Optional: Will be fetched if not provided
   avatarUrl?: string               // Optional: Will be fetched if not provided
   trustScore?: number              // Optional: Trust score to display
@@ -71,14 +71,16 @@ export function UserProfileLink({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
 
-  // Fetch profile data if not provided
+  // Fetch profile data if not provided AND we have a wallet address
   useEffect(() => {
-    // Only fetch if we don't have the data we need
-    const needsFetch = !displayName || !avatarUrl || (showTrustScore && !trustScore)
+    // Only fetch if we don't have the data we need AND we have a wallet address
+    const needsFetch = (!displayName || !avatarUrl || (showTrustScore && !trustScore)) && !!walletAddress
     
     if (!needsFetch) return
 
     const fetchProfile = async () => {
+      if (!walletAddress) return;
+      
       try {
         setLoading(true)
         const response = await fetch(`/api/profiles/${walletAddress}`)
@@ -105,11 +107,14 @@ export function UserProfileLink({
   const finalAvatarUrl = avatarUrl || profileData?.avatar_url
   const finalTrustScore = trustScore ?? profileData?.trust_score
 
-  // Format wallet address (shortened)
-  const shortenedAddress = `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
-  const displayText = showAddress 
+  // Format wallet address (shortened) - safely handle missing address
+  const shortenedAddress = walletAddress 
+    ? `${walletAddress.substring(0, 6)}...${walletAddress.substring(walletAddress.length - 4)}`
+    : ''
+    
+  const displayText = showAddress && shortenedAddress
     ? shortenedAddress 
-    : (finalDisplayName || shortenedAddress)
+    : (finalDisplayName || shortenedAddress || 'Unknown User')
 
   // Size configurations
   const sizeConfig = {

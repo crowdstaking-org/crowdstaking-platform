@@ -15,7 +15,7 @@ export interface BlogPost {
   title: string
   slug: string
   content: string
-  author_wallet_address: string
+  author_wallet_address: string | null // Can be null if using author_id from blog_authors
   status: BlogPostStatus
   published_at: string | null
   tags: string[]
