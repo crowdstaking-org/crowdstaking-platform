@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'jfcmotoudsbuwadfosjj.supabase.co',
+        port: '',
+        pathname: '/**',
+      },
     ],
     /**
      * Allow SVG images from dicebear.com avatar API

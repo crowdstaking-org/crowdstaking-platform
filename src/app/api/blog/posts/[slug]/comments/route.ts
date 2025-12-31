@@ -39,29 +39,38 @@ export async function GET(
       return errorResponse('Blog post not found', 404)
     }
     
-    // Fetch comments with author info
-    const { data, error } = await supabase
+    // Fetch comments
+    const { data: comments, error: commentsError } = await supabase
       .from('blog_comments')
-      .select(`
-        *,
-        author:profiles!blog_comments_author_wallet_address_fkey (
-          wallet_address,
-          display_name,
-          avatar_url,
-          github_username
-        )
-      `)
+      .select('*')
       .eq('post_id', post.id)
       .order('created_at', { ascending: true })
     
-    if (error) {
-      console.error('Error fetching comments:', error)
-      throw error
+    if (commentsError) {
+      console.error('Error fetching comments:', commentsError)
+      throw commentsError
     }
+
+    // Manual join for authors from profiles
+    const commentsWithAuthors = await Promise.all((comments || []).map(async (comment) => {
+      if (comment.author_wallet_address) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('wallet_address, display_name, avatar_url, github_username')
+          .ilike('wallet_address', comment.author_wallet_address)
+          .single()
+        
+        return {
+          ...comment,
+          author: profile
+        }
+      }
+      return comment
+    }))
     
     return successResponse({
-      comments: data as BlogComment[],
-      count: data?.length || 0
+      comments: commentsWithAuthors as BlogComment[],
+      count: commentsWithAuthors.length
     })
     
   } catch (error: any) {
@@ -119,26 +128,30 @@ export async function POST(
       content: validated.content,
     }
     
-    const { data, error } = await supabase
+    const { data: comment, error: commentError } = await supabase
       .from('blog_comments')
       .insert([commentData])
-      .select(`
-        *,
-        author:profiles!blog_comments_author_wallet_address_fkey (
-          wallet_address,
-          display_name,
-          avatar_url,
-          github_username
-        )
-      `)
+      .select('*')
       .single()
     
-    if (error) {
-      console.error('Error creating comment:', error)
-      throw error
+    if (commentError) {
+      console.error('Error creating comment:', commentError)
+      throw commentError
+    }
+
+    // Manual join for author profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('wallet_address, display_name, avatar_url, github_username')
+      .ilike('wallet_address', walletAddress)
+      .single()
+    
+    const commentWithAuthor = {
+      ...comment,
+      author: profile
     }
     
-    return successResponse(data as BlogComment, 201)
+    return successResponse(commentWithAuthor as BlogComment, 201)
     
   } catch (error: any) {
     // Handle authorization errors
