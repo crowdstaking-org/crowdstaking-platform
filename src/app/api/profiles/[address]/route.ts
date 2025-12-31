@@ -39,7 +39,7 @@ export async function GET(
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('wallet_address', normalizedAddress)
+      .ilike('wallet_address', normalizedAddress)
       .single()
 
     if (profileError || !profile) {

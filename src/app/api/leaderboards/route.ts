@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching leaderboard:', error)
-      return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 })
+      return NextResponse.json({ error: error.message || 'Failed to fetch leaderboard' }, { status: 500 })
     }
 
     return NextResponse.json({ data: data || [] })
@@ -67,14 +67,7 @@ async function getContributorsLeaderboard(period: string, limit: number) {
       missions_completed,
       proposals_completed,
       completion_rate,
-      last_active_at,
-      profiles (
-        wallet_address,
-        display_name,
-        avatar_url,
-        bio,
-        trust_score
-      )
+      last_active_at
     `
     )
     .gt('missions_completed', 0)
@@ -92,11 +85,21 @@ async function getContributorsLeaderboard(period: string, limit: number) {
 
   const { data, error } = await query
   
-  // Flatten the nested profile data
-  // Flatten the nested profile data
-  const flattenedData = data?.map(item => {
-    // Handle Supabase relation returning array or single object
-    const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+  if (error || !data) return { data: [], error }
+
+  // Manually fetch profiles
+  const addresses = data.map(d => d.wallet_address)
+  
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('wallet_address, display_name, avatar_url, trust_score, bio')
+    .in('wallet_address', addresses)
+    
+  // Map profiles
+  const profileMap = new Map((profiles || []).map(p => [p.wallet_address, p]))
+
+  const flattenedData = data.map(item => {
+    const profile = profileMap.get(item.wallet_address)
     
     return {
       wallet_address: item.wallet_address,
@@ -111,7 +114,7 @@ async function getContributorsLeaderboard(period: string, limit: number) {
     }
   })
 
-  return { data: flattenedData, error }
+  return { data: flattenedData, error: null }
 }
 
 /**
@@ -127,14 +130,7 @@ async function getFoundersLeaderboard(period: string, limit: number) {
       projects_live,
       missions_created,
       total_missions_payout,
-      last_active_at,
-      profiles (
-        wallet_address,
-        display_name,
-        avatar_url,
-        bio,
-        trust_score
-      )
+      last_active_at
     `
     )
     .gt('projects_created', 0)
@@ -153,11 +149,21 @@ async function getFoundersLeaderboard(period: string, limit: number) {
 
   const { data, error } = await query
   
-  // Flatten the nested profile data
-  // Flatten the nested profile data
-  const flattenedData = data?.map(item => {
-    // Handle Supabase relation returning array or single object
-    const profile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+  if (error || !data) return { data: [], error }
+
+  // Manually fetch profiles
+  const addresses = data.map(d => d.wallet_address)
+  
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('wallet_address, display_name, avatar_url, trust_score, bio')
+    .in('wallet_address', addresses)
+    
+  // Map profiles
+  const profileMap = new Map((profiles || []).map(p => [p.wallet_address, p]))
+
+  const flattenedData = data.map(item => {
+    const profile = profileMap.get(item.wallet_address)
     
     return {
       wallet_address: item.wallet_address,
@@ -173,7 +179,7 @@ async function getFoundersLeaderboard(period: string, limit: number) {
     }
   })
 
-  return { data: flattenedData, error }
+  return { data: flattenedData, error: null }
 }
 
 /**
@@ -184,8 +190,8 @@ async function getRisingStarsLeaderboard(period: string, limit: number) {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  // Get recently created profiles with stats
-  const query = supabase
+  // Get recently created profiles
+  const profilesQuery = supabase
     .from('profiles')
     .select(
       `
@@ -194,34 +200,52 @@ async function getRisingStarsLeaderboard(period: string, limit: number) {
       avatar_url,
       bio,
       trust_score,
-      created_at,
-      profile_stats!inner (
-        missions_completed,
-        proposals_submitted,
-        projects_created,
-        total_activity_days,
-        streak_days
-      )
+      created_at
     `
     )
     .gte('created_at', thirtyDaysAgo.toISOString())
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .limit(limit * 2) // Fetch more to allow filtering by activity
 
-  const { data, error } = await query
+  const { data: profiles, error: profilesError } = await profilesQuery
 
-  if (error) {
-    return { data: null, error }
+  if (profilesError || !profiles) {
+    return { data: null, error: profilesError }
   }
 
+  // Manually fetch stats for these profiles
+  const addresses = profiles.map(p => p.wallet_address)
+  
+  const { data: stats, error: statsError } = await supabase
+    .from('profile_stats')
+    .select('*')
+    .in('wallet_address', addresses)
+
+  if (statsError) {
+    return { data: null, error: statsError }
+  }
+
+  // Map stats
+  const statsMap = new Map((stats || []).map(s => [s.wallet_address, s]))
+
+  // Combine data
+  const combinedData = profiles.map(profile => {
+    const stat = statsMap.get(profile.wallet_address) || {}
+    return {
+      ...profile,
+      profile_stats: stat
+    }
+  })
+
   // Sort by activity score (custom calculation)
-  const sortedData = data?.sort((a, b) => {
+  const sortedData = combinedData.sort((a, b) => {
     const scoreA = calculateActivityScore(a.profile_stats)
     const scoreB = calculateActivityScore(b.profile_stats)
     return scoreB - scoreA
   })
-
-  return { data: sortedData, error: null }
+  
+  // Apply limit after sorting
+  return { data: sortedData.slice(0, limit), error: null }
 }
 
 /**

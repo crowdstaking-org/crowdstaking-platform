@@ -26,6 +26,21 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const founderAddress = searchParams.get('founder')
     
+    // Resolve profile ID from wallet address if provided
+    let profileId = null
+    if (founderAddress) {
+      // Try to find profile by wallet address (case-insensitive)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .ilike('wallet_address', founderAddress)
+        .maybeSingle()
+      
+      if (profile) {
+        profileId = profile.id
+      }
+    }
+    
     let query = supabase
       .from('projects_v4')
       .select('*')
@@ -33,7 +48,13 @@ export async function GET(request: NextRequest) {
     
     // Filter by founder if provided
     if (founderAddress) {
-      query = query.eq('founder_wallet', founderAddress.toLowerCase())
+      if (profileId) {
+        // Search by both wallet address (case-insensitive) and profile ID
+        query = query.or(`founder_wallet.ilike.${founderAddress},created_by.eq.${profileId}`)
+      } else {
+        // Fallback to just wallet address (case-insensitive) if no profile exists
+        query = query.ilike('founder_wallet', founderAddress)
+      }
     }
     
     const { data, error } = await query

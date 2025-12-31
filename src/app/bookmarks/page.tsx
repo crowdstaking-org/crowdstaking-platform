@@ -65,6 +65,12 @@ export default function BookmarksPage() {
         },
       })
 
+      if (response.status === 404) {
+        setBookmarks([])
+        setLoading(false)
+        return
+      }
+
       if (!response.ok) {
         throw new Error('Failed to fetch bookmarks')
       }

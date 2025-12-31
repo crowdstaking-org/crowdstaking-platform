@@ -79,8 +79,12 @@ export async function PUT(request: NextRequest) {
 
     // Update privacy settings
     const { data, error } = await supabase
+    const { data, error } = await supabase
       .from('profile_privacy')
-      .update(updates)
+      .upsert({ 
+        wallet_address: walletAddress,
+        ...updates 
+      })
       .eq('wallet_address', walletAddress)
       .select()
       .single()

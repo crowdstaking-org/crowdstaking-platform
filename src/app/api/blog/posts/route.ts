@@ -35,15 +35,7 @@ export async function GET(request: NextRequest) {
     // Build query - only published posts
     let query = supabase
       .from('blog_posts')
-      .select(`
-        *,
-        author:profiles!fk_blog_posts_author (
-          wallet_address,
-          display_name,
-          avatar_url,
-          github_username
-        )
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
       .eq('status', 'published')
       .order('published_at', { ascending: false })
     
@@ -56,15 +48,42 @@ export async function GET(request: NextRequest) {
     query = query.range(offset, offset + limit - 1)
     
     // Execute query
-    const { data, error, count } = await query
+    const { data: posts, error, count } = await query
     
     if (error) {
       console.error('Error fetching blog posts:', error)
       throw error
     }
+
+    // Manual join for authors
+    let postsWithAuthors = posts as BlogPost[]
+    if (posts && posts.length > 0) {
+      // Collect unique author addresses
+      const authorAddresses = Array.from(new Set(posts.map((p: any) => p.author_wallet_address)))
+      
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('wallet_address, display_name, avatar_url, github_username')
+        .in('wallet_address', authorAddresses)
+        
+      if (!profilesError && profiles) {
+        // Map profiles by address for O(1) lookup
+        const profileMap = new Map(profiles.map(p => [p.wallet_address, p]))
+        
+        // Attach author to posts
+        postsWithAuthors = posts.map((post: any) => ({
+          ...post,
+          author: profileMap.get(post.author_wallet_address) || {
+            wallet_address: post.author_wallet_address,
+            display_name: 'Unknown Author'
+          }
+        }))
+      }
+    }
     
     return successResponse({
-      posts: data as BlogPost[],
+      posts: postsWithAuthors,
       pagination: {
         page,
         limit,

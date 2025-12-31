@@ -167,9 +167,11 @@ export function useAuth(): AuthState {
         const accountDetails = (account as any)?.details
         const accountInfo = (account as any)?.info
         const email = accountDetails?.email || accountInfo?.email
+        const name = accountDetails?.name || accountInfo?.name || accountDetails?.firstName || accountInfo?.firstName
+        const image = accountDetails?.picture || accountInfo?.picture || accountDetails?.image || accountInfo?.image
         const authMethod = accountDetails?.authMethod || 'email'
         
-        console.log('📧 Email/Auth:', { email, authMethod })
+        console.log('📧 Email/Auth:', { email, name, hasImage: !!image, authMethod })
         
         // Use email login endpoint (no signature required)
         const response = await fetch('/api/auth/email-login', {
@@ -180,6 +182,8 @@ export function useAuth(): AuthState {
           body: JSON.stringify({
             address: account.address,
             email,
+            name,
+            image,
             authMethod,
           }),
         })

@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server'
 import { verifyLoginSignature, extractAddressFromMessage } from '@/lib/auth/thirdweb-auth'
 import { createSession } from '@/lib/auth/sessions'
 import { successResponse, errorResponse } from '@/lib/api'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/v4/supabaseAdmin'
 
 /**
  * POST /api/auth/login
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
     // PHASE 2: Ensure profile exists and is linked to this wallet
     try {
-      const { data: profile } = await supabase
+      const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('id')
         .eq('wallet_address', address.toLowerCase())
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       
       if (!profile) {
         // Create basic profile for new wallet users
-        const { error: createError } = await supabase
+        const { error: createError } = await supabaseAdmin
           .from('profiles')
           .insert({
             wallet_address: address.toLowerCase(),
