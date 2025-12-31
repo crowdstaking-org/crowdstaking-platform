@@ -162,7 +162,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
               hour: '2-digit',
               minute: '2-digit',
             })
-            const isOwn = wallet && comment.author_wallet_address.toLowerCase() === wallet.toLowerCase()
+            const isOwn = wallet && comment.author_wallet_address && comment.author_wallet_address.toLowerCase() === wallet.toLowerCase()
 
             return (
               <div
